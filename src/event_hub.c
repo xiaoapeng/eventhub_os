@@ -37,8 +37,8 @@ int eh_event_init(eh_event_t *e, eh_event_type_t *type, void (*callback)(eh_even
 
 
 eh_usec_t eh_schedule(eh_t *eh){
-    eh_timer_check(eh);
-    
+    //eh_timer_check(eh);
+    (void) eh;
     return 0;
 }
 

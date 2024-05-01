@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 
-#define  EH_EVENT_FIFO_CNT      8       /* 事件fifo的数量 必须选择 2 8 16 32， 数值越大理论性能越好*/
+#define  EH_EVENT_FIFO_CNT                              8       /* 事件fifo的数量 必须选择 2 8 16 32， 数值越大理论性能越好*/
 
 #define  eh_malloc(size)                malloc(size)
 #define  eh_free(ptr)                   free(ptr)

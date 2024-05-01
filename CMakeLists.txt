@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
 # 目标名称
-set(TARGET_APP atask_test)
 
 #设置C++版本号
 set(CMAKE_CXX_STANDARD 17)
@@ -10,16 +9,14 @@ set(CMAKE_C_EXTENSIONS ON)
 
 
 add_compile_options(
-        "-Wall"
-		#"-fsanitize=address"
-		"-fPIC"
-		"-Wextra"
-		"-Wno-psabi"
-        "-Wconversion"
-		"-DCONFIG_BOARD_NAME=${CONFIG_BOARD_NAME}"
+	"-Wall"
+	"-fPIC"
+	"-Wextra"
+	"-Wno-psabi"
+	"-Wconversion"
 )
 
-project(${TARGET_APP} )
+project(libevent_hub)
 
 # 指定头文件目录
 include_directories( 
@@ -28,21 +25,34 @@ include_directories(
 	"${PROJECT_SOURCE_DIR}/test/test/include/"
 )
 
-# 指定生成目标cd in	
-add_executable(    ${TARGET_APP}
-	"${PROJECT_SOURCE_DIR}/test/general/argparse.c"
-	"${PROJECT_SOURCE_DIR}/test/general/debug.c"
-	"${PROJECT_SOURCE_DIR}/test/main.c"
+set(eh_sources
+	"${PROJECT_SOURCE_DIR}/src/event_hub.c"
+    "${PROJECT_SOURCE_DIR}/src/event_timer.c"
 )
+list(APPEND eh_sources "${PROJECT_SOURCE_DIR}/src/arch/x64/coroutine.c" )
+
+add_library(event_hub ${eh_sources})
+target_include_directories(event_hub PUBLIC "${PROJECT_SOURCE_DIR}/src/include/")
+
+
+add_library(general_test 
+	"${PROJECT_SOURCE_DIR}/test/general/argparse.c" 
+	"${PROJECT_SOURCE_DIR}/test/general/debug.c"
+)
+target_include_directories(general_test PUBLIC 
+	"${PROJECT_SOURCE_DIR}/test/general/inc/"
+	"${PROJECT_SOURCE_DIR}/test/test/include/"
+)
+
+# test程序生成
+add_executable( test_co	"${PROJECT_SOURCE_DIR}/test/test_co.c")
+target_link_libraries(test_co general_test event_hub)
+
+
 
 # 指定库文件搜索目录
 link_directories(
 
-)
-
-# 指定库
-target_link_libraries(${TARGET_APP} 
-	""
 )
 
 
@@ -56,10 +66,5 @@ set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --show-l
 include(CTest)
 
 enable_testing()
-
-add_test(
-  NAME ${TARGET_APP}
-  COMMAND $<TARGET_FILE:${TARGET_APP}>
-)
 
 install(TARGETS ${TARGET_APP} RUNTIME DESTINATION bin)

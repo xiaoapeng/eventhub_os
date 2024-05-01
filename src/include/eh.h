@@ -19,6 +19,7 @@
 #include "eh_config.h"
 #include "eh_list.h"
 #include "eh_error.h"
+#include "eh_co.h"
 
 #if ((EH_EVENT_FIFO_CNT != 2) && (EH_EVENT_FIFO_CNT != 8) && (EH_EVENT_FIFO_CNT != 16) && (EH_EVENT_FIFO_CNT != 32))
     #error "EH_EVENT_FIFO_CNT must be 2, 8, 16, 32"
