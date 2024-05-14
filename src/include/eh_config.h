@@ -13,10 +13,9 @@
 #define _EVENT_CONFIG_H_
 
 #include <stdlib.h>
+/* 最大支持的任务数量 */
+#define EH_CONFIG_MAX_TASK_NUM                  32
 
-#define  EH_EVENT_FIFO_CNT                              8       /* 事件fifo的数量 必须选择 2 8 16 32， 数值越大理论性能越好*/
-
-#define  eh_malloc(size)                malloc(size)
-#define  eh_free(ptr)                   free(ptr)
+#define eh_debugfl(fmt, ...)    
 
 #endif // _EVENT_CONFIG_H_

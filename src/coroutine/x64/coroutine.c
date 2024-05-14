@@ -37,7 +37,7 @@
 __attribute__((naked))  void * co_context_swap(
     __attribute__((unused)) void *arg, 
     __attribute__((unused)) context_t *from, 
-    __attribute__((unused)) const context_t *to){
+    __attribute__((unused)) const context_t * const to){
     /*
      * rdi: arg
      * rsi: from
@@ -85,7 +85,7 @@ __attribute__((naked))  void * co_context_swap(
 
 
 __attribute__((naked))  context_t co_context_make( __attribute__((unused)) void *stack_top, 
-    __attribute__((unused)) void (*func)(void *arg)){
+    __attribute__((unused)) int (*func)(void *arg)){
     /*
      * rdi: stack_top
      * rsi: func
@@ -106,7 +106,7 @@ __attribute__((naked))  context_t co_context_make( __attribute__((unused)) void 
         "push %rbp \n"                                  /* 将RBP中存储的是finish的地址 */
         "jmp *%rbx \n"                                  /* 跳转到func */
     "finish: \n"
-        "xorq  %rdi, %rdi \n"                           /*  设置exit参数 */
+        "movq  %rax, %rdi \n"                           /*  设置exit参数 */
         "call  _exit@PLT \n"                            /*  exit(0) */
         "hlt \n"
         

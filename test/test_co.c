@@ -27,7 +27,7 @@ static void init(void){
     debug_init();
 }
 
-void test_co_task_2(void *arg){
+int test_co_task_2(void *arg){
     while(1){
         dbg_debugfl("arg=%p", arg);
         sleep(1);
@@ -37,10 +37,10 @@ void test_co_task_2(void *arg){
         sleep(1);
         co_context_swap((void*)0x1, &co_context_task2, &co_context_task1);
     }
+    return 0;
 }
 
-
-void test_co_task_1(void *arg){
+int test_co_task_1(void *arg){
     for(int i=0;i < 2;i++){
         dbg_debugfl("arg=%p", arg);
         sleep(1);
@@ -52,6 +52,8 @@ void test_co_task_1(void *arg){
 
     }
     co_context_swap((void*)0x3, &co_context_task1, &co_context_sys_main);
+    dbg_debugfl("test_co_task_1 return 4");
+    return 4;
 }
 
 
@@ -74,6 +76,7 @@ int main(void)
     arg = co_context_swap((void*)0x1, &co_context_sys_main, &co_context_task1);
 
     dbg_debugfl("co_context test ok! arg = %p", arg);
+    arg = co_context_swap((void*)0x1, &co_context_sys_main, &co_context_task1);
 
     return 0;
 }

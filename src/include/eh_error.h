@@ -20,20 +20,31 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define EH_RET_OK               0
-#define EH_RET_FAULT            -1
-#define EH_RET_INVALID_PARAM    -2
-#define EH_RET_INVALID_STATE    -3
-#define EH_RET_BUSY             -4
+#define EH_RET_OK                           0
+#define EH_RET_FAULT                        -1
+#define EH_RET_INVALID_PARAM                -2
+#define EH_RET_INVALID_STATE                -3
+#define EH_RET_BUSY                         -4
+#define EH_RET_SCHEDULING_ERROR             -5
+#define EH_RET_EVENT_ERROR                  -6
+#define EH_RET_TIMEOUT                      -7
+#define EH_RET_MALLOC_ERROR                 -8
+#define EH_RET_PTR_NULL                     -9
+#define EH_RET_MIN_ERROR_NUM                -255
 
-#define eh_param_assert(condition)          \
-    do{                                     \
-        if(!(condition))                    \
-            return EH_RET_INVALID_PARAM;    \
+#define eh_param_assert(condition)                                      \
+    do{                                                                 \
+        if(!(condition))                                                \
+            return EH_RET_INVALID_PARAM;                                \
     }while(0)
+#define eh_ptr_convert_int(ptr) ((int)((long)(ptr)))
+#define eh_ptr_to_error(ptr)           ({                               \
+    (ptr) == NULL ? EH_RET_PTR_NULL :                                   \
+    (eh_ptr_convert_int(ptr)) < 0 && eh_ptr_convert_int(ptr) > EH_RET_MIN_ERROR_NUM ?           \
+    eh_ptr_convert_int(ptr) : EH_RET_OK;                                             \
+})
 
-
-
+#define eh_error_to_ptr(err_on)             ((void*)(err_on))
 
 #ifdef __cplusplus
 #if __cplusplus

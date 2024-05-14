@@ -20,10 +20,13 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+#define __async__
+#define __await__
+
 typedef void* context_t;
 
-extern void * co_context_swap(void *arg, context_t *from, const context_t *to);
-extern context_t co_context_make(void *stack_top, void (*func)(void *arg));
+extern void * co_context_swap(void *arg, context_t *from, const context_t * const to);
+extern context_t co_context_make(void *stack_top, int (*func)(void *arg));
 
 #ifdef __cplusplus
 #if __cplusplus

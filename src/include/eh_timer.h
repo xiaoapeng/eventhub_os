@@ -17,19 +17,18 @@
 #include <stdint.h>
 typedef struct eh_timer_event eh_timer_event_t;
 
+/* 永不到期 */
+#define EH_TIMER_FOREVER       (-1)
+
+#define EH_TIMER_ATTR_AUTO_CIRCULATION  0x00000001              /* 自动重复，重运行 */
+#define EH_TIMER_ATTR_NOW_TIME_BASE     0x00000002              /* 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 */
+
 struct eh_timer_event {
     eh_event_t                      event;
     struct eh_list_head             list_node;               /* 定时器链，链在eh->timer_list_head上 */
-    eh_usec_t                       expire;                  /* 定时器到期时间 */
-    eh_usec_t                       interval;                /* 定时器间隔时间 */
-    union{
-        uint32_t                        flag;
-        struct{
-            uint32_t                     is_auto_circulation:1;
-            uint32_t                     is_start:1;
-        };
-    };
-    
+    eh_clock_t                      expire;                  /* 定时器到期时间 */
+    eh_sclock_t                     interval;                /* 定时器间隔时间 */
+    uint32_t                        attrribute;
 };
 
 
@@ -42,30 +41,41 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+/**
+ * @brief 计算时间差
+ * @param  time_a           时间a
+ * @param  time_b           时间b
+ */
+#define eh_diff_time(time_a, time_b)    (eh_sclock_t)(((time_a) - (time_b)))
+
+/**
+ * @brief   计算定时器剩余时间
+ * @param  now_time         当前时间
+ * @param  timer            定时器句柄指针
+ * return                  剩余时间,为正数时表示还有时间，为负数时表示已经到期
+ */
+#define eh_remaining_time(now_time, timer_ptr)  eh_diff_time((timer_ptr)->expire, (now_time))
 
 /**
  * @brief                   定时器启动
- * @param  eh               even_hub实例指针
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_timer_start(eh_t *eh, eh_timer_event_t *timer);
+extern int eh_timer_start(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器停止
- * @param  eh               even_hub实例指针
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_timer_stop(eh_t *eh, eh_timer_event_t *timer);
+extern int eh_timer_stop(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器重启,若定时器没有运行，则调用本函数运行，若定时器正在运行，则重新加载定时器
- * @param  eh               even_hub实例指针
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_time_restart(eh_t *eh, eh_timer_event_t *timer);
+extern int eh_time_restart(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器初始化
@@ -73,19 +83,35 @@ extern int eh_time_restart(eh_t *eh, eh_timer_event_t *timer);
  * @param  callback         事件触发时的回调函数
  * @return int              见eh_error.h
  */
-extern int eh_timer_init(eh_timer_event_t *timer, void (*callback)(eh_event_t *e));
+extern int eh_timer_init(eh_timer_event_t *timer);
 
 /**
- * @brief                   配置定时器的超时时间,若定时器在运行中，则下次重新运行时使用此值
- * @param  timer            实例指针
- * @param  interval         超时时间
+ * @brief                           配置定时器的超时时间,若定时器在运行中，则下次重新运行时使用此值
+ * @param  timer                    实例指针
+ * @param  clock_interval           超时时间
  * @return int 
  */
-#define eh_timer_config_interval(timer, interval)   \
-    do{                                             \
-        timer->interval = interval;                 \
+#define eh_timer_config_interval(timer, clock_interval)     \
+    do{                                                     \
+        (timer)->interval = clock_interval;                         \
     }while(0)
 
+/**
+ * @brief                           配置定时器属性
+ * @param  timer                    实例指针
+ * @param  attr                     定时器属性 EH_TIMER_ATTR_XXX | EH_TIMER_ATTR_XXXX
+ */
+#define eh_timer_set_attr(timer, attr)                      \
+    do{                                                     \
+        (timer)->attrribute = attr;                           \
+    }while(0)
+
+/**
+ * @brief                           获取定时器的事件实例指针
+ */
+#define eh_timer_to_event(timer)            (&(timer)->event)
+
+#define eh_time_is_forever(time_clock)      ((eh_sclock_t)(time_clock) == EH_TIMER_FOREVER)
 
 #ifdef __cplusplus
 #if __cplusplus
