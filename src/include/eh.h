@@ -137,9 +137,10 @@ extern void eh_event_clean(eh_event_t *e);
 extern int eh_event_notify(eh_event_t *e);
 
 /**
- * @brief                           事件等待
+ * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
  * @param  e                        事件实例指针
- * @param  timeout                  超时时间,禁止为0,若想为0，请使用epoll,EH_TIMER_FOREVER为永不超时
+ * @param  timeout                  超时时间,EH_TIMER_FOREVER为永不超时 因为事件无队列，
+                                所以超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
  * @return int 
  */
 int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout);
@@ -162,9 +163,35 @@ int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout);
  * @return eh_task_t* 
  */
 extern eh_task_t* eh_create_static_stack_task(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
+
+/**
+ * @brief                   使用动态方式创建一个协程任务
+ * @param  name             任务名称
+ * @param  stack_size       任务栈大小
+ * @param  task_arg         任务参数
+ * @param  task_function    任务执行函数
+ * @return eh_task_t* 
+ */
 extern eh_task_t* eh_create_task(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
-extern int        eh_task_exit(int ret);
+
+/**
+ * @brief                   退出任务
+ * @param  ret              退出返回值
+ */
+extern void       eh_task_exit(int ret);
+
+/**
+ * @brief                   任务获取自己的任务句柄
+ * @return eh_task_t*       返回当前的任务句柄
+ */
 extern eh_task_t* eh_self_task(void);
+
+/**
+ * @brief                   阻塞等待任务结束
+ * @param  task             被等待的任务句柄
+ * @param  ret              成功返回0
+ * @return int 
+ */
 extern int        eh_task_join(eh_task_t *task, int *ret);
 
 
@@ -180,6 +207,9 @@ extern int        eh_task_join(eh_task_t *task, int *ret);
  */
 extern int eh_global_init(void);
 
+/**
+ * @brief 世界循环，调用后将开始进行协程的调度
+ */
 extern void eh_loop_run(void);
 
 

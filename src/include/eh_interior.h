@@ -12,14 +12,21 @@
 
 #ifndef _EH_INTERIOR_H_
 #define _EH_INTERIOR_H_
-
 #include <stdint.h>
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C"{
+#endif
+#endif /* __cplusplus */
+
 enum EH_SCHEDULER_STATE{
     EH_SCHEDULER_STATE_ON_INIT,                     /* 未初始化状态 */
     EH_SCHEDULER_STATE_INIT,
     EH_SCHEDULER_STATE_RUN,                         /* 初始化状态 */
     EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER,       /* 等待状态 */
     EH_SCHEDULER_STATE_ERROR,                       /* 错误状态 */
+    EH_SCHEDULER_STATE_EXIT,                        /* 退出状态 */
 };
 
 
@@ -69,6 +76,17 @@ struct eh_task{
     };
     
 };
+
+struct eh_event_epoll_receptor{
+    struct eh_list_head                 list_node;
+    struct eh_event_receptor            receptor;
+    eh_event_t                          *event;
+}
+
+struct eh_epoll{
+    struct eh_list_head                 list_node;
+    struct eh_list_head                 receptor_list_head;
+}
 
 extern eh_t _global_eh;
 
@@ -127,18 +145,64 @@ extern void _eh_timer_check(void);
         (receptor)->wakeup_task = _wakeup_task;                         \
         (receptor)->notify_cnt = 0;                                     \
     }while(0)
+
 /**
  * @brief               给事件添加接收器
  * @param   e           事件
  * @param   receptor    事件接收器
  */
 #define eh_event_add_receptor_no_lock(e, receptor)   eh_list_add_tail(&(receptor)->list_node, &(e)->receptor_list_head)
+
+/**
+ * @brief              移除事件接收器
+ * @param   receptor    事件接收器
+ */
 #define eh_event_remove_receptor_no_lock(receptor)   eh_list_del_init(&(receptor)->list_node)
+
+/**
+ * @brief               判断事件接收器是否分离 调用 eh_event_remove_receptor_no_lock后将返回真
+ * @param   receptor    事件接收器
+ */
 #define eh_event_receptors_is_isolate(receptor)      eh_list_empty(&(receptor)->list_node)
 
+/**
+ * @brief               返回当前任务
+ */
 #define eh_get_current_task()                (_global_eh.current_task)
+/**
+ * @brief               设置当前任务
+ * @param _current_task 被设置的任务对象
+ */
 #define eh_set_current_task(_current_task)   do{_global_eh.current_task = (_current_task);}while(0)
+
+/**
+ * @brief               获取当前任务状态
+ */
 #define eh_get_current_task_state()          (_global_eh.current_task->state)
+
+/**
+ * @brief               设置当前任务状态
+ */
 #define eh_set_current_task_state(_state)     do{_global_eh.current_task->state = (_state);}while(0)
+
+/**
+ * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
+ * @return int          -1:调度失败 0:调度成功
+ */
+extern int __async__ eh_task_next(void);
+
+/**
+ * @brief                进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环
+ * @param  wakeup_task   被唤醒的任务
+ */
+extern void eh_task_wake_up(eh_task_t *wakeup_task);
+
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif /* __cplusplus */
+
 
 #endif // _EH_INTERIOR_H_

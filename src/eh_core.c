@@ -12,7 +12,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "debug.h"
 #include "eh.h"
 #include "eh_co.h"
 #include "eh_error.h"
@@ -32,11 +31,21 @@ static const eh_event_type_t task_event_type = {
 
 static struct  eh_task s_main_task;
 
+static int _task_entry(void* arg){
+    (void) arg;
+    eh_task_t *current_task = eh_get_current_task();
+    current_task->task_ret = current_task->task_function(current_task->task_arg);
+    current_task->state = EH_TASK_STATE_FINISH;
+    eh_event_notify(&current_task->event);
+    __await__ eh_task_next();
+    return current_task->task_ret;
+}
+
 /**
  * @brief             进行下一个任务的调度，调度成功返回0，调度失败返回-1
  * @return int        -1:调度失败 0:调度成功
  */
-static  int __async__ eh_task_next(void){
+int __async__ eh_task_next(void){
     eh_t *eh = &_global_eh;
     uint32_t state;
     eh_task_t *current_task = eh_get_current_task();
@@ -64,21 +73,15 @@ static  int __async__ eh_task_next(void){
     to->state = EH_TASK_STATE_RUNING;
     _eh_unlock(state);
     co_context_swap(NULL, &current_task->context, &to->context);
+
     return 0;
 }
 
-static int _task_entry(void* arg){
-    (void) arg;
-    eh_task_t *current_task = eh_get_current_task();
-    current_task->task_ret = current_task->task_function(current_task->task_arg);
-    current_task->state = EH_TASK_STATE_FINISH;
-    eh_event_notify(&current_task->event);
-    __await__ eh_task_next();
-    return current_task->task_ret;
-}
-
-
-static void eh_task_wake_up(eh_task_t *wakeup_task){
+/**
+ * @brief                   进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环
+ * @param  wakeup_task      被唤醒的任务
+ */
+void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_t *eh = &_global_eh;
     uint32_t state;
     _eh_lock(&state);
@@ -90,144 +93,6 @@ out:
     _eh_unlock(state);
 }
 
-
-static int __async__ _eh_event_wait(eh_event_t *e){
-    uint32_t state;
-    int ret;
-    eh_event_receptor_t receptor;
-    eh_event_receptor_init(&receptor, eh_get_current_task());
-
-    _eh_lock(&state);
-    eh_event_add_receptor_no_lock(e, &receptor);
-
-task_next:
-    eh_set_current_task_state(EH_TASK_STATE_WAIT);
-    _eh_unlock(state);
-
-    ret = __await__ eh_task_next();
-    if(ret < 0){
-        _eh_lock(&state);
-        eh_event_remove_receptor_no_lock(&receptor);
-        _eh_unlock(state);
-        return ret;
-    }
-
-    /* 被唤醒 */
-    _eh_lock(&state);
-    if(receptor.notify_cnt == 0){
-        if(eh_event_receptors_is_isolate(&receptor)){
-            /* 一般应该是被等待的事件被释放了 */
-            ret = EH_RET_EVENT_ERROR;
-            goto out;
-        }
-        goto task_next;
-
-    }
-
-    ret = EH_RET_OK;
-out:
-    eh_event_remove_receptor_no_lock(&receptor);
-    _eh_unlock(state);
-    return ret;
-}
-
-static int __async__ _eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout){
-    uint32_t state;
-    int ret;
-    eh_timer_event_t timeout_timer;
-    eh_event_t *timeout_e = eh_timer_to_event(&timeout_timer);
-    eh_event_receptor_t receptor,receptor_timer;
-    
-    eh_event_receptor_init(&receptor, eh_get_current_task());
-    eh_event_receptor_init(&receptor_timer, eh_get_current_task());
-
-    eh_timer_init(&timeout_timer);
-    eh_timer_config_interval(&timeout_timer, timeout);
-
-    _eh_lock(&state);
-    eh_event_add_receptor_no_lock(e, &receptor);
-    eh_event_add_receptor_no_lock(timeout_e, &receptor_timer);
-    eh_timer_start(&timeout_timer);
-
-task_next:
-    eh_set_current_task_state(EH_TASK_STATE_WAIT);
-    _eh_unlock(state);
-
-    ret = __await__ eh_task_next();
-    if(ret < 0){
-        _eh_lock(&state);
-        eh_event_remove_receptor_no_lock(&receptor);
-        eh_event_remove_receptor_no_lock(&receptor_timer);
-        eh_timer_stop(&timeout_timer);
-        _eh_unlock(state);
-        return ret;
-    }
-    
-    /* 被唤醒 */
-
-    _eh_lock(&state);
-    if((receptor.notify_cnt == 0 && receptor_timer.notify_cnt == 0)){
-        if( eh_event_receptors_is_isolate(&receptor)     ||
-            eh_event_receptors_is_isolate(&receptor_timer)
-         ){
-            /* 一般应该是被等待的事件被释放了 */
-            ret = EH_RET_EVENT_ERROR;
-            goto out;
-        }
-        /* 莫名其妙被唤醒,重新调度 */
-        goto task_next;
-    }
-    ret = receptor.notify_cnt > 0 ? EH_RET_OK : EH_RET_TIMEOUT;
-out:
-    eh_event_remove_receptor_no_lock(&receptor);
-    eh_event_remove_receptor_no_lock(&receptor_timer);
-    eh_timer_stop(&timeout_timer);
-    _eh_unlock(state);
-    return ret;
-}
-
-int eh_event_init(eh_event_t *e, const eh_event_type_t* type){
-    eh_param_assert(e);
-    INIT_EH_LIST_HEAD(&e->receptor_list_head);
-    e->type = type;
-    return EH_RET_OK;
-}
-
-void eh_event_clean(eh_event_t *e){
-    uint32_t state;
-    struct eh_event_receptor *pos ,*n;
-    
-    if(!e) return ;
-
-    _eh_lock(&state);
-    eh_list_for_each_entry_safe(pos, n, &e->receptor_list_head, list_node){
-        if(pos->wakeup_task)
-            eh_task_wake_up(pos->wakeup_task);
-        eh_event_remove_receptor_no_lock(pos);
-    }
-    _eh_unlock(state);
-}
-
-int eh_event_notify(eh_event_t *e){
-    uint32_t state;
-    struct eh_event_receptor *pos;
-    eh_param_assert(e);
-    _eh_lock(&state);
-    eh_list_for_each_entry(pos, &e->receptor_list_head, list_node){
-        pos->notify_cnt++;
-        if(pos->wakeup_task)
-            eh_task_wake_up(pos->wakeup_task);
-    }
-    _eh_unlock(state);
-    return EH_RET_OK;
-}
-int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout){
-    if(eh_time_is_forever(timeout)){
-        return __await__ _eh_event_wait(e);
-    }
-    eh_param_assert(timeout > 0);
-    return __await__ _eh_event_wait_timeout(e, timeout);
-}
 
 static eh_task_t* _eh_create_static_stack_task(const char *name,int is_static_stack, 
             void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
@@ -250,18 +115,63 @@ static eh_task_t* _eh_create_static_stack_task(const char *name,int is_static_st
     return task;
 }
 
+/**
+ * @brief                   使用静态方式创建一个协程任务
+ * @param  name             任务名称
+ * @param  stack            任务的静态栈
+ * @param  stack_size       任务栈大小
+ * @param  task_arg         任务参数
+ * @param  task_function    任务执行函数
+ * @return eh_task_t* 
+ */
 eh_task_t* eh_create_static_stack_task(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
     return _eh_create_static_stack_task(name, 1, stack, stack_size, task_arg, task_function);
 }
 
+/**
+ * @brief                   使用动态方式创建一个协程任务
+ * @param  name             任务名称
+ * @param  stack_size       任务栈大小
+ * @param  task_arg         任务参数
+ * @param  task_function    任务执行函数
+ * @return eh_task_t* 
+ */
 eh_task_t* eh_create_task(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
     eh_task_t *task;
     void *stack = eh_malloc(stack_size);
     if(stack == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
-    task = eh_create_static_stack_task(name, stack, stack_size, task_arg, task_function);
+    task = _eh_create_static_stack_task(name, 0, stack, stack_size, task_arg, task_function);
     if(eh_ptr_to_error(task) < 0)
         eh_free(stack);
     return task;
+}
+
+/**
+ * @brief                   退出任务
+ * @param  ret              退出返回值
+ */
+void  eh_task_exit(int ret){
+    uint32_t state;
+    eh_task_t *task = eh_get_current_task();
+    if(task == eh_get_global_handle()->main_task)
+        return ;
+    _eh_lock(&state);
+    task->task_ret = ret;
+    task->state = EH_TASK_STATE_FINISH;
+    _eh_unlock(state);
+    __await__ eh_task_next();
+}
+
+/**
+ * @brief                   任务获取自己的任务句柄
+ * @return eh_task_t*       返回当前的任务句柄
+ */
+eh_task_t* eh_self_task(void){
+    return eh_get_current_task();
+}
+
+int        eh_task_join(eh_task_t *task, int *ret){
+    eh_event_wait_timeout(&task->event, 0);
 }
 
 void eh_loop_run(void){
@@ -276,7 +186,6 @@ void eh_loop_run(void){
         
         /* 进行调度 */
         ret = __await__ eh_task_next();
-
         /* 调用用户外部处理函数 */
         _global_eh.state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
         _global_eh.idle_or_extern_event_handler(ret == 0 ? 0 : 1);
