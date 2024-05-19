@@ -171,7 +171,9 @@ eh_task_t* eh_self_task(void){
 }
 
 int        eh_task_join(eh_task_t *task, int *ret){
-    eh_event_wait_timeout(&task->event, 0);
+    (void)task;
+    (void)ret;
+    return 0;
 }
 
 void eh_loop_run(void){

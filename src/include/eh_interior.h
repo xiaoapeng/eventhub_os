@@ -81,12 +81,12 @@ struct eh_event_epoll_receptor{
     struct eh_list_head                 list_node;
     struct eh_event_receptor            receptor;
     eh_event_t                          *event;
-}
+};
 
 struct eh_epoll{
     struct eh_list_head                 list_node;
     struct eh_list_head                 receptor_list_head;
-}
+};
 
 extern eh_t _global_eh;
 

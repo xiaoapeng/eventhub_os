@@ -6,8 +6,7 @@ target_sources(event_hub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_core.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/eh_rbtree.c"
 )
 target_link_libraries(event_hub coroutine platform)
-
-
 

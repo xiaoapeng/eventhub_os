@@ -32,4 +32,6 @@ add_executable( test_co	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_co.c")
 target_link_libraries(test_co general_test event_hub)
 add_executable( test_eh	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_eh.c")
 target_link_libraries(test_eh general_test event_hub)
+add_executable( test_rb "${CMAKE_CURRENT_SOURCE_DIR}/test/test_rb.c")
+target_link_libraries(test_rb general_test event_hub)
 
