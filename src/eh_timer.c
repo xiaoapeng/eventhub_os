@@ -12,6 +12,7 @@
 
 #include "eh.h"
 #include "eh_co.h"
+#include "eh_config.h"
 #include "eh_interior.h"
 
 #define _eh_timer_is_empty(eh)   ( eh_list_empty(&(eh)->timer_list_head) )
@@ -76,7 +77,7 @@ out:
 
 void _eh_timer_check(void){
     uint32_t state;
-    eh_t *eh = &_global_eh;
+    eh_t *eh = eh_get_global_handle();
     eh_timer_event_t *pos, *n;
     eh_clock_t now = eh_get_clock_monotonic_time();
     eh_clock_t base;
@@ -116,7 +117,7 @@ out:
 
 
 int eh_timer_start(eh_timer_event_t *timer){
-    eh_t *eh = &_global_eh;
+    eh_t *eh = eh_get_global_handle();
     int ret;
     uint32_t state;
     eh_clock_t now = eh_get_clock_monotonic_time();
@@ -141,7 +142,7 @@ out:
 
 int eh_timer_stop(eh_timer_event_t *timer){
     uint32_t state;
-    eh_t *eh = &_global_eh;
+    eh_t *eh = eh_get_global_handle();
     int ret = EH_RET_OK;
     eh_clock_t old_expire; 
     eh_clock_t new_expire;
@@ -163,7 +164,7 @@ out:
 }
 
 int eh_time_restart(eh_timer_event_t *timer){
-    eh_t *eh = &_global_eh;
+    eh_t *eh = eh_get_global_handle();
     uint32_t state;
     eh_clock_t now = eh_get_clock_monotonic_time();
     int ret = EH_RET_OK;
@@ -235,7 +236,7 @@ int eh_timer_init(eh_timer_event_t *timer){
     eh_param_assert(timer);
     ret = eh_event_init(&timer->event, &eh_timer_event_type);
     if(ret < 0) return ret;
-    INIT_EH_LIST_HEAD(&timer->list_node);
+    eh_list_head_init(&timer->list_node);
     timer->expire = 0;
     timer->interval = 0;
     timer->attrribute = 0;

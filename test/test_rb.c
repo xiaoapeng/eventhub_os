@@ -12,13 +12,13 @@ struct test_data{
 };
 
 static int cmp(struct eh_rbtree_node *a, struct eh_rbtree_node *b){
-    int a_data = rb_entry(a, struct test_data, node)->data;
-    int b_data = rb_entry(b, struct test_data, node)->data;
+    int a_data = eh_rb_entry(a, struct test_data, node)->data;
+    int b_data = eh_rb_entry(b, struct test_data, node)->data;
     return a_data < b_data ? -1 : a_data > b_data ? 1 : 0;
 }
 
 int match(const void *key, const struct eh_rbtree_node *node){
-    int a_data = rb_entry(node, struct test_data, node)->data;
+    int a_data = eh_rb_entry(node, struct test_data, node)->data;
     //dbg_debugfl("key:%d a_data:%d", (int)((unsigned long)key), a_data);
     //return a_data == (int)((unsigned long)key) ? 0 : (int)((unsigned long)key) < a_data ? -1 : 1;
     (void)key;
@@ -44,9 +44,9 @@ int main(void){
     dbg_debugraw("\n");
 
     {
-        struct test_data *pos,*n;
+        struct test_data *pos;
         dbg_debugraw("s-S:");
-        eh_rbtree_next_for_each_entry_safe(pos, n, &test_rb_root, node){
+        eh_rbtree_next_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");
@@ -54,9 +54,9 @@ int main(void){
 
     
     {
-        struct test_data *pos,*n;
+        struct test_data *pos;
         dbg_debugraw("S-s:");
-        eh_rbtree_prev_for_each_entry_safe(pos, n, &test_rb_root, node){
+        eh_rbtree_prev_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");
@@ -72,14 +72,15 @@ int main(void){
         dbg_debugraw("\n");
     }
 
+    /* 删除掉300以下的内容 */
     for(int i=0;i<test_data_ptr_len;i++){
         eh_rb_del(&test_data_ptr[i]->node, &test_rb_root);
     }
 
     {
-        struct test_data *pos,*n;
+        struct test_data *pos;
         dbg_debugraw("S-s:");
-        eh_rbtree_prev_for_each_entry_safe(pos, n, &test_rb_root, node){
+        eh_rbtree_prev_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");

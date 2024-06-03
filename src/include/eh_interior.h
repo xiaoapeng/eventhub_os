@@ -12,8 +12,10 @@
 
 #ifndef _EH_INTERIOR_H_
 #define _EH_INTERIOR_H_
-#include <stdint.h>
 
+#include "eh.h"
+#include <stdbool.h>
+#include <stdint.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
@@ -29,7 +31,7 @@ enum EH_SCHEDULER_STATE{
     EH_SCHEDULER_STATE_EXIT,                        /* 退出状态 */
 };
 
-
+#define EH_EVENT_RECEPTOR_EPOLL                     0x00000001
 
 struct eh{
     struct      eh_list_head             task_wait_list_head;                                   /* 等待中的任务列表 */
@@ -47,22 +49,30 @@ struct eh{
     void                                 (*idle_or_extern_event_handler)(int is_wait_event);    /* 用户处理空闲和外部事件 */
     void                                 (*expire_time_change)(int is_never_expire, eh_clock_t new_expire);     /* 定时器最近到期时间改变,当is_never_expire为1时，永不到期 */
     struct module_group                  module_group[EH_MODEULE_GROUP_MAX_CNT];
+    int                                  loop_stop_code;
+    int                                  stop_flag;
 };
 
 /* 事件接收器  */
 struct eh_event_receptor{
     struct eh_list_head                 list_node;
-    struct eh_task                      *wakeup_task;          /* 被唤醒的任务            */
-    uint32_t                            notify_cnt;            /* 事件通告次数            */
+    struct eh_task                      *wakeup_task;           /* 被唤醒的任务            */
+    union{
+        uint32_t                            flags;
+        struct{
+            uint32_t                     trigger:1;
+            uint32_t                     error:1;
+        };
+    };
+    struct eh_epoll                     *epoll;
 };
 
 struct eh_task{
     const char                          *name;               
     struct eh_list_head                 task_list_node;          /* 任务链表,可被挂载到就绪，等待，完成等链表上 */
-    struct eh_list_head                 epoll_list_node;         /* epoll中相关句柄，保存下来供任务释放时一同释放 */
     int                                 (*task_function)(void*); /* 任务函数 */
     void                                *task_arg;               /* 任务相关参数 */
-    void                                *stack_top;              /* 协程栈顶 */
+    void                                *stack;              /* 协程栈顶 */
     uint32_t                            stack_size;              /* 任务栈大小 */
     context_t                           context;                 /* 协程上下文 */
     int                                 task_ret;                /* 任务返回值 */
@@ -78,14 +88,16 @@ struct eh_task{
 };
 
 struct eh_event_epoll_receptor{
-    struct eh_list_head                 list_node;
-    struct eh_event_receptor            receptor;
+    struct eh_rbtree_node               rb_node;
+    struct eh_list_head                 pending_list_node;
     eh_event_t                          *event;
+    void                                *userdata;
+    struct eh_event_receptor            receptor;
 };
 
 struct eh_epoll{
-    struct eh_list_head                 list_node;
-    struct eh_list_head                 receptor_list_head;
+    struct eh_list_head                 pending_list_head;
+    struct eh_rbtree_root               all_receptor_tree;
 };
 
 extern eh_t _global_eh;
@@ -98,13 +110,19 @@ extern eh_t _global_eh;
 extern void _eh_timer_check(void);
 
 /**
+ * @brief               获取全局句柄
+ * @return eh_t*        全局句柄
+ */
+#define eh_get_global_handle() (&_global_eh)
+
+/**
  * @brief               加锁
  * @param   state_ptr   保存状态的指针
  */
 #define _eh_lock(state_ptr)                                         \
     do{                                                             \
-        if(_global_eh.global_lock && _global_eh.global_unlock)      \
-            _global_eh.global_lock(state_ptr);                      \
+        if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
+            eh_get_global_handle()->global_lock(state_ptr);                      \
     }while(0)
 
 /**
@@ -113,15 +131,11 @@ extern void _eh_timer_check(void);
  */
 #define _eh_unlock(state)                                           \
     do{                                                             \
-        if(_global_eh.global_lock && _global_eh.global_unlock)      \
-            _global_eh.global_unlock(state);                        \
+        if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
+            eh_get_global_handle()->global_unlock(state);                        \
     }while(0)
 
-/**
- * @brief               获取全局句柄
- * @return eh_t*        全局句柄
- */
-#define eh_get_global_handle() (&_global_eh)
+
 
 /**
  * @brief               动态内存分配
@@ -134,17 +148,24 @@ extern void _eh_timer_check(void);
  */
 #define eh_free(ptr)       (eh_get_global_handle()->free((ptr)))
 
+#define __eh_event_receptor_init(receptor, _wakeup_task, _epoll)        \
+    do{                                                                 \
+        eh_list_head_init(&(receptor)->list_node);                      \
+        (receptor)->wakeup_task = (_wakeup_task);                       \
+        (receptor)->flags = 0;                                          \
+        (receptor)->epoll = (_epoll);                                   \
+    }while(0)
+
 /**
  * @brief               初始化事件接收器
  * @param   receptor    事件接收器
  * @param   wakeup_task 事件接收时被唤醒的任务
  */
 #define eh_event_receptor_init(receptor, _wakeup_task)                  \
-    do{                                                                 \
-        INIT_EH_LIST_HEAD(&(receptor)->list_node);                      \
-        (receptor)->wakeup_task = _wakeup_task;                         \
-        (receptor)->notify_cnt = 0;                                     \
-    }while(0)
+    __eh_event_receptor_init((receptor), (_wakeup_task), NULL)
+
+#define eh_event_receptor_epoll_init(receptor, _wakeup_task, epool)      \
+    __eh_event_receptor_init((receptor), (_wakeup_task), epool)
 
 /**
  * @brief               给事件添加接收器
@@ -168,22 +189,22 @@ extern void _eh_timer_check(void);
 /**
  * @brief               返回当前任务
  */
-#define eh_get_current_task()                (_global_eh.current_task)
+#define eh_get_current_task()                (eh_get_global_handle()->current_task)
 /**
  * @brief               设置当前任务
  * @param _current_task 被设置的任务对象
  */
-#define eh_set_current_task(_current_task)   do{_global_eh.current_task = (_current_task);}while(0)
+#define eh_set_current_task(_current_task)   do{eh_get_global_handle()->current_task = (_current_task);}while(0)
 
 /**
  * @brief               获取当前任务状态
  */
-#define eh_get_current_task_state()          (_global_eh.current_task->state)
+#define eh_get_current_task_state()          (eh_get_global_handle()->current_task->state)
 
 /**
  * @brief               设置当前任务状态
  */
-#define eh_set_current_task_state(_state)     do{_global_eh.current_task->state = (_state);}while(0)
+#define eh_set_current_task_state(_state)     do{eh_get_global_handle()->current_task->state = (_state);}while(0)
 
 /**
  * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
@@ -197,6 +218,14 @@ extern int __async__ eh_task_next(void);
  */
 extern void eh_task_wake_up(eh_task_t *wakeup_task);
 
+/**
+ * @brief               添加epoll到任务全局epoll链表
+ * @param   epoll       epoll对象
+ */
+#define eh_epoll_add_no_lock(epoll)                                                      \
+    do{                                                                                  \
+        eh_list_add_tail(&(epoll)->list_node, &eh_get_current_task()->epoll_list_head); \
+    }while(0)
 
 #ifdef __cplusplus
 #if __cplusplus

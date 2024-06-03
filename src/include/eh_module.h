@@ -32,10 +32,10 @@ struct module_group{
 #define eh_modeule_section_begin(_section_id)  EH_SECTION_BEGIN(modeule_call_##_section_id)
 #define eh_modeule_section_end(_section_id)  EH_SECTION_END(modeule_call_##_section_id)
 
-#define __eh_define_modeule_null(_section_id) EH_USED const static char used_section_call_##_section_id[0]   \
+#define __eh_define_modeule_null(_section_id) static EH_USED  const  char used_section_call_##_section_id[0]   \
     EH_SECTION( EH_STRINGIFY(modeule_call_##_section_id) ) 
 #define __eh_define_modeule_export(_init__func_, _exit__func_, _section_id, _section)                        \
-    EH_USED const static struct eh_module _eh_module_ EH_SECTION( EH_STRINGIFY(_section) ) = {               \
+    static EH_USED const  struct eh_module _eh_module_ EH_SECTION( EH_STRINGIFY(_section) ) = {               \
         .init = _init__func_,                                                                                \
         .exit = _exit__func_,                                                                                \
         .modeule_name = NULL,                                                                                \

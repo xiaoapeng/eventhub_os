@@ -7,10 +7,15 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+add_compile_options(
+    "$<$<CONFIG:Debug>:-g;-O3>"
+    "$<$<CONFIG:Release>:-O3>"
+    "$<$<CONFIG:MinSizeRel>:-Os>"
+    "$<$<CONFIG:RelWithDebInfo>:-g;-Os>"
+)
 
 add_compile_options(
 	"-Wall"
-	"-fPIC"
 	"-Wextra"
 	"-Wno-psabi"
 	"-Wconversion"

@@ -12,7 +12,7 @@ struct eh_list_head {
 #define EH_LIST_HEAD(name) \
 struct eh_list_head name = EH_LIST_HEAD_INIT(name)
 
-#define INIT_EH_LIST_HEAD(ptr) do { \
+#define eh_list_head_init(ptr) do { \
 	(ptr)->next = (ptr); (ptr)->prev = (ptr); \
 } while (0)
 
@@ -90,7 +90,7 @@ static inline void eh_list_del(struct eh_list_head *entry)
 static inline void eh_list_del_init(struct eh_list_head *entry)
 {
 	__eh_list_del(entry->prev, entry->next);
-	INIT_EH_LIST_HEAD(entry);
+	eh_list_head_init(entry);
 }
 
 /**
@@ -163,7 +163,7 @@ struct eh_list_head *head)
 {
 if (!eh_list_empty(eh_list)) {
 __eh_list_splice(eh_list, head);
-INIT_EH_LIST_HEAD(eh_list);
+eh_list_head_init(eh_list);
 }
 }
 

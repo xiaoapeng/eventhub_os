@@ -93,7 +93,7 @@ extern int eh_timer_init(eh_timer_event_t *timer);
  */
 #define eh_timer_config_interval(timer, clock_interval)     \
     do{                                                     \
-        (timer)->interval = clock_interval;                         \
+        (timer)->interval = clock_interval;                 \
     }while(0)
 
 /**
@@ -103,7 +103,7 @@ extern int eh_timer_init(eh_timer_event_t *timer);
  */
 #define eh_timer_set_attr(timer, attr)                      \
     do{                                                     \
-        (timer)->attrribute = attr;                           \
+        (timer)->attrribute = attr;                         \
     }while(0)
 
 /**

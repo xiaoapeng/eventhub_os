@@ -18,6 +18,7 @@
 
 #include "eh_config.h"
 #include "eh_list.h"
+#include "eh_rbtree.h"
 #include "eh_error.h"
 #include "eh_co.h"
 #include "eh_module.h"
@@ -31,13 +32,16 @@ typedef uint64_t                            eh_msec_t;
 typedef uint64_t                            eh_clock_t;
 typedef int64_t                             eh_sclock_t;
 typedef struct eh_task                      eh_task_t;
-typedef struct eh_event_receptor            eh_event_receptor_t;
-
+typedef void*                               eh_epoll_t;
+typedef struct eh_epoll_slot                eh_epoll_slot_t;
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
 #endif
 #endif /* __cplusplus */
+
+extern eh_clock_t  (*_get_clock_monotonic_time)(void);
+extern eh_clock_t  _clocks_per_sec;
 
 enum EH_TASK_STATE{
     EH_TASK_STATE_READY,                            /* 就绪状态 */
@@ -46,6 +50,10 @@ enum EH_TASK_STATE{
     EH_TASK_STATE_FINISH,                           /* 结束状态 */
 };
 
+enum EH_EPOLL_AFFAIR{
+    EH_EPOLL_AFFAIR_EVENT_TRIGGER,
+    EH_EPOLL_AFFAIR_ERROR,
+};
 
 struct eh_event_type{
     const char                          *name;
@@ -56,6 +64,11 @@ struct eh_event{
     const struct eh_event_type          *type;
 };
 
+struct eh_epoll_slot{
+    eh_event_t                          *event;
+    void                                *userdata;
+    enum EH_EPOLL_AFFAIR                affair;
+};
 
 
 struct eh_platform_port_param{
@@ -86,7 +99,7 @@ struct eh_platform_port_param{
                                                     _malloc,                            \
                                                     _free}
 
-#define eh_get_clock_monotonic_time()   (_global_eh.get_clock_monotonic_time())
+#define eh_get_clock_monotonic_time()   (_get_clock_monotonic_time())
 
 /**
  * @brief   微秒转换为时钟数
@@ -94,7 +107,7 @@ struct eh_platform_port_param{
  * return   eh_clock_t
  */
 #define  eh_msec_to_clock(_msec) ({                                                     \
-        eh_clock_t clock = ((eh_msec_t)(_msec) * _global_eh.clocks_per_sec)/1000;       \
+        eh_clock_t clock = ((eh_msec_t)(_msec) * _clocks_per_sec)/1000;                 \
         clock ? clock : 1;                                                              \
     })
 
@@ -104,7 +117,7 @@ struct eh_platform_port_param{
  * return   eh_clock_t
  */
 #define  eh_usec_to_clock(_usec) ({                                                     \
-        eh_clock_t clock = ((eh_msec_t)(_usec) * _global_eh.clocks_per_sec)/1000000     \
+        eh_clock_t clock = ((eh_msec_t)(_usec) * _clocks_per_sec)/1000000               \
         clock ? clock : 1;                                                              \
     })
 
@@ -138,12 +151,67 @@ extern int eh_event_notify(eh_event_t *e);
 
 /**
  * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
+ *                                  必须等待condition返回true才进行返回，若condition == NULL 那么就等待信号发生就直接返回
+ * @param  e                        事件实例指针
+ * @param  arv                      condition的参数
+ * @param  condition                条件函数
+ * @param  timeout                  超时时间,EH_TIMER_FOREVER为永不超时 因为事件无队列，
+ *                              当condition为NULL时，超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
+ * @return int 
+ */
+extern int __async__ eh_event_wait_condition_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout);
+
+/**
+ * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
  * @param  e                        事件实例指针
  * @param  timeout                  超时时间,EH_TIMER_FOREVER为永不超时 因为事件无队列，
                                 所以超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
  * @return int 
  */
-int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout);
+static inline int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout){
+    return __await__ eh_event_wait_condition_timeout(e, NULL, NULL, timeout);
+}
+
+/**
+ * @brief                   创建一个epoll句柄
+ * @return eh_epoll_t 
+ */
+extern eh_epoll_t eh_epoll_new(void);
+
+
+/**
+ * @brief                   删除一个epoll句柄
+ * @param  epoll            
+ */
+extern void eh_epoll_del(eh_epoll_t epoll);
+
+/**
+ * @brief                   为epoll添加一个被监视事件
+ * @param  epoll            epoll句柄
+ * @param  e                事件句柄
+ * @param  userdata         当事件发生时，可将userdata通过wait传递出来
+ * @return int
+ */
+extern int eh_epoll_local_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
+
+/**
+ * @brief                   为epoll删除一个被监视事件
+ * @param  epoll            epoll句柄
+ * @param  e                事件句柄
+ * @return int 
+ */
+extern int eh_epoll_local_del_event(eh_epoll_t epoll,eh_event_t *e);
+
+/**
+ * @brief                   epoll事件等待
+ * @param  epoll            epoll句柄
+ * @param  epool_slot       epoll事件等待槽
+ * @param  slot_size        epoll事件等待槽大小
+ * @param  timeout          超时时间，当0则立即返回,当EH_TIMER_FOREVER永久等待，其他大于0的值则进行相应时间的等待
+ * @return int              成功返回拿到event事件的个数，失败返回负数错误码
+ */
+extern int __async__ eh_epoll_wait(eh_epoll_t epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout);
+
 
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 /* EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE */
@@ -162,7 +230,7 @@ int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout);
  * @param  task_function    任务执行函数
  * @return eh_task_t* 
  */
-extern eh_task_t* eh_create_static_stack_task(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
+extern eh_task_t* eh_task_static_stack_create(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
 
 /**
  * @brief                   使用动态方式创建一个协程任务
@@ -172,7 +240,7 @@ extern eh_task_t* eh_create_static_stack_task(const char *name, void *stack, uin
  * @param  task_function    任务执行函数
  * @return eh_task_t* 
  */
-extern eh_task_t* eh_create_task(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
+extern eh_task_t* eh_task_create(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
 
 /**
  * @brief                   退出任务
@@ -184,7 +252,7 @@ extern void       eh_task_exit(int ret);
  * @brief                   任务获取自己的任务句柄
  * @return eh_task_t*       返回当前的任务句柄
  */
-extern eh_task_t* eh_self_task(void);
+extern eh_task_t* eh_task_self(void);
 
 /**
  * @brief                   阻塞等待任务结束
@@ -192,14 +260,13 @@ extern eh_task_t* eh_self_task(void);
  * @param  ret              成功返回0
  * @return int 
  */
-extern int        eh_task_join(eh_task_t *task, int *ret);
-
+extern int __async__ eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
 
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 /* EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE */
 
 /**
- * @brief  初始化event_hub句柄
+ * @brief  初始化event_hub
  *  1.考虑到配合系统多线程编程时在其他线程产生事件的操作，所以设计了互斥锁接口.
  *  2.给lock预留了state参数，考虑在裸机编程时，中断禁止时，需要记录获得锁前的中断状态，所以需要预留state参数。
  * @param  param                     初始化参数
@@ -208,9 +275,20 @@ extern int        eh_task_join(eh_task_t *task, int *ret);
 extern int eh_global_init(void);
 
 /**
+ * @brief 反初始化event_hub
+ */
+extern void eh_global_exit(void);
+
+/**
  * @brief 世界循环，调用后将开始进行协程的调度
  */
-extern void eh_loop_run(void);
+extern int eh_loop_run(void);
+
+/**
+ * @brief                   退出任务
+ * @param  exit_code        退出返回值
+ */
+extern void eh_loop_exit(int exit_code);
 
 
 #ifdef __cplusplus

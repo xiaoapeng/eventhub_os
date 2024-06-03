@@ -616,6 +616,13 @@ void rb_replace_node(struct eh_rbtree_node *victim, struct eh_rbtree_node *new,
 		rb_set_parent(victim->rb_right, new);
 	__rb_change_child(victim, new, parent, root);
 }
+
+/**
+ * @brief 					添加节点
+ * @param  node             要添加的节点
+ * @param  tree             rb树对象
+ * @return 					正常返回NULL, 返回 node 说明 插入最左的节点
+ */
 struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree)
 {
 	struct eh_rbtree_node **link = &tree->rb_node;
@@ -640,8 +647,13 @@ struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_
 	return leftmost ? node : NULL;
 }
 
-struct eh_rbtree_node *rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree,
-	    int (*cmp)(struct eh_rbtree_node *, const struct eh_rbtree_node *))
+/**
+ * @brief 					添加节点
+ * @param  node             要添加的节点
+ * @param  tree             rb树对象
+ * @return 					正常返回NULL, 返回非NULL说明find成功
+ */
+struct eh_rbtree_node *eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree)
 {
 	struct eh_rbtree_node **link = &tree->rb_node;
 	struct eh_rbtree_node *parent = NULL;
@@ -650,13 +662,14 @@ struct eh_rbtree_node *rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree
 
 	while (*link) {
 		parent = *link;
-		c = cmp(node, parent);
+		c = tree->cmp(node, parent);
 
 		if (c < 0)
 			link = &parent->rb_left;
-		else if (c > 0)
+		else if (c > 0){
 			link = &parent->rb_right;
-		else
+			leftmost = false;
+		}else
 			return parent;
 	}
 
@@ -666,6 +679,26 @@ struct eh_rbtree_node *rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree
 	rb_insert_color(node, tree);
 	return NULL;
 }
+
+struct eh_rbtree_node * eh_rb_match_find(const void *key, struct eh_rbtree_root *tree, 
+	int (*match)(const void *key, const struct eh_rbtree_node *)){
+	struct eh_rbtree_node *node;
+	int c;
+
+	node = tree->rb_node;
+	while(node){
+		c = match(key, node);
+		if(c < 0){
+			node = node->rb_left;
+		}else if(c > 0){
+			node = node->rb_right;
+		}else{
+			return node;
+		}
+	}
+	return NULL;
+}
+
 /* 后序遍历 */
 struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *node)
 {
