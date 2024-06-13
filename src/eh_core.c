@@ -21,6 +21,7 @@
 #include "eh_interior.h"
 #include "eh_list.h"
 #include "eh_module.h"
+#include "eh_rbtree.h"
 #include "eh_timer.h"
 #include "eh_types.h"
 
@@ -29,7 +30,6 @@ eh_t _global_eh;
 eh_clock_t   (*_get_clock_monotonic_time)(void);
 eh_clock_t  _clocks_per_sec;
 
-eh_module_section_define();
 
 static const eh_event_type_t task_event_type = {
     .name = "task_event"
@@ -39,7 +39,7 @@ static struct  eh_task s_main_task;
 
 static int _task_entry(void* arg){
     (void) arg;
-    eh_task_t *current_task = eh_get_current_task();
+    eh_task_t *current_task = eh_task_get_current();
     current_task->task_ret = current_task->task_function(current_task->task_arg);
     current_task->state = EH_TASK_STATE_FINISH;
     eh_event_notify(&current_task->event);
@@ -55,9 +55,9 @@ static bool _task_is_finish(void *arg){
 static void _task_destroy(eh_task_t *task){
     uint32_t state;
     eh_event_clean(&task->event);
-    _eh_lock(&state);
+    eh_lock(&state);
     eh_list_del(&task->task_list_node);
-    _eh_unlock(state);
+    eh_unlock(state);
     if(!task->is_static_stack)
         eh_free(task->stack);
     eh_free(task);
@@ -65,24 +65,16 @@ static void _task_destroy(eh_task_t *task){
 
 static void _clear(void){
     eh_t *eh = eh_get_global_handle();
-    
-    {
-        eh_timer_event_t *pos,*n;
-        /* 停止定时器 */
-        eh_list_for_each_entry_safe(pos, n, &eh->timer_list_head, list_node)
-            eh_timer_stop(pos);
+    eh_task_t *pos,*n;
 
-    }
-    {
-        eh_task_t *pos,*n;
-        /* 清理任务 */
-        eh_list_for_each_entry_safe(pos, n, &eh->task_finish_list_head, task_list_node)
-            _task_destroy(pos);
-        eh_list_for_each_entry_safe(pos, n, &eh->current_task->task_list_node, task_list_node)
-            _task_destroy(pos);
-        eh_list_for_each_entry_safe(pos, n, &eh->task_wait_list_head, task_list_node)
-            _task_destroy(pos);
-    }
+    /* 清理任务 */
+    eh_list_for_each_entry_safe(pos, n, &eh->task_finish_list_head, task_list_node)
+        _task_destroy(pos);
+    eh_list_for_each_entry_safe(pos, n, &eh->current_task->task_list_node, task_list_node)
+        _task_destroy(pos);
+    eh_list_for_each_entry_safe(pos, n, &eh->task_wait_list_head, task_list_node)
+        _task_destroy(pos);
+    
 }
 
 /**
@@ -92,17 +84,17 @@ static void _clear(void){
 int __async__ eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
     uint32_t state;
-    eh_task_t *current_task = eh_get_current_task();
+    eh_task_t *current_task = eh_task_get_current();
     eh_task_t *to;
     
-    _eh_lock(&state);
+    eh_lock(&state);
     if(eh_list_empty(&current_task->task_list_node)){
         current_task->state = EH_TASK_STATE_RUNING;
-        _eh_unlock(state);
+        eh_unlock(state);
         return EH_RET_SCHEDULING_ERROR;
     }
     to = eh_list_entry(current_task->task_list_node.next, eh_task_t, task_list_node);
-    eh_set_current_task(to);
+    eh_task_set_current(to);
     switch (current_task->state) {
         case EH_TASK_STATE_READY:
         case EH_TASK_STATE_RUNING:
@@ -116,7 +108,7 @@ int __async__ eh_task_next(void){
             break;
     }
     to->state = EH_TASK_STATE_RUNING;
-    _eh_unlock(state);
+    eh_unlock(state);
     co_context_swap(NULL, &current_task->context, &to->context);
 
     return 0;
@@ -129,13 +121,13 @@ int __async__ eh_task_next(void){
 void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_t *eh = eh_get_global_handle();
     uint32_t state;
-    _eh_lock(&state);
+    eh_lock(&state);
     if(wakeup_task->state != EH_TASK_STATE_WAIT)
         goto out;
     wakeup_task->state = EH_TASK_STATE_READY;
     eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
 out:
-    _eh_unlock(state);
+    eh_unlock(state);
 }
 
 
@@ -217,13 +209,13 @@ int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
  */
 void  eh_task_exit(int ret){
     uint32_t state;
-    eh_task_t *task = eh_get_current_task();
+    eh_task_t *task = eh_task_get_current();
     if(task == eh_get_global_handle()->main_task)
         return ;
-    _eh_lock(&state);
+    eh_lock(&state);
     task->task_ret = ret;
     task->state = EH_TASK_STATE_FINISH;
-    _eh_unlock(state);
+    eh_unlock(state);
     eh_task_next();
 }
 
@@ -232,7 +224,7 @@ void  eh_task_exit(int ret){
  * @return eh_task_t*       返回当前的任务句柄
  */
 eh_task_t* eh_task_self(void){
-    return eh_get_current_task();
+    return eh_task_get_current();
 }
 
 
@@ -243,7 +235,6 @@ void eh_loop_exit(int exit_code){
 }
 
 int eh_loop_run(void){
-    int ret;
     eh_t *eh = eh_get_global_handle();
     eh->state = EH_SCHEDULER_STATE_RUN;
     eh->stop_flag = false;
@@ -251,48 +242,58 @@ int eh_loop_run(void){
     while(!eh->stop_flag){
 
         /* 检查定时器是否超时，超时后进行相关事件通知 */
-        _eh_timer_check();
+        eh_timer_check();
         
         /* 检查是否有信号需要处理 */
         
         /* 进行调度 */
-        ret = __await__ eh_task_next();
+        __await__ eh_task_next();
         /* 调用用户外部处理函数 */
         eh->state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
-        eh->idle_or_extern_event_handler(ret == 0 ? 0 : 1);
+        eh->idle_or_extern_event_handler();
         eh->state = EH_SCHEDULER_STATE_RUN;
-
     }
+    eh->state = EH_SCHEDULER_STATE_EXIT;
     return eh->loop_stop_code;
 }
 
-static int interior_init(void){
-    extern eh_platform_port_param_t platform_port_param;
+/**
+ * @brief                   注册平台端口参数
+ * @param  param            平台相关接口
+ * @return int 
+ */
+int eh_platform_register_port_param(const eh_platform_port_param_t *param){
     eh_t *eh = eh_get_global_handle();
-    eh_param_assert(platform_port_param.get_clock_monotonic_time);
-    eh_param_assert(platform_port_param.idle_or_extern_event_handler);
-    eh_param_assert(platform_port_param.expire_time_change);
-    eh_param_assert(platform_port_param.clocks_per_sec >= 100);
+    eh_param_assert(param);
+    eh_param_assert(param->get_clock_monotonic_time);
+    eh_param_assert(param->idle_or_extern_event_handler);
+    eh_param_assert(param->idle_break);
+    eh_param_assert(param->clocks_per_sec >= 100);
+    eh_param_assert(param->malloc);
+    eh_param_assert(param->free);
+
+    _get_clock_monotonic_time = param->get_clock_monotonic_time;
+    _clocks_per_sec = param->clocks_per_sec;
+
+    eh->global_lock = param->global_lock;
+    eh->global_unlock = param->global_unlock;
+    eh->get_clock_monotonic_time = param->get_clock_monotonic_time;
+    eh->idle_or_extern_event_handler = param->idle_or_extern_event_handler;
+    eh->idle_break = param->idle_break;
+    eh->malloc = param->malloc;
+    eh->free = param->free;
+    return 0;
+}
+
+static int interior_init(void){
+    eh_t *eh = eh_get_global_handle();
     bzero(eh, sizeof(eh_t));
     bzero(&s_main_task,  sizeof(struct  eh_task));
-
-    _get_clock_monotonic_time = platform_port_param.get_clock_monotonic_time;
-    _clocks_per_sec = platform_port_param.clocks_per_sec;
-
-    eh->clocks_per_sec = platform_port_param.clocks_per_sec;
     
     eh_list_head_init(&eh->task_wait_list_head);
     eh_list_head_init(&eh->task_finish_list_head);
-    eh_list_head_init(&eh->timer_list_head);
 
     eh->state = EH_SCHEDULER_STATE_INIT;
-    eh->global_lock = platform_port_param.global_lock;
-    eh->global_unlock = platform_port_param.global_unlock;
-    eh->get_clock_monotonic_time = platform_port_param.get_clock_monotonic_time;
-    eh->idle_or_extern_event_handler = platform_port_param.idle_or_extern_event_handler;
-    eh->expire_time_change = platform_port_param.expire_time_change;
-    eh->malloc = platform_port_param.malloc;
-    eh->free = platform_port_param.free;
 
     eh->main_task = &s_main_task;
     eh->current_task = &s_main_task;
@@ -306,77 +307,50 @@ static int interior_init(void){
     s_main_task.stack_size = 0;
     s_main_task.state = EH_TASK_STATE_RUNING;
 
-    eh->module_group[0].module_array = (struct eh_module*)eh_modeule_section_begin(0);
-    eh->module_group[0].module_cnt = (struct eh_module*)eh_modeule_section_end(0) - (struct eh_module*)eh_modeule_section_begin(0);
-
-    eh->module_group[1].module_array = (struct eh_module*)eh_modeule_section_begin(1);
-    eh->module_group[1].module_cnt = (struct eh_module*)eh_modeule_section_end(1) - (struct eh_module*)eh_modeule_section_begin(1);
-
-    eh->module_group[2].module_array = (struct eh_module*)eh_modeule_section_begin(2);
-    eh->module_group[2].module_cnt = (struct eh_module*)eh_modeule_section_end(2) - (struct eh_module*)eh_modeule_section_begin(2);
-
-    eh->module_group[3].module_array = (struct eh_module*)eh_modeule_section_begin(3);
-    eh->module_group[3].module_cnt = (struct eh_module*)eh_modeule_section_end(3) - (struct eh_module*)eh_modeule_section_begin(3);
-
-    eh->module_group[4].module_array = (struct eh_module*)eh_modeule_section_begin(4);
-    eh->module_group[4].module_cnt = (struct eh_module*)eh_modeule_section_end(4) - (struct eh_module*)eh_modeule_section_begin(4);
-
-    eh->module_group[5].module_array = (struct eh_module*)eh_modeule_section_begin(5);
-    eh->module_group[5].module_cnt = (struct eh_module*)eh_modeule_section_end(5) - (struct eh_module*)eh_modeule_section_begin(5);
-
-    eh->module_group[6].module_array = (struct eh_module*)eh_modeule_section_begin(6);
-    eh->module_group[6].module_cnt = (struct eh_module*)eh_modeule_section_end(6) - (struct eh_module*)eh_modeule_section_begin(6);
-
-    eh->module_group[7].module_array = (struct eh_module*)eh_modeule_section_begin(7);
-    eh->module_group[7].module_cnt = (struct eh_module*)eh_modeule_section_end(7) - (struct eh_module*)eh_modeule_section_begin(7);
-    
+    eh->eh_init_fini_array = (struct eh_module*)eh_modeule_section_begin();
+    eh->eh_init_fini_array_len = ((struct eh_module*)eh_modeule_section_end() - (struct eh_module*)eh_modeule_section_begin());
     return 0;
 }
 
-static int  module_group_init (void){
-    long i,j;
-    int ret;
-    struct module_group *start_group = eh_get_global_handle()->module_group;
-    for(i=0;i<EH_MODEULE_GROUP_MAX_CNT;i++){
-        for(j=0;j<start_group[i].module_cnt;j++){
-            if(start_group[i].module_array[j].init){
-                ret = start_group[i].module_array[j].init();
-                if(ret < 0) goto init_error;
-            }
+static int  module_group_init(void){
+    eh_t *eh = eh_get_global_handle();
+    struct eh_module  *eh_init_fini_array;
+    long i,len;
+    int ret = 0;
+    len = eh->eh_init_fini_array_len;
+    eh_init_fini_array = eh->eh_init_fini_array;
+    for(i=0;i<len;i++){
+        if(eh_init_fini_array[i].init){
+            ret = eh_init_fini_array[i].init();
+            if(ret < 0)
+                goto init_error;
         }
     }
 
     return ret;
 init_error:
-    for(j=j-1;j>=0;j--){
-        if(start_group[i].module_array[j].exit)
-            start_group[i].module_array[j].exit();
-    }
     for(i=i-1;i>=0;i--){
-        j = start_group[i].module_cnt;
-        for(j=j-1;j>=0;j--){
-            if(start_group[i].module_array[j].exit)
-                start_group[i].module_array[j].exit();
-        }
+        if(eh_init_fini_array[i].exit)
+            eh_init_fini_array[i].exit();
     }
     return ret;
 }
 
 static void module_group_exit(void){
-    struct module_group *start_group = eh_get_global_handle()->module_group;
-    long i,j;
-    for(i=EH_MODEULE_GROUP_MAX_CNT-1;i>=0;i--){
-        for(j=start_group[i].module_cnt-1;j>=0;j--){
-            if(start_group[i].module_array[j].exit){
-                start_group[i].module_array[j].exit();
-            }
-        }
+    eh_t *eh = eh_get_global_handle();
+    struct eh_module  *eh_init_fini_array;
+    long i;
+    i = eh->eh_init_fini_array_len;
+    eh_init_fini_array = eh->eh_init_fini_array;
+
+    for(i=i-1;i>=0;i--){
+        if(eh_init_fini_array[i].exit)
+            eh_init_fini_array[i].exit();
     }
 
-
 }
-
 int eh_global_init( void ){
+    struct eh_module aaa(void);
     interior_init();
     module_group_init();
     return 0;

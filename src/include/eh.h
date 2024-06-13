@@ -72,32 +72,15 @@ struct eh_epoll_slot{
 
 
 struct eh_platform_port_param{
-    void                                (*global_lock)(uint32_t *state);        /* 上锁， */
-    void                                (*global_unlock)(uint32_t state);       /* 解锁 */
+    void                                (*global_lock)(uint32_t *state);                            /* 上锁， */
+    void                                (*global_unlock)(uint32_t state);                           /* 解锁 */
     eh_clock_t                          clocks_per_sec;
-    eh_clock_t                          (*get_clock_monotonic_time)(void);      /* 系统单调时钟的微秒数 */
-    void                                (*idle_or_extern_event_handler)(int is_wait_event);    /* 用户处理空闲和外部事件 */
-    void                                (*expire_time_change)(int is_never_expire, eh_clock_t new_expire);     /* 定时器最近到期时间改变,当is_never_expire为1时，永不到期 */
+    eh_clock_t                          (*get_clock_monotonic_time)(void);                          /* 系统单调时钟的微秒数 */
+    void                                (*idle_or_extern_event_handler);                            /* 用户处理空闲和外部事件 */
+    void                                (*idle_break)(void);                                        /* 调用此函数通知"platform"从idle_or_extern_event_handler返回 */
     void*                               (*malloc)(size_t size);
     void                                (*free)(void* ptr);
 };
-
-#define EH_DEFINE_PLATFORM_PORT_PARAM(                                                  \
-        _global_lock, _global_unlock,                                                   \
-        _clocks_per_sec,                                                                \
-        _get_clock_monotonic_time,                                                      \
-        _idle_or_extern_event_handler,                                                  \
-        expire_time_change,                                                             \
-        _malloc,                                                                        \
-        _free)                                                                          \
-    eh_platform_port_param_t platform_port_param = {_global_lock,                       \
-                                                    _global_unlock,                     \
-                                                    _clocks_per_sec,                    \
-                                                    _get_clock_monotonic_time,          \
-                                                    _idle_or_extern_event_handler,      \
-                                                    expire_time_change,                 \
-                                                    _malloc,                            \
-                                                    _free}
 
 #define eh_get_clock_monotonic_time()   (_get_clock_monotonic_time())
 
@@ -108,7 +91,7 @@ struct eh_platform_port_param{
  */
 #define  eh_msec_to_clock(_msec) ({                                                     \
         eh_clock_t clock = ((eh_msec_t)(_msec) * _clocks_per_sec)/1000;                 \
-        clock ? clock : 1;                                                              \
+        clock ? clock : !!(_msec);                                                      \
     })
 
 /**
@@ -117,8 +100,28 @@ struct eh_platform_port_param{
  * return   eh_clock_t
  */
 #define  eh_usec_to_clock(_usec) ({                                                     \
-        eh_clock_t clock = ((eh_msec_t)(_usec) * _clocks_per_sec)/1000000               \
-        clock ? clock : 1;                                                              \
+        eh_clock_t clock = ((eh_usec_t)(_usec) * _clocks_per_sec)/1000000;              \
+        clock ? clock : !!(_usec);                                                      \
+    })
+
+/**
+ * @brief   时钟数转换为毫秒数
+ * @param   _clock  时钟数
+ * return   eh_msec_t
+ */
+#define  eh_clock_to_msec(_clock) ({                                                    \
+        eh_msec_t msec = ((eh_msec_t)(_clock) * 1000)/_clocks_per_sec;                  \
+        msec ? msec : !!(_clock);                                                       \
+    })
+
+/**
+ * @brief   时钟数转换为微秒数
+ * @param   _clock  时钟数
+ * return   eh_usec_t
+ */
+#define  eh_clock_to_usec(_clock) ({                                                    \
+        eh_usec_t usec = ((eh_usec_t)(_clock) * 1000000)/_clocks_per_sec;               \
+        usec ? usec : !!(_clock);                                                       \
     })
 
 

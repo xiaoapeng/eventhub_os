@@ -515,21 +515,6 @@ struct eh_rbtree_node * eh_rb_del(struct eh_rbtree_node *node, struct eh_rbtree_
 	return leftmost;
 }
 
-/*
- * This function returns the first node (in sort order) of the tree.
- */
-struct eh_rbtree_node *eh_rb_first(const struct eh_rbtree_root *root)
-{
-	struct eh_rbtree_node	*n;
-
-	n = root->rb_node;
-	if (!n)
-		return NULL;
-	while (n->rb_left)
-		n = n->rb_left;
-	return n;
-}
-
 struct eh_rbtree_node *eh_rb_last(const struct eh_rbtree_root *root)
 {
 	struct eh_rbtree_node	*n;
@@ -546,7 +531,7 @@ struct eh_rbtree_node *eh_rb_next(const struct eh_rbtree_node *node)
 {
 	struct eh_rbtree_node *parent;
 
-	if (RB_EMPTY_NODE(node))
+	if (eh_rb_node_is_empty(node))
 		return NULL;
 
 	/*
@@ -577,7 +562,7 @@ struct eh_rbtree_node *eh_rb_prev(const struct eh_rbtree_node *node)
 {
 	struct eh_rbtree_node *parent;
 
-	if (RB_EMPTY_NODE(node))
+	if (eh_rb_node_is_empty(node))
 		return NULL;
 
 	/*

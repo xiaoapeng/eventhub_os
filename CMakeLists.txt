@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
 add_compile_options(
-    "$<$<CONFIG:Debug>:-g;-O3>"
+    "$<$<CONFIG:Debug>:-g;-O0>"
     "$<$<CONFIG:Release>:-O3>"
     "$<$<CONFIG:MinSizeRel>:-Os>"
     "$<$<CONFIG:RelWithDebInfo>:-g;-Os>"
@@ -34,9 +34,12 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test/general")
 
 # test程序生成
 add_executable( test_co	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_co.c")
-target_link_libraries(test_co general_test event_hub)
+target_link_libraries(test_co general_test event_hub_interface)
 add_executable( test_eh	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_eh.c")
-target_link_libraries(test_eh general_test event_hub)
+#target_link_libraries(test_eh general_test "-Wl,--whole-archive" event_hub "-Wl,--no-whole-archive" )
+target_link_libraries(test_eh general_test event_hub_interface )
+add_executable( test_epoll	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_epoll.c")
+target_link_libraries(test_epoll general_test event_hub_interface)
 add_executable( test_rb "${CMAKE_CURRENT_SOURCE_DIR}/test/test_rb.c")
-target_link_libraries(test_rb general_test event_hub)
+target_link_libraries(test_rb general_test event_hub_interface)
 

@@ -14,104 +14,80 @@
 #include "eh_co.h"
 #include "eh_config.h"
 #include "eh_interior.h"
+#include "eh_module.h"
+#include "eh_rbtree.h"
 
-#define _eh_timer_is_empty(eh)   ( eh_list_empty(&(eh)->timer_list_head) )
-#define _eh_timer_get_expire(eh) ( container_of((eh)->timer_list_head.next, eh_timer_event_t, list_node)->expire )
+#define timer_is_empty()            (eh_rb_root_is_empty(&timer_tree_root))
+#define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)
 
-static int _eh_timer_start_no_lock(eh_t *eh, eh_clock_t now, eh_timer_event_t *timer){
-    eh_timer_event_t *tail, *head, *pos;
-    eh_sclock_t tail_remaining_time;
-    eh_sclock_t head_remaining_time;
-    eh_sclock_t timer_remaining_time;
+#define FIRST_TIMER_UPDATE      1
+#define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000)))
+
+static struct eh_rbtree_root     timer_tree_root;                                       /* 系统时钟树 */
+static        eh_clock_t         timer_now;
+static int _eh_timer_rbtree_cmp(struct eh_rbtree_node *a, struct eh_rbtree_node *b){
+    eh_sclock_t a_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(a,eh_timer_event_t, rb_node));
+    eh_sclock_t b_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(b,eh_timer_event_t, rb_node));
+    return a_remaining_time < b_remaining_time ? -1 : a_remaining_time > b_remaining_time ? 1 : 0;
+}
+
+static int _eh_timer_start_no_lock(eh_clock_t base, eh_timer_event_t *timer){
     int ret = EH_RET_OK;    
-    if(!eh_list_empty(&timer->list_node)){
+    if(!eh_rb_node_is_empty(&timer->rb_node)){
         ret = EH_RET_BUSY;
         goto out;
     }
-
-    timer->expire = now + (eh_clock_t)timer->interval;
-    if( _eh_timer_is_empty(eh)){
-        eh_list_add(&timer->list_node, &eh->timer_list_head);
-        goto out;
-    }
-
-    tail = eh_list_entry(eh->timer_list_head.prev, eh_timer_event_t, list_node);
-    head = eh_list_entry(eh->timer_list_head.next, eh_timer_event_t, list_node);
-    tail_remaining_time = eh_remaining_time(now, tail);
-    head_remaining_time = eh_remaining_time(now, head);
-    timer_remaining_time = timer->interval;
-
-    if(timer_remaining_time < head_remaining_time){
-        eh_list_add(&timer->list_node, &eh->timer_list_head);
-        goto out;
-    }
-    if(timer_remaining_time >= tail_remaining_time){
-        eh_list_add_tail(&timer->list_node, &eh->timer_list_head);
-        goto out;
-    }
-
-    /* 判断目前的时间是离头近还是离尾近，离谁近就从哪开始遍历 */
-    if( tail_remaining_time - timer_remaining_time  <= timer_remaining_time - head_remaining_time){
-        /* 从尾开始遍历 */
-        eh_list_for_each_prev_entry(pos, &eh->timer_list_head, list_node){
-            if(eh_remaining_time(now, pos) <= timer_remaining_time){
-                eh_list_add(&timer->list_node, &pos->list_node);
-                goto out;
-            }
-        }
-    }else{
-        /* 从头开始遍历 */
-        eh_list_for_each_entry(pos, &eh->timer_list_head, list_node){
-            if(eh_remaining_time(now, pos) > timer_remaining_time){
-                eh_list_add(&timer->list_node, pos->list_node.prev);
-                goto out;
-            }
-        }
-    }
-    /* 出现在这里说明出现灵异事件 */
-    ret = EH_RET_FAULT;
+    timer->expire = base + (eh_clock_t)timer->interval;
+    
+    /* 如果最紧急的定时器得到更新，那么应该通知调用者 */
+    if(eh_rb_add(&timer->rb_node, &timer_tree_root))
+        ret = FIRST_TIMER_UPDATE;
 out:
     return ret; 
 }
 
+eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void){
+    eh_sclock_t min_remaining_time = 0;
+    timer_now = eh_get_clock_monotonic_time();
+    if(timer_is_empty())
+        return FIRST_TIMER_MAX_TIME;
+    min_remaining_time = eh_diff_time(timer_get_first_expire(), timer_now);
+    min_remaining_time = min_remaining_time > FIRST_TIMER_MAX_TIME ? 
+        FIRST_TIMER_MAX_TIME : min_remaining_time;
+    return min_remaining_time;
+}
 
-void _eh_timer_check(void){
+void eh_timer_check(void){
     uint32_t state;
-    eh_t *eh = eh_get_global_handle();
-    eh_timer_event_t *pos, *n;
-    eh_clock_t now = eh_get_clock_monotonic_time();
+    eh_timer_event_t *first_timer;
     eh_clock_t base;
-    eh_clock_t old_expire;
-    eh_clock_t new_expire;
-
-    _eh_lock(&state);
     
-    if(_eh_timer_is_empty(eh))  goto out;
+    eh_lock(&state);
+    
+    timer_now = eh_get_clock_monotonic_time();
 
-    old_expire =  _eh_timer_get_expire(eh);
+    if(timer_is_empty())  goto out;
 
-    eh_list_for_each_entry_safe(pos, n, &eh->timer_list_head, list_node){
-        if(eh_remaining_time(now, pos) > 0)
-            break ;
-        /* 定时器已经到期 */
-        eh_event_notify(&pos->event);
-        eh_list_del_init(&pos->list_node);
-        if(!(pos->attrribute & EH_TIMER_ATTR_AUTO_CIRCULATION))
+    for(first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node); 
+        first_timer && eh_remaining_time(timer_now, first_timer) <= 0 ; 
+        first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)
+    ){
+        /* 定时器到期 */
+        eh_event_notify(&first_timer->event);
+        eh_rb_del(&first_timer->rb_node, &timer_tree_root);
+        eh_rb_node_init(&first_timer->rb_node);
+
+        if(!(first_timer->attrribute & EH_TIMER_ATTR_AUTO_CIRCULATION))
             continue;
         /* 重新启动定时器 */
-        base = (pos->attrribute & EH_TIMER_ATTR_NOW_TIME_BASE) ? now : 
-            eh_diff_time(pos->expire + (eh_clock_t)pos->interval, now) > 0 ? pos->expire : now;
-        _eh_timer_start_no_lock(eh, base, pos);
-    }
+        base = (first_timer->attrribute & EH_TIMER_ATTR_NOW_TIME_BASE) ? timer_now : 
+            eh_diff_time(first_timer->expire + (eh_clock_t)first_timer->interval, timer_now) > 0 ? first_timer->expire : timer_now;
+        _eh_timer_start_no_lock(base, first_timer);
 
-    if(_eh_timer_is_empty(eh)){
-        eh->expire_time_change(1, 0);
-    }else if(old_expire != (new_expire = _eh_timer_get_expire(eh))){
-        eh->expire_time_change(0, new_expire);
     }
 
 out:
-    _eh_unlock(state);
+    eh_unlock(state);
 }
 
 
@@ -120,110 +96,60 @@ int eh_timer_start(eh_timer_event_t *timer){
     eh_t *eh = eh_get_global_handle();
     int ret;
     uint32_t state;
-    eh_clock_t now = eh_get_clock_monotonic_time();
-    eh_clock_t old_expire = now - 0xFFFF; 
-    eh_clock_t new_expire;
     eh_param_assert(eh);
     eh_param_assert(timer);
     eh_param_assert((eh_sclock_t)(timer->interval) > 0);
 
-    _eh_lock(&state);
-
-    old_expire = _eh_timer_is_empty(eh) ? old_expire : _eh_timer_get_expire(eh);
-    ret = _eh_timer_start_no_lock(eh, now, timer);
-    if(ret < 0) goto out;
-    new_expire = _eh_timer_get_expire(eh);
-    if(new_expire != old_expire)
-        eh->expire_time_change(0, new_expire);
-out:
-    _eh_unlock(state);
+    eh_lock(&state);
+    timer_now = eh_get_clock_monotonic_time();
+    ret = _eh_timer_start_no_lock(timer_now, timer);
+    if(ret == FIRST_TIMER_UPDATE)
+        eh_idle_break();
+    eh_unlock(state);
     return ret;
 }
 
 int eh_timer_stop(eh_timer_event_t *timer){
     uint32_t state;
-    eh_t *eh = eh_get_global_handle();
     int ret = EH_RET_OK;
-    eh_clock_t old_expire; 
-    eh_clock_t new_expire;
     eh_param_assert(timer);
 
-    _eh_lock(&state);
-    if(eh_list_empty(&timer->list_node))
+    eh_lock(&state);
+    if(eh_rb_node_is_empty(&timer->rb_node))
         goto out;
-    old_expire = _eh_timer_get_expire(eh);
-    eh_list_del_init(&timer->list_node);
-    if(_eh_timer_is_empty(eh)){
-        eh->expire_time_change(1, 0);
-    }else if(old_expire != (new_expire = _eh_timer_get_expire(eh))){
-        eh->expire_time_change(0, new_expire);
-    }
+    
+    eh_rb_del(&timer->rb_node, &timer_tree_root);
+    eh_rb_node_init(&timer->rb_node);
+
 out:
-    _eh_unlock(state);
+    eh_unlock(state);
     return ret;
 }
 
 int eh_time_restart(eh_timer_event_t *timer){
-    eh_t *eh = eh_get_global_handle();
     uint32_t state;
-    eh_clock_t now = eh_get_clock_monotonic_time();
     int ret = EH_RET_OK;
-    eh_sclock_t old_remaining_time;
-    eh_sclock_t new_remaining_time;
-    eh_timer_event_t *pos;
-    eh_clock_t old_expire = now - 0xFFFF; 
-    eh_clock_t new_expire;
 
     eh_param_assert(timer);
     eh_param_assert(timer->interval > 0);
 
-    _eh_lock(&state);
-    old_expire = _eh_timer_is_empty(eh) ? old_expire : _eh_timer_get_expire(eh);
+    eh_lock(&state);
+    timer_now = eh_get_clock_monotonic_time();
 
     /* 如果节点为空，说明不在工作，直接start */
-    if(eh_list_empty(&timer->list_node)){
-        ret = _eh_timer_start_no_lock(eh, now, timer);
+    if(eh_rb_node_is_empty(&timer->rb_node)){
+        ret = _eh_timer_start_no_lock(timer_now, timer);
         goto out;
     }
-    /* 已经在工作，应该重新设置expire后再重排序 */
-    old_remaining_time = eh_remaining_time(now, timer);
-    new_remaining_time = timer->interval;
-    if(old_remaining_time == new_remaining_time) goto out;
-    timer->expire = now + (eh_clock_t)timer->interval;
-    pos = timer;
-    if(new_remaining_time > old_remaining_time){
-        /* 向后移动 */
-        eh_list_for_each_entry_continue(pos, &eh->timer_list_head, list_node){
-            if(eh_remaining_time(now, pos) > new_remaining_time){
-                if(&timer->list_node != pos->list_node.prev)
-                    eh_list_move(&timer->list_node, pos->list_node.prev);
-                goto out;
-            }
-        }
-        /* 放到最后一个 */
-        if(&timer->list_node != eh->timer_list_head.prev)
-            eh_list_move(&timer->list_node, eh->timer_list_head.prev);
-    }else{
-        /* 向前移动 */
-        eh_list_for_each_prev_entry_continue(pos, &eh->timer_list_head, list_node){
-            if(eh_remaining_time(now, pos) <= new_remaining_time){
-                if(&timer->list_node != pos->list_node.next)
-                    eh_list_move(&timer->list_node, &pos->list_node);
-                goto out;
-            }
-        }
-        /* 放到第一个 */
-        if(&timer->list_node != eh->timer_list_head.next)
-            eh_list_move(&timer->list_node, &eh->timer_list_head);
-    }
+    /* 已经在工作，从树中删除后重新启动 */
+    eh_rb_del(&timer->rb_node, &timer_tree_root);
+    eh_rb_node_init(&timer->rb_node);
+    ret = _eh_timer_start_no_lock(timer_now, timer);
 
 out:
-    if(ret == EH_RET_OK){
-        new_expire = _eh_timer_get_expire(eh);
-        if(new_expire != old_expire)
-            eh->expire_time_change(0, new_expire);
-    }
-    _eh_unlock(state);
+    if(ret == FIRST_TIMER_UPDATE)
+        eh_idle_break();
+    eh_unlock(state);
     return ret;
 }
 
@@ -236,10 +162,20 @@ int eh_timer_init(eh_timer_event_t *timer){
     eh_param_assert(timer);
     ret = eh_event_init(&timer->event, &eh_timer_event_type);
     if(ret < 0) return ret;
-    eh_list_head_init(&timer->list_node);
+    eh_rb_node_init(&timer->rb_node);
     timer->expire = 0;
     timer->interval = 0;
     timer->attrribute = 0;
     return 0;
 }
+
+static int __init eh_timer_interior_init(void){
+    eh_rb_root_init(&timer_tree_root, _eh_timer_rbtree_cmp);
+    return 0;
+}
+
+static void __exit eh_timer_interior_exit(void){
+}
+
+eh_interior_module_export(eh_timer_interior_init, eh_timer_interior_exit);
 

@@ -33,11 +33,11 @@ int main(void){
     int test_data_ptr_len = 0;
     srand((unsigned int)time(NULL));
     // 生成并打印
-    eh_rbtree_root_init(&test_rb_root, cmp);
+    eh_rb_root_init(&test_rb_root, cmp);
     dbg_debugraw("test_data:");
     for (int i = 0; i < TEST_DATA_SIZE; i++){
         test_data[i].data = rand()%TEST_DATA_SIZE;
-        eh_rbtree_node_init(&(test_data[i].node));
+        eh_rb_node_init(&(test_data[i].node));
         dbg_debugraw("%d ", test_data[i].data);
         eh_rb_add(&(test_data[i].node), &test_rb_root);
     }
@@ -46,7 +46,7 @@ int main(void){
     {
         struct test_data *pos;
         dbg_debugraw("s-S:");
-        eh_rbtree_next_for_each_entry(pos, &test_rb_root, node){
+        eh_rb_next_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");
@@ -56,7 +56,7 @@ int main(void){
     {
         struct test_data *pos;
         dbg_debugraw("S-s:");
-        eh_rbtree_prev_for_each_entry(pos, &test_rb_root, node){
+        eh_rb_prev_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");
@@ -80,7 +80,7 @@ int main(void){
     {
         struct test_data *pos;
         dbg_debugraw("S-s:");
-        eh_rbtree_prev_for_each_entry(pos, &test_rb_root, node){
+        eh_rb_prev_for_each_entry(pos, &test_rb_root, node){
             dbg_debugraw("%d ", pos->data);
         }
         dbg_debugraw("\n");

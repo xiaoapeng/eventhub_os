@@ -48,22 +48,22 @@ struct eh_rbtree_root {
 	   ____ptr ? eh_rb_entry(____ptr, type, member) : NULL; \
 	})
 
-#define RB_EMPTY_ROOT(root)  (READ_ONCE((root)->rb_node) == NULL)
+#define eh_rb_root_is_empty(root)  ((root)->rb_node == NULL)
 
 /* 'empty' nodes are nodes that are known not to be inserted in an rbtree */
-#define RB_EMPTY_NODE(node)  \
+#define eh_rb_node_is_empty(node)  \
 	((node)->parent_and_color == (parent_node_t)(node))
-#define RB_CLEAR_NODE(node)  \
+#define eh_rb_node_clear(node)  \
 	((node)->parent_and_color = (parent_node_t)(node))
 
-#define eh_rbtree_root_init(root, __cmp)	\
+#define eh_rb_root_init(root, __cmp)	\
 	do{									\
 		(root)->rb_node = NULL;			\
 		(root)->rb_leftmost = NULL;		\
 		(root)->cmp = (__cmp);				\
 	}while(0)
 
-#define eh_rbtree_node_init(node)		\
+#define eh_rb_node_init(node)		\
 	do{									\
 		(node)->parent_and_color = (parent_node_t)(node);	\
 		(node)->rb_left = NULL;			\
@@ -78,27 +78,27 @@ extern struct eh_rbtree_node * eh_rb_match_find(const void *key, struct eh_rbtre
 /* Find logical next and previous nodes in a tree */
 extern struct eh_rbtree_node *	eh_rb_next(const struct eh_rbtree_node *);
 extern struct eh_rbtree_node *	eh_rb_prev(const struct eh_rbtree_node *);
-extern struct eh_rbtree_node *	eh_rb_first(const struct eh_rbtree_root *);
+#define 						eh_rb_first(root)	((root)->rb_leftmost)
 extern struct eh_rbtree_node *	eh_rb_last(const struct eh_rbtree_root *);
 /* Postorder iteration - always visit the parent after its children */
 extern struct eh_rbtree_node *rb_first_postorder(const struct eh_rbtree_root *root);
 extern struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *);
 
 /*后序 左右根 */
-#define eh_rbtree_postorder_for_each_entry_safe(pos, n, root, member) \
+#define eh_rb_postorder_for_each_entry_safe(pos, n, root, member) \
 	for (pos = eh_rb_entry_safe(rb_first_postorder(root), typeof(*pos), member); \
 	     pos && ({ n = eh_rb_entry_safe(rb_next_postorder(&pos->member), \
 			typeof(*pos), member); 1; }); \
 	     pos = n)
 
 /* 递增遍历 */
-#define eh_rbtree_next_for_each_entry(pos, root, member) \
-    for (pos = eh_rb_entry_safe((root)->rb_leftmost, typeof(*pos), member); \
+#define eh_rb_next_for_each_entry(pos, root, member) \
+    for (pos = eh_rb_entry_safe(eh_rb_first(root), typeof(*pos), member); \
          pos ; \
          pos = eh_rb_entry_safe(eh_rb_next(&pos->member), typeof(*pos), member))
 
 /* 递减遍历 */
-#define eh_rbtree_prev_for_each_entry(pos, root, member) \
+#define eh_rb_prev_for_each_entry(pos, root, member) \
     for (pos = eh_rb_entry_safe(eh_rb_last(root), typeof(*pos), member) ; \
          pos ; 	\
          pos = eh_rb_entry_safe(eh_rb_prev(&pos->member), typeof(*pos), member))

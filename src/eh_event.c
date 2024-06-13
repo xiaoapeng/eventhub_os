@@ -29,14 +29,14 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
     if(condition && condition(arg))
         return EH_RET_OK;
 
-    eh_event_receptor_init(&receptor, eh_get_current_task());
+    eh_event_receptor_init(&receptor, eh_task_get_current());
 
-    _eh_lock(&state);
+    eh_lock(&state);
     eh_event_add_receptor_no_lock(e, &receptor);
-    _eh_unlock(state);
+    eh_unlock(state);
 
     for(;;){
-        _eh_lock(&state);
+        eh_lock(&state);
         if(condition){
             if(condition(arg)){
                 ret = EH_RET_OK;
@@ -50,19 +50,19 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
             ret = receptor.trigger ? EH_RET_OK : EH_RET_EVENT_ERROR;
             goto unlock_out;
         }
-        eh_set_current_task_state(EH_TASK_STATE_WAIT);
-        _eh_unlock(state);
+        eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        eh_unlock(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0){
-            _eh_lock(&state);
+            eh_lock(&state);
             goto unlock_out;
         }
     }
 
 unlock_out:
     eh_event_remove_receptor_no_lock(&receptor);
-    _eh_unlock(state);
+    eh_unlock(state);
     return ret;
 }
 
@@ -75,8 +75,8 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
     if(condition && condition(arg))
         return EH_RET_OK;
 
-    eh_event_receptor_init(&receptor, eh_get_current_task());
-    eh_event_receptor_init(&receptor_timer, eh_get_current_task());
+    eh_event_receptor_init(&receptor, eh_task_get_current());
+    eh_event_receptor_init(&receptor_timer, eh_task_get_current());
 
     eh_timer_init(&timeout_timer);
     eh_timer_config_interval(&timeout_timer, timeout);
@@ -86,12 +86,12 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
     eh_timer_start(&timeout_timer);
 
     /* 事件预激活过，必须有锁add */
-    _eh_lock(&state);
+    eh_lock(&state);
     eh_event_add_receptor_no_lock(e, &receptor);
-    _eh_unlock(state);
+    eh_unlock(state);
 
     for(;;){
-        _eh_lock(&state);
+        eh_lock(&state);
         if(condition){
             if(condition(arg)){
                 ret = EH_RET_OK;
@@ -110,19 +110,19 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
             ret = receptor.trigger ? EH_RET_TIMEOUT : EH_RET_EVENT_ERROR;
             goto unlock_out;
         }
-        eh_set_current_task_state(EH_TASK_STATE_WAIT);
-        _eh_unlock(state);
+        eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        eh_unlock(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0){
-            _eh_lock(&state);
+            eh_lock(&state);
             goto unlock_out;
         }
     }
 
 unlock_out:
     eh_event_remove_receptor_no_lock(&receptor);
-    _eh_unlock(state);
+    eh_unlock(state);
 
     eh_timer_stop(&timeout_timer);
     eh_event_remove_receptor_no_lock(&receptor_timer);
@@ -156,7 +156,7 @@ void eh_event_clean(eh_event_t *e){
     
     if(!e) return ;
 
-    _eh_lock(&state);
+    eh_lock(&state);
     eh_list_for_each_entry_safe(pos, n, &e->receptor_list_head, list_node){
         pos->error = 1;
         if(pos->wakeup_task)
@@ -168,7 +168,7 @@ void eh_event_clean(eh_event_t *e){
         }
         eh_event_remove_receptor_no_lock(pos);
     }
-    _eh_unlock(state);
+    eh_unlock(state);
 }
 
 
@@ -182,7 +182,7 @@ int eh_event_notify(eh_event_t *e){
     struct eh_event_receptor *pos;
     struct eh_event_epoll_receptor *epoll_receptor;
     eh_param_assert(e);
-    _eh_lock(&state);
+    eh_lock(&state);
     eh_list_for_each_entry(pos, &e->receptor_list_head, list_node){
         pos->trigger = 1;
         if(pos->wakeup_task)
@@ -193,7 +193,7 @@ int eh_event_notify(eh_event_t *e){
                 eh_list_add_tail(&epoll_receptor->pending_list_node, &pos->epoll->pending_list_head);
         }
     }
-    _eh_unlock(state);
+    eh_unlock(state);
     return EH_RET_OK;
 }
 
@@ -226,7 +226,7 @@ eh_epoll_t eh_epoll_new(void){
     if( epoll == NULL )
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     eh_list_head_init(&epoll->pending_list_head);
-    eh_rbtree_root_init(&epoll->all_receptor_tree, __epoll_rbtree_cmp);
+    eh_rb_root_init(&epoll->all_receptor_tree, __epoll_rbtree_cmp);
     return (eh_epoll_t*)epoll;
 }
 
@@ -234,10 +234,10 @@ void eh_epoll_del(eh_epoll_t _epoll){
     struct eh_event_epoll_receptor *pos,*n;
     struct eh_epoll *epoll = _epoll;
     uint32_t state;
-    eh_rbtree_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
-        _eh_lock(&state);
+    eh_rb_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
+        eh_lock(&state);
         eh_event_remove_receptor_no_lock(&pos->receptor);
-        _eh_unlock(state);
+        eh_unlock(state);
         eh_free(pos);
     }
     eh_free(epoll);
@@ -255,12 +255,12 @@ int eh_epoll_local_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     
     if( receptor == NULL )
         return EH_RET_MALLOC_ERROR;
-    eh_event_receptor_epoll_init(&receptor->receptor, eh_get_current_task(), epoll);
+    eh_event_receptor_epoll_init(&receptor->receptor, eh_task_get_current(), epoll);
     eh_list_head_init(&receptor->pending_list_node);
-    eh_rbtree_node_init(&receptor->rb_node);
+    eh_rb_node_init(&receptor->rb_node);
     receptor->event = e;
     receptor->userdata = userdata;
-    _eh_lock(&state);
+    eh_lock(&state);
     /* 添加到epoll树中 */
     ret_rb = eh_rb_find_add(&receptor->rb_node, &epoll->all_receptor_tree);
     if( ret_rb ){
@@ -271,7 +271,7 @@ int eh_epoll_local_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     /* 添加接收器到event中 */
     eh_event_add_receptor_no_lock(e, &receptor->receptor);
 out:
-    _eh_unlock(state);
+    eh_unlock(state);
     return ret;
 }
 
@@ -283,20 +283,20 @@ int eh_epoll_local_del_event(eh_epoll_t _epoll,eh_event_t *e){
     eh_param_assert(_epoll);
     eh_param_assert(e);
 
-    _eh_lock(&state);
+    eh_lock(&state);
     
     epoll_receptor = eh_rb_entry_safe(
         eh_rb_match_find(e, &epoll->all_receptor_tree, __epoll_rbtree_match),
         struct eh_event_epoll_receptor, rb_node );
     if(epoll_receptor == NULL){
-        _eh_unlock(state);
+        eh_unlock(state);
         return EH_RET_INVALID_PARAM;
     }
     /* 从事件中删除接收器 */
     eh_event_remove_receptor_no_lock(&epoll_receptor->receptor);
     eh_list_del(&epoll_receptor->pending_list_node);
     eh_rb_del(&epoll_receptor->rb_node, &epoll->all_receptor_tree);
-    _eh_unlock(state);
+    eh_unlock(state);
     eh_free(epoll_receptor);
     return EH_RET_OK;
 }
@@ -324,12 +324,12 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
     uint32_t state;
     int ret;
     for(;;){
-        _eh_lock(&state);
+        eh_lock(&state);
         ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
         if(ret != 0)
             goto unlock_exit;
-        eh_set_current_task_state(EH_TASK_STATE_WAIT);
-        _eh_unlock(state);
+        eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        eh_unlock(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0)
@@ -337,7 +337,7 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
     }
 
 unlock_exit:
-    _eh_unlock(state);
+    eh_unlock(state);
     return ret;
 }
 
@@ -347,7 +347,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
     struct eh_event_receptor receptor_timer;
     int ret;
     
-    eh_event_receptor_init(&receptor_timer, eh_get_current_task());
+    eh_event_receptor_init(&receptor_timer, eh_task_get_current());
     eh_timer_init(&timeout_timer);
     eh_timer_config_interval(&timeout_timer, timeout);
 
@@ -356,7 +356,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
     eh_timer_start(&timeout_timer);
 
     for(;;){
-        _eh_lock(&state);
+        eh_lock(&state);
         ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
         if(ret != 0){
             goto unlock_out;
@@ -365,8 +365,8 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
             ret = receptor_timer.trigger ? EH_RET_TIMEOUT : EH_RET_EVENT_ERROR;
             goto unlock_out;
         }
-        eh_set_current_task_state(EH_TASK_STATE_WAIT);
-        _eh_unlock(state);
+        eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        eh_unlock(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0)
@@ -374,7 +374,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
     }
 
 unlock_out:
-    _eh_unlock(state);
+    eh_unlock(state);
 out:
     eh_timer_stop(&timeout_timer);
     eh_event_remove_receptor_no_lock(&receptor_timer);
@@ -389,9 +389,9 @@ int __async__ eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int s
     if(timeout > 0)
         return __await__  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
     /* timeout == 0 || timeout != EH_TIMER_FOREVER 时，不进行任何等待 */
-    _eh_lock(&state);
+    eh_lock(&state);
     ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
-    _eh_unlock(state);
+    eh_unlock(state);
     return ret == 0 ? EH_RET_TIMEOUT : ret;
 }
 

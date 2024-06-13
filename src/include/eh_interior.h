@@ -15,6 +15,7 @@
 
 #include "eh.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus
 #if __cplusplus
@@ -36,19 +37,18 @@ enum EH_SCHEDULER_STATE{
 struct eh{
     struct      eh_list_head             task_wait_list_head;                                   /* 等待中的任务列表 */
     struct      eh_list_head             task_finish_list_head;                                 /* 完成待销毁的任务列表 */
-    struct      eh_list_head             timer_list_head;                                       /* 系统定时器列表 */
     enum        EH_SCHEDULER_STATE       state;
     struct      eh_task                  *current_task;                                         /* 当前被调度的任务 */
     struct      eh_task                  *main_task;                                            /* 系统栈任务 */
-    eh_clock_t                           clocks_per_sec;
     void*                                (*malloc)(size_t size);
     void                                 (*free)(void* ptr);
     void                                 (*global_lock)(uint32_t *state);
     void                                 (*global_unlock)(uint32_t state);
-    eh_usec_t                            (*get_clock_monotonic_time)(void);                     /* 系统单调时钟的次数 */
-    void                                 (*idle_or_extern_event_handler)(int is_wait_event);    /* 用户处理空闲和外部事件 */
-    void                                 (*expire_time_change)(int is_never_expire, eh_clock_t new_expire);     /* 定时器最近到期时间改变,当is_never_expire为1时，永不到期 */
-    struct module_group                  module_group[EH_MODEULE_GROUP_MAX_CNT];
+    eh_usec_t                            (*get_clock_monotonic_time)(void);                                      /* 系统单调时钟的次数 */
+    void                                 (*idle_or_extern_event_handler)(void);                 /* 用户处理空闲和外部事件 */
+    void                                 (*idle_break)(void);                                                    /* 调用此函数通知"platform"从idle_or_extern_event_handler返回 */
+    struct eh_module                     *eh_init_fini_array;
+    long                                 eh_init_fini_array_len;
     int                                  loop_stop_code;
     int                                  stop_flag;
 };
@@ -107,7 +107,13 @@ extern eh_t _global_eh;
 /**
  * @brief 定时器检查函数
  */
-extern void _eh_timer_check(void);
+extern void eh_timer_check(void);
+
+/**
+ * @brief  获取第一个定时器剩余时间
+ * @return eh_sclock_t 
+ */
+extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
 
 /**
  * @brief               获取全局句柄
@@ -119,7 +125,7 @@ extern void _eh_timer_check(void);
  * @brief               加锁
  * @param   state_ptr   保存状态的指针
  */
-#define _eh_lock(state_ptr)                                         \
+#define eh_lock(state_ptr)                                         \
     do{                                                             \
         if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
             eh_get_global_handle()->global_lock(state_ptr);                      \
@@ -129,13 +135,17 @@ extern void _eh_timer_check(void);
  * @brief               解锁
  * @param   state       加锁时保存的状态
  */
-#define _eh_unlock(state)                                           \
+#define eh_unlock(state)                                           \
     do{                                                             \
         if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
             eh_get_global_handle()->global_unlock(state);                        \
     }while(0)
 
 
+
+#define eh_idle_break() do{  \
+        eh_get_global_handle()->idle_break(); \
+    }while(0)
 
 /**
  * @brief               动态内存分配
@@ -189,22 +199,22 @@ extern void _eh_timer_check(void);
 /**
  * @brief               返回当前任务
  */
-#define eh_get_current_task()                (eh_get_global_handle()->current_task)
+#define eh_task_get_current()                (eh_get_global_handle()->current_task)
 /**
  * @brief               设置当前任务
  * @param _current_task 被设置的任务对象
  */
-#define eh_set_current_task(_current_task)   do{eh_get_global_handle()->current_task = (_current_task);}while(0)
+#define eh_task_set_current(_current_task)   do{eh_get_global_handle()->current_task = (_current_task);}while(0)
 
 /**
  * @brief               获取当前任务状态
  */
-#define eh_get_current_task_state()          (eh_get_global_handle()->current_task->state)
+#define eh_task_get_current_state()          (eh_get_global_handle()->current_task->state)
 
 /**
  * @brief               设置当前任务状态
  */
-#define eh_set_current_task_state(_state)     do{eh_get_global_handle()->current_task->state = (_state);}while(0)
+#define eh_task_set_current_state(_state)     do{eh_get_global_handle()->current_task->state = (_state);}while(0)
 
 /**
  * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
@@ -218,14 +228,6 @@ extern int __async__ eh_task_next(void);
  */
 extern void eh_task_wake_up(eh_task_t *wakeup_task);
 
-/**
- * @brief               添加epoll到任务全局epoll链表
- * @param   epoll       epoll对象
- */
-#define eh_epoll_add_no_lock(epoll)                                                      \
-    do{                                                                                  \
-        eh_list_add_tail(&(epoll)->list_node, &eh_get_current_task()->epoll_list_head); \
-    }while(0)
 
 #ifdef __cplusplus
 #if __cplusplus

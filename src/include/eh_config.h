@@ -16,7 +16,7 @@
 /* 最大支持的任务数量 */
 #define EH_CONFIG_MAX_TASK_NUM                  32
 
-//#include "debug.h"
-#define eh_debugfl(fmt, ...)                    //dbg_debugfl(fmt, ##__VA_ARGS__)
+#include "debug.h"
+#define eh_debugfl(fmt, ...)                    dbg_debugfl(fmt, ##__VA_ARGS__)
 
 #endif // _EVENT_CONFIG_H_

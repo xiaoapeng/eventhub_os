@@ -26,7 +26,7 @@ int task_test_2(void *arg){
     eh_timer_start(&timer);
     for(int i=0; i<10; i++){
         __await__ eh_event_wait_timeout(eh_timer_to_event(&timer), EH_TIMER_FOREVER);
-        dbg_debugfl("1000ms wakeup");
+        dbg_debugfl("1000ms wakeup %lld", eh_get_clock_monotonic_time());
     }
     eh_timer_stop(&timer);
     dbg_debugfl("return");
@@ -42,7 +42,7 @@ int task_test_1(void *arg){
     eh_timer_start(&timer);
     for(int i=0;i<10;i++){
         __await__ eh_event_wait_timeout(eh_timer_to_event(&timer), EH_TIMER_FOREVER);
-        dbg_debugfl("500ms wakeup");
+        dbg_debugfl("500ms wakeup %lld", eh_get_clock_monotonic_time());
     }
     eh_timer_stop(&timer);
     dbg_debugfl("return");
@@ -68,11 +68,18 @@ int task_app(void *arg){
 
 int main(void){
     debug_init();
-
+    dbg_debugfl("test_eh start!!");
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);
     eh_loop_run();
     eh_global_exit();
     
+    
+    eh_global_init();
+    eh_task_create("task_app", 12*1024, "task_app", task_app);
+    eh_loop_run();
+    eh_global_exit();
+
+
     return 0;
 }
