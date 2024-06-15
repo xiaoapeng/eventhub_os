@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
@@ -8,11 +7,12 @@
 #include "eh_module.h"
 #include "eh_timer.h"
 #include "eh_platform.h"
-
+#include "epoll_hub.h"
 
 static struct {
     pthread_mutexattr_t attr;
     pthread_mutex_t     eh_use_mutex;
+    pthread_mutex_t     idle_break_mutex;
     eh_clock_t          expire;
 }linux_platform;
 static void  linux_global_lock(uint32_t *state){
@@ -34,9 +34,11 @@ static eh_clock_t linux_get_clock_monotonic_time(void){
 }
 
 static void linux_idle_or_extern_event_handler(void){
-    
-    usleep((__useconds_t)eh_clock_to_usec(eh_get_loop_idle_time()));
+    eh_usec_t usec_timeout;
 
+    usec_timeout = eh_clock_to_usec(eh_get_loop_idle_time());
+
+    epoll_hub_poll(usec_timeout);
 }
 static void linux_idle_break( void ){
     
@@ -54,17 +56,46 @@ static eh_platform_port_param_t linux_platform_port_param = {
 };
 
 static int  __init linux_platform_init(void){
-    pthread_mutexattr_init(&linux_platform.attr);
-    pthread_mutexattr_settype(&linux_platform.attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&linux_platform.eh_use_mutex, &linux_platform.attr);
+    int ret;
+    ret = epoll_hub_init();
+    if(ret < 0) return ret;
 
-    eh_platform_register_port_param(&linux_platform_port_param);
-    return 0;
+    ret = pthread_mutexattr_init(&linux_platform.attr);
+    if(ret < 0)
+        goto mutex_attr_init_error;
+    ret = pthread_mutexattr_settype(&linux_platform.attr, PTHREAD_MUTEX_RECURSIVE);
+    if(ret < 0)
+        goto pthread_mutexattr_settype_error;
+    ret = pthread_mutex_init(&linux_platform.eh_use_mutex, &linux_platform.attr);
+    if(ret < 0)
+        goto pthread_mutex_init_eh_use_error;
+        
+    ret = pthread_mutex_init(&linux_platform.idle_break_mutex, NULL);
+    if(ret < 0)
+        goto pthread_mutex_idle_break_mutex_use_error;
+
+    ret = eh_platform_register_port_param(&linux_platform_port_param);
+    if(ret < 0)
+        goto eh_platform_register_port_param_error;
+    ret = 0;
+    return ret;
+eh_platform_register_port_param_error:
+    pthread_mutex_destroy(&linux_platform.idle_break_mutex);
+pthread_mutex_idle_break_mutex_use_error:
+    pthread_mutex_destroy(&linux_platform.eh_use_mutex);
+pthread_mutex_init_eh_use_error:
+pthread_mutexattr_settype_error:
+    pthread_mutexattr_destroy(&linux_platform.attr);
+mutex_attr_init_error:
+    epoll_hub_exit();
+    return ret;
 }
 
 static void __exit linux_platform_deinit(void){
+    pthread_mutex_destroy(&linux_platform.idle_break_mutex);
     pthread_mutex_destroy(&linux_platform.eh_use_mutex);
     pthread_mutexattr_destroy(&linux_platform.attr);
+    epoll_hub_exit();
 }
 
 eh_core_module_export(linux_platform_init, linux_platform_deinit);

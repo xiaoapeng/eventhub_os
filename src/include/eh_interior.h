@@ -98,6 +98,7 @@ struct eh_event_epoll_receptor{
 struct eh_epoll{
     struct eh_list_head                 pending_list_head;
     struct eh_rbtree_root               all_receptor_tree;
+    struct eh_task                      *wakeup_task;           /* 被唤醒的任务            */
 };
 
 extern eh_t _global_eh;

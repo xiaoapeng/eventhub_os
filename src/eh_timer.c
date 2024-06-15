@@ -21,7 +21,7 @@
 #define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)
 
 #define FIRST_TIMER_UPDATE      1
-#define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000)))
+#define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000*10)))
 
 static struct eh_rbtree_root     timer_tree_root;                                       /* 系统时钟树 */
 static        eh_clock_t         timer_now;
@@ -167,6 +167,12 @@ int eh_timer_init(eh_timer_event_t *timer){
     timer->interval = 0;
     timer->attrribute = 0;
     return 0;
+}
+
+
+void eh_timer_clean(eh_timer_event_t *timer){
+    eh_timer_stop(timer);
+    eh_event_clean(&timer->event);
 }
 
 static int __init eh_timer_interior_init(void){

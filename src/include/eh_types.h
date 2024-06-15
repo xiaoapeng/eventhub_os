@@ -79,13 +79,13 @@ extern "C"{
 #define EH_STRINGIFY(x) #x
 
 #undef offsetof
-#define offsetof(TYPE, MEMBER)	__builtin_offsetof(TYPE, MEMBER)
-#define typeof_member(T, m)	typeof(((T*)0)->m)
-#define __same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
-#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+#define offsetof(TYPE, MEMBER)	        __builtin_offsetof(TYPE, MEMBER)
+#define typeof_member(T, m)	            typeof(((T*)0)->m)
+#define __same_type(a, b)               __builtin_types_compatible_p(typeof(a), typeof(b))
+#define static_assert(expr, ...)        __static_assert(expr, ##__VA_ARGS__, #expr)
 #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-# define likely(x)	__builtin_expect(!!(x), 1)
-# define unlikely(x)	__builtin_expect(!!(x), 0)
+# define likely(x)	                    __builtin_expect(!!(x), 1)
+# define unlikely(x)	                __builtin_expect(!!(x), 0)
 
 #define container_of(ptr, type, member) ({				\
 	void *__mptr = (void *)(ptr);					\

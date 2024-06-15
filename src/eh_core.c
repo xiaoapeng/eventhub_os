@@ -239,7 +239,7 @@ int eh_loop_run(void){
     eh->state = EH_SCHEDULER_STATE_RUN;
     eh->stop_flag = false;
 
-    while(!eh->stop_flag){
+    for(;;){
 
         /* 检查定时器是否超时，超时后进行相关事件通知 */
         eh_timer_check();
@@ -248,6 +248,10 @@ int eh_loop_run(void){
         
         /* 进行调度 */
         __await__ eh_task_next();
+
+        if(unlikely(eh->stop_flag))
+            break;
+
         /* 调用用户外部处理函数 */
         eh->state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
         eh->idle_or_extern_event_handler();
@@ -350,7 +354,6 @@ static void module_group_exit(void){
 
 }
 int eh_global_init( void ){
-    struct eh_module aaa(void);
     interior_init();
     module_group_init();
     return 0;

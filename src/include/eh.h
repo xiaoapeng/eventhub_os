@@ -125,6 +125,7 @@ struct eh_platform_port_param{
     })
 
 
+
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 /* ########################################################## event 相关接口 ############################################################ */
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
@@ -195,7 +196,7 @@ extern void eh_epoll_del(eh_epoll_t epoll);
  * @param  userdata         当事件发生时，可将userdata通过wait传递出来
  * @return int
  */
-extern int eh_epoll_local_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
+extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
 
 /**
  * @brief                   为epoll删除一个被监视事件
@@ -203,7 +204,7 @@ extern int eh_epoll_local_add_event(eh_epoll_t epoll, eh_event_t *e, void *userd
  * @param  e                事件句柄
  * @return int 
  */
-extern int eh_epoll_local_del_event(eh_epoll_t epoll,eh_event_t *e);
+extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
 
 /**
  * @brief                   epoll事件等待

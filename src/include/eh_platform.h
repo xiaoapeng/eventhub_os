@@ -29,7 +29,7 @@ static inline eh_sclock_t eh_get_loop_idle_time(void){
     uint32_t state;
     eh_sclock_t half_time;
     eh_lock(&state);
-    half_time = eh_list_empty(&eh_task_get_current()->task_list_node) ? 
+    half_time = !eh_list_empty(&eh_task_get_current()->task_list_node) ? 
         0 : eh_timer_get_first_remaining_time_on_lock();
     eh_unlock(state);
     return half_time;

@@ -80,10 +80,17 @@ extern int eh_time_restart(eh_timer_event_t *timer);
 /**
  * @brief                   定时器初始化
  * @param  timer            实例指针
- * @param  callback         事件触发时的回调函数
  * @return int              见eh_error.h
  */
 extern int eh_timer_init(eh_timer_event_t *timer);
+
+
+/**
+ * @brief                   清除占用资源
+ * @param  timer            实例指针
+ */
+extern void eh_timer_clean(eh_timer_event_t *timer);
+
 
 /**
  * @brief                           配置定时器的超时时间,若定时器在运行中，则下次重新运行时使用此值

@@ -7,11 +7,16 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+
 add_compile_options(
-    "$<$<CONFIG:Debug>:-g;-O0>"
+    "$<$<CONFIG:Debug>:-g;-O0;-fprofile-arcs;-ftest-coverage>"
     "$<$<CONFIG:Release>:-O3>"
     "$<$<CONFIG:MinSizeRel>:-Os>"
     "$<$<CONFIG:RelWithDebInfo>:-g;-Os>"
+)
+
+add_link_options(
+    "$<$<CONFIG:Debug>:-fprofile-arcs;-ftest-coverage>"
 )
 
 add_compile_options(
@@ -42,4 +47,5 @@ add_executable( test_epoll	"${CMAKE_CURRENT_SOURCE_DIR}/test/test_epoll.c")
 target_link_libraries(test_epoll general_test event_hub_interface)
 add_executable( test_rb "${CMAKE_CURRENT_SOURCE_DIR}/test/test_rb.c")
 target_link_libraries(test_rb general_test event_hub_interface)
-
+add_executable( test_coverage "${CMAKE_CURRENT_SOURCE_DIR}/test/test_coverage.c")
+target_link_libraries(test_coverage general_test event_hub_interface)

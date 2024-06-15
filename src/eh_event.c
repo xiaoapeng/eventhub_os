@@ -165,6 +165,8 @@ void eh_event_clean(eh_event_t *e){
             epoll_receptor = container_of(pos, struct eh_event_epoll_receptor, receptor);
             if(eh_list_empty(&epoll_receptor->pending_list_node))
                 eh_list_add_tail(&epoll_receptor->pending_list_node, &pos->epoll->pending_list_head);
+            if(pos->epoll->wakeup_task)
+                eh_task_wake_up(pos->epoll->wakeup_task);
         }
         eh_event_remove_receptor_no_lock(pos);
     }
@@ -191,6 +193,8 @@ int eh_event_notify(eh_event_t *e){
             epoll_receptor = container_of(pos, struct eh_event_epoll_receptor, receptor);
             if(eh_list_empty(&epoll_receptor->pending_list_node))
                 eh_list_add_tail(&epoll_receptor->pending_list_node, &pos->epoll->pending_list_head);
+        if(pos->epoll->wakeup_task)
+            eh_task_wake_up(pos->epoll->wakeup_task);
         }
     }
     eh_unlock(state);
@@ -243,7 +247,7 @@ void eh_epoll_del(eh_epoll_t _epoll){
     eh_free(epoll);
 }
 
-int eh_epoll_local_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
+int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     uint32_t state;
     int ret = EH_RET_OK;
     struct eh_rbtree_node  *ret_rb;
@@ -255,7 +259,7 @@ int eh_epoll_local_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     
     if( receptor == NULL )
         return EH_RET_MALLOC_ERROR;
-    eh_event_receptor_epoll_init(&receptor->receptor, eh_task_get_current(), epoll);
+    eh_event_receptor_epoll_init(&receptor->receptor, NULL, epoll);
     eh_list_head_init(&receptor->pending_list_node);
     eh_rb_node_init(&receptor->rb_node);
     receptor->event = e;
@@ -275,7 +279,7 @@ out:
     return ret;
 }
 
-int eh_epoll_local_del_event(eh_epoll_t _epoll,eh_event_t *e){
+int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
     uint32_t state;
     struct eh_event_epoll_receptor *epoll_receptor;
     struct eh_epoll *epoll = _epoll;
@@ -329,6 +333,7 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
         if(ret != 0)
             goto unlock_exit;
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        epoll->wakeup_task = eh_task_get_current();
         eh_unlock(state);
 
         ret = __await__ eh_task_next();
@@ -366,6 +371,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
             goto unlock_out;
         }
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
+        epoll->wakeup_task = eh_task_get_current();
         eh_unlock(state);
 
         ret = __await__ eh_task_next();
