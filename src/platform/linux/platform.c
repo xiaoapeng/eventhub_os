@@ -1,7 +1,9 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
+#include "debug.h"
 #include "eh.h"
 #include "eh_config.h"
 #include "eh_module.h"
@@ -14,6 +16,7 @@ static struct {
     pthread_mutex_t     eh_use_mutex;
     pthread_mutex_t     idle_break_mutex;
     eh_clock_t          expire;
+    bool                is_idle_state;
 }linux_platform;
 static void  linux_global_lock(uint32_t *state){
     (void) state;
@@ -36,12 +39,22 @@ static eh_clock_t linux_get_clock_monotonic_time(void){
 static void linux_idle_or_extern_event_handler(void){
     eh_usec_t usec_timeout;
 
+
+    pthread_mutex_lock(&linux_platform.idle_break_mutex);
+    linux_platform.is_idle_state = true;
     usec_timeout = eh_clock_to_usec(eh_get_loop_idle_time());
+    epoll_hub_clean_wait_break_event();
+    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
 
     epoll_hub_poll(usec_timeout);
+    
+    linux_platform.is_idle_state = false;
 }
 static void linux_idle_break( void ){
-    
+    pthread_mutex_lock(&linux_platform.idle_break_mutex);
+    if(linux_platform.is_idle_state)
+        epoll_hub_set_wait_break_event();
+    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
 }
 
 static eh_platform_port_param_t linux_platform_port_param = {
@@ -59,7 +72,7 @@ static int  __init linux_platform_init(void){
     int ret;
     ret = epoll_hub_init();
     if(ret < 0) return ret;
-
+    linux_platform.is_idle_state = false;
     ret = pthread_mutexattr_init(&linux_platform.attr);
     if(ret < 0)
         goto mutex_attr_init_error;

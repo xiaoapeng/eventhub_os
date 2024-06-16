@@ -34,7 +34,7 @@ int task_app(void *arg){
     eh_timer_config_interval(&timer2, (eh_sclock_t)eh_msec_to_clock(700));
     
     eh_timer_init(&timer3);
-    eh_timer_set_attr(&timer3, EH_TIMER_ATTR_AUTO_CIRCULATION);
+    eh_timer_set_attr(&timer3, 0);
     eh_timer_config_interval(&timer3, (eh_sclock_t)eh_msec_to_clock(1100));
     
     eh_timer_init(&timer4);
@@ -45,7 +45,7 @@ int task_app(void *arg){
     eh_timer_start(&timer1);
     eh_timer_start(&timer2);
     eh_timer_start(&timer3);
-    eh_timer_start(&timer4);
+    eh_timer_restart(&timer4);
 
     epoll = eh_epoll_new();
 
@@ -63,6 +63,12 @@ int task_app(void *arg){
             }else{
                 dbg_debugfl("%s timeout!! ERROR! ", epoll_slot[i].userdata);
             }
+            
+            if(epoll_slot[i].event == eh_timer_to_event(&timer2)){
+                /* restart test */
+                dbg_debugfl("eh_time_restart(&timer1)");
+                eh_timer_restart(&timer1);
+            }
         }
     }
     
@@ -72,7 +78,6 @@ int task_app(void *arg){
     eh_timer_clean(&timer1);
 
     eh_epoll_del(epoll);
-
 
     eh_loop_exit(0);
     return 0;

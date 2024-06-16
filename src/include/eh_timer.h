@@ -75,7 +75,7 @@ extern int eh_timer_stop(eh_timer_event_t *timer);
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_time_restart(eh_timer_event_t *timer);
+extern int eh_timer_restart(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器初始化

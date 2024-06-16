@@ -89,9 +89,10 @@ struct eh_platform_port_param{
  * @param   _msec   毫秒数
  * return   eh_clock_t
  */
-#define  eh_msec_to_clock(_msec) ({                                                     \
-        eh_clock_t clock = ((eh_msec_t)(_msec) * _clocks_per_sec)/1000;                 \
-        clock ? clock : !!(_msec);                                                      \
+#define  eh_msec_to_clock(_msec) ({                                                                 \
+        eh_clock_t clock = ((eh_msec_t)(_msec)/1000) * _clocks_per_sec;                             \
+        clock += (((_msec)%1000) * _clocks_per_sec)/1000;                                           \
+        clock ? clock : !!(_msec);                                                                  \
     })
 
 /**
@@ -99,9 +100,10 @@ struct eh_platform_port_param{
  * @param   _usec   微秒数
  * return   eh_clock_t
  */
-#define  eh_usec_to_clock(_usec) ({                                                     \
-        eh_clock_t clock = ((eh_usec_t)(_usec) * _clocks_per_sec)/1000000;              \
-        clock ? clock : !!(_usec);                                                      \
+#define  eh_usec_to_clock(_usec) ({                                                                 \
+        eh_clock_t clock = ((eh_usec_t)((_usec)/1000000) * _clocks_per_sec);                        \
+        clock += (((_usec)%1000000) * _clocks_per_sec)/1000000;                                     \
+        clock ? clock : !!(_usec);                                                                  \
     })
 
 /**
@@ -109,9 +111,10 @@ struct eh_platform_port_param{
  * @param   _clock  时钟数
  * return   eh_msec_t
  */
-#define  eh_clock_to_msec(_clock) ({                                                    \
-        eh_msec_t msec = ((eh_msec_t)(_clock) * 1000)/_clocks_per_sec;                  \
-        msec ? msec : !!(_clock);                                                       \
+#define  eh_clock_to_msec(_clock) ({                                                                \
+        eh_msec_t msec = ((eh_msec_t)(((eh_clock_t)(_clock)/_clocks_per_sec) * 1000));              \
+        msec += (((eh_clock_t)(_clock)%_clocks_per_sec) * 1000)/_clocks_per_sec;                    \
+        msec ? msec : !!(_clock);                                                                   \
     })
 
 /**
@@ -119,9 +122,10 @@ struct eh_platform_port_param{
  * @param   _clock  时钟数
  * return   eh_usec_t
  */
-#define  eh_clock_to_usec(_clock) ({                                                    \
-        eh_usec_t usec = ((eh_usec_t)(_clock) * 1000000)/_clocks_per_sec;               \
-        usec ? usec : !!(_clock);                                                       \
+#define  eh_clock_to_usec(_clock) ({                                                                \
+        eh_msec_t msec = ((eh_msec_t)(((eh_clock_t)(_clock)/_clocks_per_sec) * 1000000));           \
+        msec += (((eh_clock_t)(_clock)%_clocks_per_sec) * 1000000)/_clocks_per_sec;                 \
+        msec ? msec : !!(_clock);                                                                   \
     })
 
 

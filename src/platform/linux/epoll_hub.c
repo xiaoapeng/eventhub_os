@@ -11,9 +11,12 @@
  */
 
 
+#include <unistd.h>
 #include <sys/timerfd.h>
 #include <sys/epoll.h>
-#include <unistd.h>
+#include <sys/eventfd.h>
+
+#include "debug.h"
 #include "eh.h"
 #include "eh_module.h"
 #include "epoll_hub.h"
@@ -27,6 +30,23 @@ struct epoll_hub{
     struct epoll_fd_action      wait_break_fd_action;
     struct epoll_event          wait_events[1024];
 }epoll_hub;
+
+
+static void event_wait_break_callback(uint32_t events, void *arg){
+    (void) events;
+    (void) arg;
+    epoll_hub_clean_wait_break_event();
+}
+
+void epoll_hub_clean_wait_break_event(void){
+    eventfd_t value;
+    eventfd_read(epoll_hub.wait_break_fd, &value);
+}
+
+void epoll_hub_set_wait_break_event(void){
+    eventfd_write(epoll_hub.wait_break_fd, 1);
+}
+
 
 int epoll_hub_add_fd(int fd, uint32_t events, struct epoll_fd_action *action){
     struct epoll_event event = {0};
@@ -83,6 +103,18 @@ int __init epoll_hub_init(void){
         goto timerfd_create_error;
     epoll_hub.timeout_fd = ret;
 
+    ret = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if(ret < 0)
+        goto eventfd_error;
+    epoll_hub.wait_break_fd = ret;
+
+    epoll_hub.wait_break_fd_action.arg = NULL;
+    epoll_hub.wait_break_fd_action.callback = event_wait_break_callback;
+
+    ret = epoll_hub_add_fd(epoll_hub.wait_break_fd, EPOLLIN, &epoll_hub.wait_break_fd_action);
+    if(ret < 0)
+        goto epoll_hub_add_fd_error;
+
     ret = epoll_hub_add_fd(epoll_hub.timeout_fd, EPOLLIN, NULL);
     if(ret < 0)
         goto epoll_hub_add_fd_error;
@@ -90,6 +122,8 @@ int __init epoll_hub_init(void){
     ret = 0;
     return ret;
 epoll_hub_add_fd_error:
+    close(epoll_hub.wait_break_fd);
+eventfd_error:
     close(epoll_hub.timeout_fd);
 timerfd_create_error:
     close(epoll_hub.epoll_fd);

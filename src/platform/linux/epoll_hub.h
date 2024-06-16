@@ -25,6 +25,8 @@ struct epoll_fd_action{
     void *arg;
 };
 
+extern void epoll_hub_set_wait_break_event(void);
+extern void epoll_hub_clean_wait_break_event(void);
 extern int  epoll_hub_add_fd(int fd, uint32_t events, struct epoll_fd_action *action);
 extern int  epoll_hub_del_fd(int fd);
 extern int  epoll_hub_poll(eh_usec_t timeout);

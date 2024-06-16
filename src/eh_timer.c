@@ -21,7 +21,7 @@
 #define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)
 
 #define FIRST_TIMER_UPDATE      1
-#define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000*10)))
+#define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000*60)))
 
 static struct eh_rbtree_root     timer_tree_root;                                       /* 系统时钟树 */
 static        eh_clock_t         timer_now;
@@ -52,9 +52,9 @@ eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void){
     if(timer_is_empty())
         return FIRST_TIMER_MAX_TIME;
     min_remaining_time = eh_diff_time(timer_get_first_expire(), timer_now);
-    min_remaining_time = min_remaining_time > FIRST_TIMER_MAX_TIME ? 
-        FIRST_TIMER_MAX_TIME : min_remaining_time;
-    return min_remaining_time;
+    if(min_remaining_time < 0)
+        return 0;
+    return min_remaining_time > FIRST_TIMER_MAX_TIME ? FIRST_TIMER_MAX_TIME : min_remaining_time;
 }
 
 void eh_timer_check(void){
@@ -126,7 +126,7 @@ out:
     return ret;
 }
 
-int eh_time_restart(eh_timer_event_t *timer){
+int eh_timer_restart(eh_timer_event_t *timer){
     uint32_t state;
     int ret = EH_RET_OK;
 
