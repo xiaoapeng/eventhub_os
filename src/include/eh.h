@@ -221,6 +221,14 @@ extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
 extern int __async__ eh_epoll_wait(eh_epoll_t epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout);
 
 
+/**
+ * @brief                   定时器事件的封装，在在指定协程上睡眠 usec 微秒
+ * @param  usec             微秒
+ */
+extern void __async__ eh_usleep(eh_usec_t usec);
+
+
+
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 /* EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE */
 

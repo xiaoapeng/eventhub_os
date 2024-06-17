@@ -51,3 +51,5 @@ add_executable( test_coverage "${CMAKE_CURRENT_SOURCE_DIR}/test/test_coverage.c"
 target_link_libraries(test_coverage general_test event_hub_interface)
 add_executable( test_safety "${CMAKE_CURRENT_SOURCE_DIR}/test/test_safety.c")
 target_link_libraries(test_safety general_test event_hub_interface)
+add_executable( test_sleep "${CMAKE_CURRENT_SOURCE_DIR}/test/test_sleep.c")
+target_link_libraries(test_sleep general_test event_hub_interface)

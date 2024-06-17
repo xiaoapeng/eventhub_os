@@ -36,6 +36,19 @@ static eh_clock_t linux_get_clock_monotonic_time(void){
     return microsecond;
 }
 
+// static uint64_t linux_get_clock_monotonic_time(void) {
+//     uint32_t low, high;
+//     asm volatile (
+//         "rdtsc"           // 执行RDTSC指令
+//         : "=a"(low), "=d"(high) // 输出到%eax（low）和%edx（high）
+//         :
+//         : "memory" // 确保内存副作用正确处理
+//     );
+    
+//     return ((uint64_t)high << 32) | low; // 结合高低32位为一个64位值
+// }
+
+
 static void linux_idle_or_extern_event_handler(void){
     eh_usec_t usec_timeout;
 
@@ -61,6 +74,7 @@ static eh_platform_port_param_t linux_platform_port_param = {
     .global_lock = linux_global_lock,
     .global_unlock = linux_global_unlock,
     .clocks_per_sec = 1000000,
+    //.clocks_per_sec = 2903998000,
     .get_clock_monotonic_time = linux_get_clock_monotonic_time,
     .idle_or_extern_event_handler = linux_idle_or_extern_event_handler,
     .idle_break = linux_idle_break,

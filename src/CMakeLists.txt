@@ -9,6 +9,7 @@ target_sources(event_hub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_rbtree.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/eh_sleep.c"
 )
 
 target_compile_options( event_hub PRIVATE "-fPIC" "-fdata-sections" "-ffunction-sections" )
