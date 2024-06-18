@@ -238,6 +238,12 @@ extern void __async__ eh_usleep(eh_usec_t usec);
 /* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 
 /**
+ * @brief 让出当前任务
+ * @return int 返回0
+ */
+extern void __async__ eh_task_yield(void);
+
+/**
  * @brief                   使用静态方式创建一个协程任务
  * @param  name             任务名称
  * @param  stack            任务的静态栈

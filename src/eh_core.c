@@ -153,6 +153,13 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack,
 }
 
 /**
+ * @brief 让出当前任务
+ */
+void __async__ eh_task_yield(void){
+    eh_task_next();
+}
+
+/**
  * @brief                   使用静态方式创建一个协程任务
  * @param  name             任务名称
  * @param  stack            任务的静态栈
