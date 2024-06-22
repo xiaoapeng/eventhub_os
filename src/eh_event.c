@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "eh.h"
-#include "eh_error.h"
+#include "eh_event.h"
 #include "eh_interior.h"
 #include "eh_list.h"
 #include "eh_rbtree.h"
@@ -231,12 +231,12 @@ eh_epoll_t eh_epoll_new(void){
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     eh_list_head_init(&epoll->pending_list_head);
     eh_rb_root_init(&epoll->all_receptor_tree, __epoll_rbtree_cmp);
-    return (eh_epoll_t*)epoll;
+    return (eh_epoll_t)epoll;
 }
 
 void eh_epoll_del(eh_epoll_t _epoll){
     struct eh_event_epoll_receptor *pos,*n;
-    struct eh_epoll *epoll = _epoll;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     uint32_t state;
     eh_rb_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
         eh_lock(&state);
@@ -251,7 +251,7 @@ int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     uint32_t state;
     int ret = EH_RET_OK;
     struct eh_rbtree_node  *ret_rb;
-    struct eh_epoll *epoll = _epoll;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     struct eh_event_epoll_receptor *receptor = 
         eh_malloc(sizeof(struct eh_event_epoll_receptor));
     eh_param_assert(_epoll);
@@ -282,7 +282,7 @@ out:
 int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
     uint32_t state;
     struct eh_event_epoll_receptor *epoll_receptor;
-    struct eh_epoll *epoll = _epoll;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
 
     eh_param_assert(_epoll);
     eh_param_assert(e);
@@ -389,12 +389,12 @@ out:
 int __async__ eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
     uint32_t state;
     int ret;
-    struct eh_epoll *epoll = _epoll;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     if(eh_time_is_forever(timeout))
         return __await__ _eh_epoll_wait(epoll, epool_slot, slot_size);
     if(timeout > 0)
         return __await__  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
-    /* timeout == 0 || timeout != EH_TIMER_FOREVER 时，不进行任何等待 */
+    /* timeout == 0 || timeout != EH_TIME_FOREVER 时，不进行任何等待 */
     eh_lock(&state);
     ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
     eh_unlock(state);

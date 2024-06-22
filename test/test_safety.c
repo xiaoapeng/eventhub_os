@@ -18,8 +18,8 @@
 
 #include "debug.h"
 #include "eh.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+#include "eh_event.h"
+#include "eh_timer.h"
 
 static bool gpio_status = false;
 void* thread_function(void* arg) {
@@ -87,7 +87,7 @@ int task_app(void *arg){
         eh_loop_exit(1);
     }
     for(;;){
-        ret = __await__ eh_event_wait_timeout(eh_timer_to_event(&gpio_debounce_timer), EH_TIMER_FOREVER);
+        ret = __await__ eh_event_wait_timeout(eh_timer_to_event(&gpio_debounce_timer), EH_TIME_FOREVER);
         if(ret != EH_RET_OK)
             break;
         dbg_debugfl("gpio_status:%s %llu", gpio_status ? "H":"L", eh_clock_to_msec(eh_get_clock_monotonic_time()));

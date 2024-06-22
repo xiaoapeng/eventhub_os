@@ -10,14 +10,14 @@
  * @par 修改日志:
  */
 
-#include "debug.h"
-#include "eh.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+
 #include <stdlib.h>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <valgrind/valgrind.h>
+#include "eh.h"
+#include "eh_event.h"
+#include "eh_timer.h" 
+#include "eh_sleep.h"
+
+#include "debug.h"
 int task_test_2(void *arg){
     (void) arg;
     for(int i=0; i < 20; i++){
@@ -44,9 +44,9 @@ int task_app(void *arg){
     dbg_debugfl("%s", arg);
     test_1 = eh_task_create("test_1", 12*1024, "1", task_test_1);
     test_2 = eh_task_create("test_2", 12*1024, "2", task_test_2);
-    ret = eh_task_join(test_1, &app_ret, EH_TIMER_FOREVER);
+    ret = eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_1: ret=%d app_ret=%d", ret, app_ret);
-    ret = eh_task_join(test_2, &app_ret, EH_TIMER_FOREVER);
+    ret = eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
     eh_loop_exit(0);
     return 0;

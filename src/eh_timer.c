@@ -11,11 +11,9 @@
  */
 
 #include "eh.h"
-#include "eh_co.h"
-#include "eh_config.h"
+#include "eh_event.h"
+#include "eh_timer.h"
 #include "eh_interior.h"
-#include "eh_module.h"
-#include "eh_rbtree.h"
 
 #define timer_is_empty()            (eh_rb_root_is_empty(&timer_tree_root))
 #define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)

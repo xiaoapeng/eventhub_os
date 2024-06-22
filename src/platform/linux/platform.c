@@ -5,8 +5,7 @@
 #include <unistd.h>
 #include "debug.h"
 #include "eh.h"
-#include "eh_config.h"
-#include "eh_module.h"
+#include "eh_event.h"
 #include "eh_timer.h"
 #include "eh_platform.h"
 #include "epoll_hub.h"

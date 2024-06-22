@@ -12,11 +12,11 @@
 
 #include "debug.h"
 #include "eh.h"
+#include "eh_event.h"
 #include "eh_timer.h" 
 #include "eh_types.h"
 #include <stdlib.h>
 #include <sys/epoll.h>
-#include <valgrind/valgrind.h>
 
 int task_app(void *arg){
     eh_timer_event_t timer1, timer2, timer3;

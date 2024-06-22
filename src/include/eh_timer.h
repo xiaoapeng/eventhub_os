@@ -17,9 +17,6 @@
 #include <stdint.h>
 typedef struct eh_timer_event eh_timer_event_t;
 
-/* 永不到期 */
-#define EH_TIMER_FOREVER       (-1)
-
 #define EH_TIMER_ATTR_AUTO_CIRCULATION  0x00000001              /* 自动重复，重运行 */
 #define EH_TIMER_ATTR_NOW_TIME_BASE     0x00000002              /* 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 */
 
@@ -100,7 +97,7 @@ extern void eh_timer_clean(eh_timer_event_t *timer);
  */
 #define eh_timer_config_interval(timer, clock_interval)     \
     do{                                                     \
-        (timer)->interval = clock_interval;                 \
+        (timer)->interval = (eh_sclock_t)(clock_interval);                 \
     }while(0)
 
 /**
@@ -118,7 +115,7 @@ extern void eh_timer_clean(eh_timer_event_t *timer);
  */
 #define eh_timer_to_event(timer)            (&(timer)->event)
 
-#define eh_time_is_forever(time_clock)      ((eh_sclock_t)(time_clock) == EH_TIMER_FOREVER)
+#define eh_time_is_forever(time_clock)      ((eh_sclock_t)(time_clock) == EH_TIME_FOREVER)
 
 #ifdef __cplusplus
 #if __cplusplus

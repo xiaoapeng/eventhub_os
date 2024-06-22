@@ -15,15 +15,9 @@
 #include <string.h>
 #include <strings.h>
 #include "eh.h"
-#include "eh_co.h"
-#include "eh_config.h"
-#include "eh_error.h"
+#include "eh_event.h"
 #include "eh_interior.h"
-#include "eh_list.h"
-#include "eh_module.h"
-#include "eh_rbtree.h"
 #include "eh_timer.h"
-#include "eh_types.h"
 
 
 eh_t _global_eh;
@@ -67,12 +61,8 @@ static void _clear(void){
     eh_t *eh = eh_get_global_handle();
     eh_task_t *pos,*n;
 
-    /* 清理任务 */
+    /* 清理已经完成的任务，未完成的任务该泄漏就泄漏，他应该是程序员的职责 */
     eh_list_for_each_entry_safe(pos, n, &eh->task_finish_list_head, task_list_node)
-        _task_destroy(pos);
-    eh_list_for_each_entry_safe(pos, n, &eh->current_task->task_list_node, task_list_node)
-        _task_destroy(pos);
-    eh_list_for_each_entry_safe(pos, n, &eh->task_wait_list_head, task_list_node)
         _task_destroy(pos);
     
 }
@@ -198,18 +188,29 @@ eh_task_t* eh_task_create(const char *name, uint32_t stack_size, void *task_arg,
  * @return int              成功返回0
  */
 int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
+    eh_t *eh = eh_get_global_handle();
     int wait_ret;
     eh_param_assert( task != NULL );
+    if(eh->state == EH_SCHEDULER_STATE_EXIT)
+        goto destroy;
 
     wait_ret = __await__ eh_event_wait_condition_timeout(&task->event, task, _task_is_finish, timeout);
     if(wait_ret < 0)
         return wait_ret;
-
+destroy:
     if(ret)
         *ret = task->task_ret;
     _task_destroy(task);
     return EH_RET_OK;
 }
+
+/**
+ * @brief                   无条件回收任务，十分暴力，被回收的任务资源应该由回收者释放
+ */
+void eh_task_destroy(eh_task_t *task){
+    _task_destroy(task);
+}
+
 /**
  * @brief                   退出任务
  * @param  ret              退出返回值
@@ -250,8 +251,6 @@ int eh_loop_run(void){
 
         /* 检查定时器是否超时，超时后进行相关事件通知 */
         eh_timer_check();
-        
-        /* 检查是否有信号需要处理 */
         
         /* 进行调度 */
         __await__ eh_task_next();

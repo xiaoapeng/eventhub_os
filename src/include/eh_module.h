@@ -53,8 +53,8 @@ struct module_group{
 
 
 
-#define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, 0)
-#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, 1)
+#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, 0)
+#define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, 1)
 #define eh_module_export(_init__func_, _exit__func_)            _eh_define_modeule_export(_init__func_, _exit__func_, 7)
 #define EH_MODEULE_GROUP_MAX_CNT    8
 
