@@ -18,12 +18,12 @@
 #include "eh_mutex.h"
 #include "debug.h"
 
-eh_mutex_t mutex;
+eh_mutex_t sem;
 int task_test_2(void *arg){
     int ret;
     (void) arg;
 
-    ret = eh_mutex_lock(mutex, EH_TIME_FOREVER);
+    ret = __await__ eh_mutex_lock(sem, EH_TIME_FOREVER);
     dbg_debugfl("ret = %d",ret);
 
     dbg_debugfl("debug..");
@@ -36,7 +36,7 @@ int task_test_2(void *arg){
     eh_usleep(1*1000*1000);
     dbg_debugfl("debug..");
 
-    ret = eh_mutex_unlock(mutex);
+    ret = eh_mutex_unlock(sem);
     dbg_debugfl("ret = %d",ret);
 
     return 2;
@@ -46,8 +46,8 @@ int task_test_1(void *arg){
     int ret;
     (void) arg;
 
-    ret = eh_mutex_lock(mutex, EH_TIME_FOREVER);
-    ret = eh_mutex_lock(mutex, EH_TIME_FOREVER);
+    ret = __await__ eh_mutex_lock(sem, EH_TIME_FOREVER);
+    ret = __await__ eh_mutex_lock(sem, EH_TIME_FOREVER);
     dbg_debugfl("ret = %d",ret);
 
     dbg_debugfl("debug..");
@@ -60,8 +60,8 @@ int task_test_1(void *arg){
     eh_usleep(1*1000*1000);
     dbg_debugfl("debug..");
 
-    ret = eh_mutex_unlock(mutex);
-    ret = eh_mutex_unlock(mutex);
+    ret = eh_mutex_unlock(sem);
+    ret = eh_mutex_unlock(sem);
     dbg_debugfl("ret = %d",ret);
 
     return 1;
@@ -75,7 +75,7 @@ int task_app(void *arg){
 
     dbg_debugfl("%s", arg);
     
-    mutex = eh_mutex_create(EH_MUTEX_TYPE_RECURSIVE);
+    sem = eh_mutex_create(EH_MUTEX_TYPE_RECURSIVE);
 
     test_1 = eh_task_create("test_1", 12*1024, "1", task_test_1);
     test_2 = eh_task_create("test_2", 12*1024, "2", task_test_2);
@@ -85,7 +85,7 @@ int task_app(void *arg){
     ret = eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
 
-    eh_mutex_destroy(mutex);
+    eh_mutex_destroy(sem);
 
     eh_loop_exit(0);
     return 0;

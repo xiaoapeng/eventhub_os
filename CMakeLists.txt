@@ -68,3 +68,5 @@ add_executable( test_event_cb "${CMAKE_CURRENT_SOURCE_DIR}/test/test_event_cb.c"
 target_link_libraries(test_event_cb general_test event_hub_interface)
 add_executable( test_mutex "${CMAKE_CURRENT_SOURCE_DIR}/test/test_mutex.c")
 target_link_libraries(test_mutex general_test event_hub_interface)
+add_executable( test_sem "${CMAKE_CURRENT_SOURCE_DIR}/test/test_sem.c")
+target_link_libraries(test_sem general_test event_hub_interface)

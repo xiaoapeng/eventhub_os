@@ -114,6 +114,7 @@ void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_lock(&state);
     if(wakeup_task->state != EH_TASK_STATE_WAIT)
         goto out;
+    eh_idle_break();
     wakeup_task->state = EH_TASK_STATE_READY;
     eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
 out:

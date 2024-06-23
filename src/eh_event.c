@@ -38,12 +38,12 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
     for(;;){
         eh_lock(&state);
         if(condition){
-            if(condition(arg)){
-                ret = EH_RET_OK;
-                goto unlock_out;
-            }
             if(receptor.error){
                 ret = EH_RET_EVENT_ERROR;
+                goto unlock_out;
+            }
+            if(condition(arg)){
+                ret = EH_RET_OK;
                 goto unlock_out;
             }
         }else if(receptor.flags) {

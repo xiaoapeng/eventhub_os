@@ -5,6 +5,8 @@
  *    在遍历链表时调用 __await类型函数，在其他任务上就
  *    可能操作到该链表导致链表指针无效出现段错误，所以
  *    在非必要情况，是用不到本模块的。
+ *      使用限制: 此模块所有的函数都只能在协程上下文中使用，
+ *      也就是说，不要在中断上下文，或者其他线程上下文中调用本函数
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @version 1.0
  * @date 2024-06-22
@@ -21,14 +23,14 @@
 #include "eh_interior.h"
 #include "eh_mutex.h"
 
-
+#define EH_MUTEX_LOCK_CNT_MAX   0xFFFFFFFF
 struct eh_mutex {
     eh_event_t                  wakeup_event;
     uint32_t                    lock_cnt;
     enum eh_mutex_type          type;
     eh_task_t                   *lock_task;
 };
-const eh_event_type_t eh_mutex_type = {
+static const eh_event_type_t eh_mutex_type = {
     .name = "mutex_type"
 };
 
@@ -62,6 +64,8 @@ int __async__ eh_mutex_lock(eh_mutex_t _mutex, eh_sclock_t timeout){
     ret = __await__ eh_event_wait_condition_timeout(&mutex->wakeup_event, mutex, condition_mutex, timeout);
     if(ret < 0)
         return ret;
+    if( mutex->lock_cnt == EH_MUTEX_LOCK_CNT_MAX )
+        return EH_RET_INVALID_STATE;
     mutex->lock_task = eh_task_self();
     mutex->lock_cnt++;
     return EH_RET_OK;

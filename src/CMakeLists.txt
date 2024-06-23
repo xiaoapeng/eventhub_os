@@ -12,6 +12,7 @@ target_sources(event_hub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_sleep.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event_cb.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_mutex.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/eh_sem.c"
 )
 
 target_compile_options( event_hub PRIVATE "-fPIC" "-fdata-sections" "-ffunction-sections" )
