@@ -19,7 +19,7 @@ int task_test_2(void *arg){
     (void)arg;
     for(int i=0;i<1000000;i++){
         dbg_infofl("debug! %d %llu",i,eh_get_clock_monotonic_time());
-        eh_task_yield();
+        __await__ eh_task_yield();
     }
     return 2;
 }
@@ -28,7 +28,7 @@ int task_test_1(void *arg){
     (void)arg;
     for(int i=0;i<1000000;i++){
         dbg_infofl("debug! %d %llu",i,eh_get_clock_monotonic_time());
-        eh_task_yield();
+        __await__ eh_task_yield();
     }
     return 1;
 }
@@ -42,9 +42,9 @@ int task_app(void *arg){
     test_1 = eh_task_create("test_1", 12*1024, "1", task_test_1);
     test_2 = eh_task_create("test_2", 12*1024, "2", task_test_2);
     //eh_usleep(1000*1000);
-    ret = eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
+    ret = __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_1: ret=%d app_ret=%d", ret, app_ret);
-    ret = eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
+    ret = __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
     eh_loop_exit(0);
     return 0;

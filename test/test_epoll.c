@@ -12,6 +12,7 @@
 
 #include "debug.h"
 #include "eh.h"
+#include "eh_co.h"
 #include "eh_event.h"
 #include "eh_timer.h" 
 #include "eh_types.h"
@@ -49,7 +50,7 @@ int task_app(void *arg){
     eh_epoll_add_event(epoll, eh_timer_to_event(&timer3), "timer3");
 
     for(int i=0;i<40;i++){
-        ret = eh_epoll_wait(epoll, &epoll_slot, 1, (eh_sclock_t)eh_msec_to_clock(5000));
+        ret = __await__ eh_epoll_wait(epoll, &epoll_slot, 1, (eh_sclock_t)eh_msec_to_clock(5000));
         dbg_debugfl("ret=%d",ret);
         if(ret > 0)
             dbg_debugfl("%s timeout!! %lld", epoll_slot.userdata, eh_get_clock_monotonic_time());

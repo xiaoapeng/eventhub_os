@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "eh.h"
+#include "eh_co.h"
 #include "eh_event.h"
 #include "eh_timer.h"
 #include "eh_sleep.h" 
@@ -24,7 +25,7 @@ eh_sem_t sem;
 int task_test(void *arg){
     int ret;
     for(;;){
-        ret = eh_sem_wait(sem, EH_TIME_FOREVER);
+        ret = __await__ eh_sem_wait(sem, EH_TIME_FOREVER);
         dbg_debugfl("ret=%d %s",ret, arg);
         if(ret < 0)
             return -1;
@@ -62,10 +63,10 @@ int task_app(void *arg){
     test_3 = eh_task_create("test_3", 12*1024, "3", task_test);
     test_4 = eh_task_create("test_4", 12*1024, "4", task_test);
 
-    eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
-    eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
-    eh_task_join(test_3, &app_ret, EH_TIME_FOREVER);
-    eh_task_join(test_4, &app_ret, EH_TIME_FOREVER);
+    __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
+    __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
+    __await__ eh_task_join(test_3, &app_ret, EH_TIME_FOREVER);
+    __await__ eh_task_join(test_4, &app_ret, EH_TIME_FOREVER);
 
     //eh_sem_destroy(sem);
 

@@ -12,7 +12,7 @@
 #ifndef _EH_EVENT_H_
 #define _EH_EVENT_H_
 
-
+#include "eh_types.h"
 
 typedef struct eh_event                     eh_event_t;
 typedef struct eh_event_type                eh_event_type_t;
@@ -53,21 +53,21 @@ struct eh_epoll_slot{
  * @param  static_const_name        事件名称，可为NULL
  * @return int                      见eh_error.h
  */
-extern int eh_event_init(eh_event_t *e, const eh_event_type_t* type);
+extern __safety int eh_event_init(eh_event_t *e, const eh_event_type_t* type);
 
 /**
  * @brief                           唤醒所有监听该事件的任务
  *                                  并将其剔除等待队列，一般在释放event实例前进行调用
  * @param  e                        事件实例指针
  */
-extern void eh_event_clean(eh_event_t *e);
+extern __safety void eh_event_clean(eh_event_t *e);
 
 /**
  * @brief                           事件通知,唤醒所有监听该事件的任务
  * @param  e                        事件实例指针
  * @return int 
  */
-extern int eh_event_notify(eh_event_t *e);
+extern __safety int eh_event_notify(eh_event_t *e);
 
 /**
  * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
@@ -96,14 +96,14 @@ static inline int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t tim
  * @brief                   创建一个epoll句柄
  * @return eh_epoll_t 
  */
-extern eh_epoll_t eh_epoll_new(void);
+extern __safety eh_epoll_t eh_epoll_new(void);
 
 
 /**
  * @brief                   删除一个epoll句柄
  * @param  epoll            
  */
-extern void eh_epoll_del(eh_epoll_t epoll);
+extern __safety void eh_epoll_del(eh_epoll_t epoll);
 
 /**
  * @brief                   为epoll添加一个被监视事件

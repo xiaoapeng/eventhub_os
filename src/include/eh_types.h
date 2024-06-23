@@ -84,9 +84,10 @@ extern "C"{
 #define __same_type(a, b)               __builtin_types_compatible_p(typeof(a), typeof(b))
 #define static_assert(expr, ...)        __static_assert(expr, ##__VA_ARGS__, #expr)
 #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-# define likely(x)	                    __builtin_expect(!!(x), 1)
-# define unlikely(x)	                __builtin_expect(!!(x), 0)
+#define likely(x)	                    __builtin_expect(!!(x), 1)
+#define unlikely(x)	                __builtin_expect(!!(x), 0)
 
+#define __safety                    /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define container_of(ptr, type, member) ({				\
 	void *__mptr = (void *)(ptr);					\
 	static_assert(__same_type(*(ptr), ((type *)0)->member) ||	\

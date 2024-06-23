@@ -14,7 +14,8 @@
 #ifndef _EH_TIMER_H_
 #define _EH_TIMER_H_
 
-#include <stdint.h>
+#include "eh_types.h"
+
 typedef struct eh_timer_event eh_timer_event_t;
 
 #define EH_TIMER_ATTR_AUTO_CIRCULATION  0x00000001              /* 自动重复，重运行 */
@@ -58,35 +59,35 @@ extern "C"{
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_timer_start(eh_timer_event_t *timer);
+extern __safety int eh_timer_start(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器停止
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_timer_stop(eh_timer_event_t *timer);
+extern __safety int eh_timer_stop(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器重启,若定时器没有运行，则调用本函数运行，若定时器正在运行，则重新加载定时器
  * @param  timer            定时器实例指针
  * @return int 
  */
-extern int eh_timer_restart(eh_timer_event_t *timer);
+extern __safety int eh_timer_restart(eh_timer_event_t *timer);
 
 /**
  * @brief                   定时器初始化
  * @param  timer            实例指针
  * @return int              见eh_error.h
  */
-extern int eh_timer_init(eh_timer_event_t *timer);
+extern __safety int eh_timer_init(eh_timer_event_t *timer);
 
 
 /**
  * @brief                   清除占用资源
  * @param  timer            实例指针
  */
-extern void eh_timer_clean(eh_timer_event_t *timer);
+extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 
 
 /**
@@ -95,7 +96,7 @@ extern void eh_timer_clean(eh_timer_event_t *timer);
  * @param  clock_interval           超时时间
  * @return int 
  */
-#define eh_timer_config_interval(timer, clock_interval)     \
+#define  eh_timer_config_interval(timer, clock_interval)     \
     do{                                                     \
         (timer)->interval = (eh_sclock_t)(clock_interval);                 \
     }while(0)

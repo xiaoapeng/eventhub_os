@@ -16,6 +16,8 @@
 #ifndef _EH_SEM_H_
 #define _EH_SEM_H_
 
+#include "eh_types.h"
+
 typedef int* eh_sem_t;
 
 #ifdef __cplusplus
@@ -27,7 +29,7 @@ extern "C"{
 extern eh_sem_t eh_sem_create(uint32_t value);
 extern void eh_sem_destroy(eh_sem_t sem);
 extern int __async__ eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
-extern int eh_sem_post(eh_sem_t sem);
+extern __safety int eh_sem_post(eh_sem_t sem);
 
 #ifdef __cplusplus
 #if __cplusplus

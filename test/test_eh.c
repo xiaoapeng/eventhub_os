@@ -57,9 +57,9 @@ int task_app(void *arg){
     dbg_debugfl("%s", arg);
     test_1 = eh_task_create("test_1", 12*1024, "1", task_test_1);
     test_2 = eh_task_create("test_2", 12*1024, "2", task_test_2);
-    ret = eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
+    ret = __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_1: ret=%d app_ret=%d", ret, app_ret);
-    ret = eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
+    ret = __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     dbg_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
     eh_loop_exit(0);
     return 0;
