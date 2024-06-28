@@ -1,6 +1,6 @@
 
-#ifndef	_LINUX_RBTREE_H
-#define	_LINUX_RBTREE_H
+#ifndef	_EH_RBTERR_H_
+#define	_EH_RBTERR_H_
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -144,4 +144,4 @@ eh_rb_next_match(const void *key, struct eh_rbtree_node *node,
 
 
 
-#endif	/* _LINUX_RBTREE_H */
+#endif	/* _EH_RBTERR_H_ */
