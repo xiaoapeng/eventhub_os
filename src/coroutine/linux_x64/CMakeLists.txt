@@ -1,4 +1,4 @@
 
-target_sources(event_hub PRIVATE
+target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/coroutine.c")
 
