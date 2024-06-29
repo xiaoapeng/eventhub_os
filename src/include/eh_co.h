@@ -26,7 +26,7 @@ extern "C"{
 typedef void* context_t;
 
 extern void * co_context_swap(void *arg, context_t *from, const context_t * const to);
-extern context_t co_context_make(void *stack_top, int (*func)(void *arg));
+extern context_t co_context_make(void *stack_lim, void *stack_top, int (*func)(void *arg));
 
 #ifdef __cplusplus
 #if __cplusplus

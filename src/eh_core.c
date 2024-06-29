@@ -133,7 +133,7 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack,
     task->task_arg = task_arg;
     task->stack = stack;
     task->stack_size = stack_size;
-    task->context = co_context_make(((uint8_t*)stack) + stack_size, _task_entry);
+    task->context = co_context_make(stack, ((uint8_t*)stack) + stack_size, _task_entry);
     task->task_ret = 0;
     task->state = EH_TASK_STATE_WAIT;
     task->is_static_stack = is_static_stack & 0x01;

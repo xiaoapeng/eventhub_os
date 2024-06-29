@@ -12,6 +12,8 @@
 #ifndef _EH_PLATFORM_H_
 #define _EH_PLATFORM_H_
 
+typedef unsigned long eh_save_state_t ;
+#include "platform_port.h"
 
 #include "eh_interior.h"
 #ifdef __cplusplus
@@ -19,18 +21,6 @@
 extern "C"{
 #endif
 #endif /* __cplusplus */
-
-typedef unsigned long eh_save_state_t ;
-
-/* ########################################### 平台方进行实现 ################################################ */
-extern eh_clock_t  platform_get_clock_monotonic_time(void);
-extern eh_save_state_t  platform_enter_critical(void);
-extern void  platform_exit_critical(eh_save_state_t state);
-extern void* platform_malloc(size_t size);
-extern void  platform_free(void* ptr);
-extern void  platform_idle_break(void);
-extern void  platform_idle_or_extern_event_handler(void);
-/* ########################################################################################################## */
 
 /**
  * @brief                  获取系统的单调时钟数,由平台方实现，精度越高越好

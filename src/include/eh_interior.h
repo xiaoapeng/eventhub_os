@@ -65,7 +65,7 @@ struct eh_task{
     struct eh_list_head                 task_list_node;          /* 任务链表,可被挂载到就绪，等待，完成等链表上 */
     int                                 (*task_function)(void*); /* 任务函数 */
     void                                *task_arg;               /* 任务相关参数 */
-    void                                *stack;              /* 协程栈顶 */
+    void                                *stack;                  /* 协程栈内存 */
     uint32_t                            stack_size;              /* 任务栈大小 */
     context_t                           context;                 /* 协程上下文 */
     int                                 task_ret;                /* 任务返回值 */

@@ -84,14 +84,17 @@ __attribute__((naked))  void * co_context_swap(
 
 
 
-__attribute__((naked))  context_t co_context_make( __attribute__((unused)) void *stack_top, 
+__attribute__((naked))  context_t co_context_make( 
+    __attribute__((unused)) void *stack_lim,
+    __attribute__((unused)) void *stack_top, 
     __attribute__((unused)) int (*func)(void *arg)){
     /*
-     * rdi: stack_top
-     * rsi: func
+     * rdi: stack_lim
+     * rsi: stack_top
+     * rdx: func
      */
     __asm__ volatile(
-        "movq  %rdi, %rax \n"                           /*  获得栈顶指针 */
+        "movq  %rsi, %rax \n"                           /*  获得栈顶指针 */
         "andq  $-16, %rax \n"                           /*  设置为16字节对齐 */
         "leaq  -0x40(%rax), %rax \n"                    /*  制作context的空间 0x40个字节*/
         "stmxcsr  (%rax) \n"                            /* fc_mxcsr:  save MMX control- and status-word */
@@ -100,7 +103,7 @@ __attribute__((naked))  context_t co_context_make( __attribute__((unused)) void 
         "movq  %rcx, 0x38(%rax) \n"                     /* RIP:       将trampoline的地址放到RIP上 */
         "leaq  finish(%rip), %rcx \n"                   /*  获得finish的绝对地址 */
         "movq  %rcx, 0x30(%rax) \n"                     /* RBP:       将finish的地址放到RBP的位置 */
-        "movq  %rsi, 0x28(%rax) \n"                     /* RBX:       将func地址放到RBX上 */
+        "movq  %rdx, 0x28(%rax) \n"                     /* RBX:       将func地址放到RBX上 */
         "ret \n"
     "trampoline: \n"
         "push %rbp \n"                                  /* 将RBP中存储的是finish的地址 */
