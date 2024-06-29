@@ -12,8 +12,9 @@
 
 #include "eh.h"
 #include "eh_event.h"
-#include "eh_timer.h"
+#include "eh_platform.h"
 #include "eh_interior.h"
+#include "eh_timer.h"
 
 #define timer_is_empty()            (eh_rb_root_is_empty(&timer_tree_root))
 #define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)
@@ -56,11 +57,11 @@ eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void){
 }
 
 void eh_timer_check(void){
-    uint32_t state;
+    eh_save_state_t state;
     eh_timer_event_t *first_timer;
     eh_clock_t base;
     
-    eh_lock(&state);
+    state = eh_enter_critical();;
     
     timer_now = eh_get_clock_monotonic_time();
 
@@ -85,7 +86,7 @@ void eh_timer_check(void){
     }
 
 out:
-    eh_unlock(state);
+    eh_exit_critical(state);
 }
 
 
@@ -93,26 +94,26 @@ out:
 int eh_timer_start(eh_timer_event_t *timer){
     eh_t *eh = eh_get_global_handle();
     int ret;
-    uint32_t state;
+    eh_save_state_t state;
     eh_param_assert(eh);
     eh_param_assert(timer);
     eh_param_assert((eh_sclock_t)(timer->interval) > 0);
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     timer_now = eh_get_clock_monotonic_time();
     ret = _eh_timer_start_no_lock(timer_now, timer);
     if(ret == FIRST_TIMER_UPDATE)
         eh_idle_break();
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 
 int eh_timer_stop(eh_timer_event_t *timer){
-    uint32_t state;
+    eh_save_state_t state;
     int ret = EH_RET_OK;
     eh_param_assert(timer);
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     if(eh_rb_node_is_empty(&timer->rb_node))
         goto out;
     
@@ -120,18 +121,18 @@ int eh_timer_stop(eh_timer_event_t *timer){
     eh_rb_node_init(&timer->rb_node);
 
 out:
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 
 int eh_timer_restart(eh_timer_event_t *timer){
-    uint32_t state;
+    eh_save_state_t state;
     int ret = EH_RET_OK;
 
     eh_param_assert(timer);
     eh_param_assert(timer->interval > 0);
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     timer_now = eh_get_clock_monotonic_time();
 
     /* 如果节点为空，说明不在工作，直接start */
@@ -147,7 +148,7 @@ int eh_timer_restart(eh_timer_event_t *timer){
 out:
     if(ret == FIRST_TIMER_UPDATE)
         eh_idle_break();
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 

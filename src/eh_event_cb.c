@@ -74,7 +74,7 @@ void eh_event_cb_trigger_clean(eh_event_cb_trigger_t *trigger){
 static int __init eh_event_cb_init(void)
 {
     int ret = EH_RET_OK;
-    signal_dispose_task = eh_task_create("event_cb", EH_EVENT_CALLBACK_FUNCTION_STACK_SIZE, NULL, task_signal_dispose);
+    signal_dispose_task = eh_task_create("event_cb", EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE, NULL, task_signal_dispose);
     if(eh_ptr_to_error(signal_dispose_task) < 0)
         return eh_ptr_to_error(signal_dispose_task);
     signal_dispose_epoll = eh_epoll_new();

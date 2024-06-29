@@ -4,7 +4,6 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <bits/types.h>
 #include "eh_types.h"
 
 
@@ -83,6 +82,10 @@ extern struct eh_rbtree_node *	eh_rb_last(const struct eh_rbtree_root *);
 /* Postorder iteration - always visit the parent after its children */
 extern struct eh_rbtree_node *rb_first_postorder(const struct eh_rbtree_root *root);
 extern struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *);
+extern struct eh_rbtree_node *eh_rb_find_first(const void *key, const struct eh_rbtree_root *tree,
+	      int (*match)(const void *key, const struct eh_rbtree_node *));
+extern struct eh_rbtree_node *eh_rb_next_match(const void *key, struct eh_rbtree_node *node,
+	      int (*match)(const void *key, const struct eh_rbtree_node *));
 
 /*后序 左右根 */
 #define eh_rb_postorder_for_each_entry_safe(pos, n, root, member) \
@@ -103,39 +106,7 @@ extern struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *);
          pos ; 	\
          pos = eh_rb_entry_safe(eh_rb_prev(&pos->member), typeof(*pos), member))
 
-
-static __always_inline struct eh_rbtree_node *
-eh_rb_find_first(const void *key, const struct eh_rbtree_root *tree,
-	      int (*match)(const void *key, const struct eh_rbtree_node *))
-{
-	struct eh_rbtree_node *node = tree->rb_node;
-	struct eh_rbtree_node *match_node = NULL;
-
-	while (node) {
-		int c = match(key, node);
-
-		if (c <= 0) {
-			if (!c)
-				match_node = node;
-			node = node->rb_left;
-		} else if (c > 0) {
-			node = node->rb_right;
-		}
-	}
-
-	return match_node;
-}
-
-static __always_inline struct eh_rbtree_node *
-eh_rb_next_match(const void *key, struct eh_rbtree_node *node,
-	      int (*match)(const void *key, const struct eh_rbtree_node *))
-{
-	node = eh_rb_next(node);
-	if (node && match(key, node))
-		node = NULL;
-	return node;
-}
-
+/* 条件遍历 */
 #define eh_rb_for_entry_each(pos, tree, key, match, member) \
 	for ((pos) = eh_rb_entry_safe(eh_rb_find_first((key), (tree), \
 			(match)), typeof(*pos), member); \

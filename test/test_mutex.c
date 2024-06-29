@@ -12,6 +12,7 @@
 
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_timer.h"
 #include "eh_sleep.h" 
 #include "eh_interior.h"

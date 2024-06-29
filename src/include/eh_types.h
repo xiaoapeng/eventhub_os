@@ -85,7 +85,13 @@ extern "C"{
 #define static_assert(expr, ...)        __static_assert(expr, ##__VA_ARGS__, #expr)
 #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
 #define likely(x)	                    __builtin_expect(!!(x), 1)
-#define unlikely(x)	                __builtin_expect(!!(x), 0)
+#define unlikely(x)	                    __builtin_expect(!!(x), 0)
+
+#ifdef __always_inline
+#undef __always_inline
+#endif
+
+# define __always_inline                 __attribute__((always_inline))
 
 #define __safety                    /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define container_of(ptr, type, member) ({				\

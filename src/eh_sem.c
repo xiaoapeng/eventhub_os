@@ -16,6 +16,7 @@
 
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_interior.h"
 #include "eh_sem.h"
 #include <stdbool.h>
@@ -71,8 +72,8 @@ int eh_sem_wait(eh_sem_t _sem, eh_sclock_t timeout){
 int eh_sem_post(eh_sem_t _sem){
     struct eh_sem *sem = (struct eh_sem *)_sem;
     int ret = EH_RET_OK;
-    uint32_t state;
-    eh_lock(&state);
+    eh_save_state_t state;
+    state = eh_enter_critical();;
     if(sem->sem_num_v + 1 == sem->sem_num_p){
         ret = EH_RET_BUSY;
         goto out;
@@ -80,7 +81,7 @@ int eh_sem_post(eh_sem_t _sem){
     sem->sem_num_v++;
     ret = eh_event_notify(&sem->wakeup_event);
 out:
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 

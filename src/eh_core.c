@@ -16,13 +16,12 @@
 #include <strings.h>
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_interior.h"
 #include "eh_timer.h"
 
 
 eh_t _global_eh;
-eh_clock_t   (*_get_clock_monotonic_time)(void);
-eh_clock_t  _clocks_per_sec;
 
 
 static const eh_event_type_t task_event_type = {
@@ -47,11 +46,11 @@ static bool _task_is_finish(void *arg){
 }
 
 static void _task_destroy(eh_task_t *task){
-    uint32_t state;
+    eh_save_state_t state;
     eh_event_clean(&task->event);
-    eh_lock(&state);
+    state = eh_enter_critical();
     eh_list_del(&task->task_list_node);
-    eh_unlock(state);
+    eh_exit_critical(state);
     if(!task->is_static_stack)
         eh_free(task->stack);
     eh_free(task);
@@ -73,14 +72,14 @@ static void _clear(void){
  */
 int __async__ eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
-    uint32_t state;
+    eh_save_state_t state;
     eh_task_t *current_task = eh_task_get_current();
     eh_task_t *to;
     
-    eh_lock(&state);
+    state = eh_enter_critical();;
     if(eh_list_empty(&current_task->task_list_node)){
         current_task->state = EH_TASK_STATE_RUNING;
-        eh_unlock(state);
+        eh_exit_critical(state);
         return EH_RET_SCHEDULING_ERROR;
     }
     to = eh_list_entry(current_task->task_list_node.next, eh_task_t, task_list_node);
@@ -98,7 +97,7 @@ int __async__ eh_task_next(void){
             break;
     }
     to->state = EH_TASK_STATE_RUNING;
-    eh_unlock(state);
+    eh_exit_critical(state);
     co_context_swap(NULL, &current_task->context, &to->context);
 
     return 0;
@@ -110,15 +109,15 @@ int __async__ eh_task_next(void){
  */
 void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_t *eh = eh_get_global_handle();
-    uint32_t state;
-    eh_lock(&state);
+    eh_save_state_t state;
+    state = eh_enter_critical();;
     if(wakeup_task->state != EH_TASK_STATE_WAIT)
         goto out;
     eh_idle_break();
     wakeup_task->state = EH_TASK_STATE_READY;
     eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
 out:
-    eh_unlock(state);
+    eh_exit_critical(state);
 }
 
 
@@ -217,14 +216,14 @@ void eh_task_destroy(eh_task_t *task){
  * @param  ret              退出返回值
  */
 void  eh_task_exit(int ret){
-    uint32_t state;
+    eh_save_state_t state;
     eh_task_t *task = eh_task_get_current();
     if(task == eh_get_global_handle()->main_task)
         return ;
-    eh_lock(&state);
+    state = eh_enter_critical();;
     task->task_ret = ret;
     task->state = EH_TASK_STATE_FINISH;
-    eh_unlock(state);
+    eh_exit_critical(state);
     eh_task_next();
 }
 
@@ -261,39 +260,11 @@ int eh_loop_run(void){
 
         /* 调用用户外部处理函数 */
         eh->state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
-        eh->idle_or_extern_event_handler();
+        eh_idle_or_extern_event_handler();
         eh->state = EH_SCHEDULER_STATE_RUN;
     }
     eh->state = EH_SCHEDULER_STATE_EXIT;
     return eh->loop_stop_code;
-}
-
-/**
- * @brief                   注册平台端口参数
- * @param  param            平台相关接口
- * @return int 
- */
-int eh_platform_register_port_param(const eh_platform_port_param_t *param){
-    eh_t *eh = eh_get_global_handle();
-    eh_param_assert(param);
-    eh_param_assert(param->get_clock_monotonic_time);
-    eh_param_assert(param->idle_or_extern_event_handler);
-    eh_param_assert(param->idle_break);
-    eh_param_assert(param->clocks_per_sec >= 100);
-    eh_param_assert(param->malloc);
-    eh_param_assert(param->free);
-
-    _get_clock_monotonic_time = param->get_clock_monotonic_time;
-    _clocks_per_sec = param->clocks_per_sec;
-
-    eh->global_lock = param->global_lock;
-    eh->global_unlock = param->global_unlock;
-    eh->get_clock_monotonic_time = param->get_clock_monotonic_time;
-    eh->idle_or_extern_event_handler = param->idle_or_extern_event_handler;
-    eh->idle_break = param->idle_break;
-    eh->malloc = param->malloc;
-    eh->free = param->free;
-    return 0;
 }
 
 static int interior_init(void){

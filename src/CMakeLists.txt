@@ -15,9 +15,9 @@ target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_sem.c"
 )
 
-target_compile_options( eventhub PRIVATE "-fPIC" "-fdata-sections" "-ffunction-sections" )
-target_link_options( eventhub PRIVATE "-Wl,-gc-sections" "-Wl,--print-gc-sections")
-target_link_options( eventhub PUBLIC "-rdynamic" "-T${CMAKE_CURRENT_SOURCE_DIR}/eh.lds" )
+target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/" )
 
-# add_library(eventhub_interface INTERFACE)
-# target_link_libraries(eventhub_interface INTERFACE "-Wl,--whole-archive" eventhub "-Wl,--no-whole-archive")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_options( eventhub PUBLIC "-T${CMAKE_CURRENT_SOURCE_DIR}/eh.lds" )
+endif()
+

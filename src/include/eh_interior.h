@@ -40,13 +40,6 @@ struct eh{
     enum        EH_SCHEDULER_STATE       state;
     struct      eh_task                  *current_task;                                         /* 当前被调度的任务 */
     struct      eh_task                  *main_task;                                            /* 系统栈任务 */
-    void*                                (*malloc)(size_t size);
-    void                                 (*free)(void* ptr);
-    void                                 (*global_lock)(uint32_t *state);
-    void                                 (*global_unlock)(uint32_t state);
-    eh_usec_t                            (*get_clock_monotonic_time)(void);                                      /* 系统单调时钟的次数 */
-    void                                 (*idle_or_extern_event_handler)(void);                 /* 用户处理空闲和外部事件 */
-    void                                 (*idle_break)(void);                                                    /* 调用此函数通知"platform"从idle_or_extern_event_handler返回 */
     struct eh_module                     *eh_init_fini_array;
     long                                 eh_init_fini_array_len;
     int                                  loop_stop_code;
@@ -121,43 +114,6 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
  * @return eh_t*        全局句柄
  */
 #define eh_get_global_handle() (&_global_eh)
-
-/**
- * @brief               加锁
- * @param   state_ptr   保存状态的指针
- */
-#define eh_lock(state_ptr)                                         \
-    do{                                                             \
-        if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
-            eh_get_global_handle()->global_lock(state_ptr);                      \
-    }while(0)
-
-/**
- * @brief               解锁
- * @param   state       加锁时保存的状态
- */
-#define eh_unlock(state)                                           \
-    do{                                                             \
-        if(eh_get_global_handle()->global_lock && eh_get_global_handle()->global_unlock)      \
-            eh_get_global_handle()->global_unlock(state);                        \
-    }while(0)
-
-
-
-#define eh_idle_break() do{  \
-        eh_get_global_handle()->idle_break(); \
-    }while(0)
-
-/**
- * @brief               动态内存分配
- * @return              void*
- */
-#define eh_malloc(size)    (eh_get_global_handle()->malloc((size)))
-
-/**
- * @brief               内存释放
- */
-#define eh_free(ptr)       (eh_get_global_handle()->free((ptr)))
 
 #define __eh_event_receptor_init(receptor, _wakeup_task, _epoll)        \
     do{                                                                 \

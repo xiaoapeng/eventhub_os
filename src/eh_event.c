@@ -14,6 +14,7 @@
 #include <string.h>
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_interior.h"
 #include "eh_list.h"
 #include "eh_rbtree.h"
@@ -22,7 +23,7 @@
 
 
 static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(void* arg)){
-    uint32_t state;
+    eh_save_state_t state;
     int ret;
     struct eh_event_receptor receptor;
 
@@ -31,12 +32,12 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
 
     eh_event_receptor_init(&receptor, eh_task_get_current());
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     eh_event_add_receptor_no_lock(e, &receptor);
-    eh_unlock(state);
+    eh_exit_critical(state);
 
     for(;;){
-        eh_lock(&state);
+        state = eh_enter_critical();;
         if(condition){
             if(receptor.error){
                 ret = EH_RET_EVENT_ERROR;
@@ -51,23 +52,23 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
             goto unlock_out;
         }
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
-        eh_unlock(state);
+        eh_exit_critical(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0){
-            eh_lock(&state);
+            state = eh_enter_critical();;
             goto unlock_out;
         }
     }
 
 unlock_out:
     eh_event_remove_receptor_no_lock(&receptor);
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 
 static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
-    uint32_t state;
+    eh_save_state_t state;
     int ret;
     eh_timer_event_t timeout_timer;
     struct eh_event_receptor receptor,receptor_timer;
@@ -86,12 +87,12 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
     eh_timer_start(&timeout_timer);
 
     /* 事件预激活过，必须有锁add */
-    eh_lock(&state);
+    state = eh_enter_critical();;
     eh_event_add_receptor_no_lock(e, &receptor);
-    eh_unlock(state);
+    eh_exit_critical(state);
 
     for(;;){
-        eh_lock(&state);
+        state = eh_enter_critical();;
         if(condition){
             if(receptor.error){
                 ret = EH_RET_EVENT_ERROR;
@@ -111,18 +112,18 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
             goto unlock_out;
         }
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
-        eh_unlock(state);
+        eh_exit_critical(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0){
-            eh_lock(&state);
+            state = eh_enter_critical();;
             goto unlock_out;
         }
     }
 
 unlock_out:
     eh_event_remove_receptor_no_lock(&receptor);
-    eh_unlock(state);
+    eh_exit_critical(state);
 
     eh_timer_stop(&timeout_timer);
     eh_event_remove_receptor_no_lock(&receptor_timer);
@@ -150,13 +151,13 @@ int eh_event_init(eh_event_t *e, const eh_event_type_t* type){
  * @param  e                        事件实例指针
  */
 void eh_event_clean(eh_event_t *e){
-    uint32_t state;
+    eh_save_state_t state;
     struct eh_event_receptor *pos ,*n;
     struct eh_event_epoll_receptor *epoll_receptor;
     
     if(!e) return ;
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     eh_list_for_each_entry_safe(pos, n, &e->receptor_list_head, list_node){
         pos->error = 1;
         if(pos->wakeup_task)
@@ -170,7 +171,7 @@ void eh_event_clean(eh_event_t *e){
         }
         eh_event_remove_receptor_no_lock(pos);
     }
-    eh_unlock(state);
+    eh_exit_critical(state);
 }
 
 
@@ -180,11 +181,11 @@ void eh_event_clean(eh_event_t *e){
  * @return int 
  */
 int eh_event_notify(eh_event_t *e){
-    uint32_t state;
+    eh_save_state_t state;
     struct eh_event_receptor *pos;
     struct eh_event_epoll_receptor *epoll_receptor;
     eh_param_assert(e);
-    eh_lock(&state);
+    state = eh_enter_critical();;
     eh_list_for_each_entry(pos, &e->receptor_list_head, list_node){
         pos->trigger = 1;
         if(pos->wakeup_task)
@@ -197,7 +198,7 @@ int eh_event_notify(eh_event_t *e){
             eh_task_wake_up(pos->epoll->wakeup_task);
         }
     }
-    eh_unlock(state);
+    eh_exit_critical(state);
     return EH_RET_OK;
 }
 
@@ -237,18 +238,18 @@ eh_epoll_t eh_epoll_new(void){
 void eh_epoll_del(eh_epoll_t _epoll){
     struct eh_event_epoll_receptor *pos,*n;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
-    uint32_t state;
+    eh_save_state_t state;
     eh_rb_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
-        eh_lock(&state);
+        state = eh_enter_critical();;
         eh_event_remove_receptor_no_lock(&pos->receptor);
-        eh_unlock(state);
+        eh_exit_critical(state);
         eh_free(pos);
     }
     eh_free(epoll);
 }
 
 int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
-    uint32_t state;
+    eh_save_state_t state;
     int ret = EH_RET_OK;
     struct eh_rbtree_node  *ret_rb;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
@@ -264,7 +265,7 @@ int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     eh_rb_node_init(&receptor->rb_node);
     receptor->event = e;
     receptor->userdata = userdata;
-    eh_lock(&state);
+    state = eh_enter_critical();;
     /* 添加到epoll树中 */
     ret_rb = eh_rb_find_add(&receptor->rb_node, &epoll->all_receptor_tree);
     if( ret_rb ){
@@ -275,32 +276,32 @@ int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     /* 添加接收器到event中 */
     eh_event_add_receptor_no_lock(e, &receptor->receptor);
 out:
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 
 int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
-    uint32_t state;
+    eh_save_state_t state;
     struct eh_event_epoll_receptor *epoll_receptor;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
 
     eh_param_assert(_epoll);
     eh_param_assert(e);
 
-    eh_lock(&state);
+    state = eh_enter_critical();;
     
     epoll_receptor = eh_rb_entry_safe(
         eh_rb_match_find(e, &epoll->all_receptor_tree, __epoll_rbtree_match),
         struct eh_event_epoll_receptor, rb_node );
     if(epoll_receptor == NULL){
-        eh_unlock(state);
+        eh_exit_critical(state);
         return EH_RET_INVALID_PARAM;
     }
     /* 从事件中删除接收器 */
     eh_event_remove_receptor_no_lock(&epoll_receptor->receptor);
     eh_list_del(&epoll_receptor->pending_list_node);
     eh_rb_del(&epoll_receptor->rb_node, &epoll->all_receptor_tree);
-    eh_unlock(state);
+    eh_exit_critical(state);
     eh_free(epoll_receptor);
     return EH_RET_OK;
 }
@@ -325,16 +326,16 @@ static int _eh_epoll_pending_read_on_lock(struct eh_epoll *epoll, eh_epoll_slot_
 }
 
 static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size){
-    uint32_t state;
+    eh_save_state_t state;
     int ret;
     for(;;){
-        eh_lock(&state);
+        state = eh_enter_critical();;
         ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
         if(ret != 0)
             goto unlock_exit;
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         epoll->wakeup_task = eh_task_get_current();
-        eh_unlock(state);
+        eh_exit_critical(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0)
@@ -342,12 +343,12 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
     }
 
 unlock_exit:
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret;
 }
 
 static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
-    uint32_t state;
+    eh_save_state_t state;
     eh_timer_event_t timeout_timer;
     struct eh_event_receptor receptor_timer;
     int ret;
@@ -361,7 +362,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
     eh_timer_start(&timeout_timer);
 
     for(;;){
-        eh_lock(&state);
+        state = eh_enter_critical();;
         ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
         if(ret != 0){
             goto unlock_out;
@@ -372,7 +373,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
         }
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         epoll->wakeup_task = eh_task_get_current();
-        eh_unlock(state);
+        eh_exit_critical(state);
 
         ret = __await__ eh_task_next();
         if(ret < 0)
@@ -380,14 +381,14 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
     }
 
 unlock_out:
-    eh_unlock(state);
+    eh_exit_critical(state);
 out:
     eh_timer_stop(&timeout_timer);
     eh_event_remove_receptor_no_lock(&receptor_timer);
     return ret;
 }
 int __async__ eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
-    uint32_t state;
+    eh_save_state_t state;
     int ret;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     if(eh_time_is_forever(timeout))
@@ -395,9 +396,9 @@ int __async__ eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int s
     if(timeout > 0)
         return __await__  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
     /* timeout == 0 || timeout != EH_TIME_FOREVER 时，不进行任何等待 */
-    eh_lock(&state);
+    state = eh_enter_critical();;
     ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
-    eh_unlock(state);
+    eh_exit_critical(state);
     return ret == 0 ? EH_RET_TIMEOUT : ret;
 }
 

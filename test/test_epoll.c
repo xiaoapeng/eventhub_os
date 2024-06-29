@@ -14,6 +14,7 @@
 #include "eh.h"
 #include "eh_co.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_timer.h" 
 #include "eh_types.h"
 #include <stdlib.h>

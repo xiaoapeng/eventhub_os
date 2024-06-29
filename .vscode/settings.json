@@ -1,13 +1,5 @@
 {
     "gcovViewer.buildDirectories": [
-        "/home/simon/project/libevent_hub/build/src/CMakeFiles/event_hub.dir/coroutine/x64",
-        "/home/simon/project/libevent_hub/build/src/CMakeFiles/event_hub.dir/platform/linux",
-        "/home/simon/project/libevent_hub/build/src/CMakeFiles/event_hub.dir",
-        "/home/simon/project/libevent_hub/build/test/general/CMakeFiles/general_test.dir",
-        "/home/simon/project/libevent_hub/build/CMakeFiles/test_co.dir/test",
-        "/home/simon/project/libevent_hub/build/CMakeFiles/test_coverage.dir/test",
-        "/home/simon/project/libevent_hub/build/CMakeFiles/test_eh.dir/test",
-        "/home/simon/project/libevent_hub/build/CMakeFiles/test_epoll.dir/test",
-        "/home/simon/project/libevent_hub/build/CMakeFiles/test_rb.dir/test"
+        "${workspaceFolder}/build"
     ]
 }

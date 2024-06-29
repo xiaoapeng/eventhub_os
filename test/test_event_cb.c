@@ -13,6 +13,7 @@
 #include "debug.h"
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_platform.h"
 #include "eh_timer.h" 
 #include "eh_sleep.h"
 #include "eh_event_cb.h"
@@ -24,7 +25,7 @@ static eh_event_cb_slot_t slot1;
 static eh_event_cb_slot_t slot2;
 static void slot_function(eh_event_t *e, void *p){
     (void)e;
-    eh_debugfl("slot_function %s %llu", p, eh_clock_to_usec(eh_get_clock_monotonic_time()));
+    dbg_debugfl("slot_function %s %llu", p, eh_clock_to_usec(eh_get_clock_monotonic_time()));
 }
 
 int task_app(void *arg){

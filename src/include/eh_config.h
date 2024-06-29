@@ -12,11 +12,8 @@
 #ifndef _EVENT_CONFIG_H_
 #define _EVENT_CONFIG_H_
 
-#include <stdlib.h>
-#include "debug.h"
+#include "eh_user_config.h"
 
 
-#define EH_EVENT_CALLBACK_FUNCTION_STACK_SIZE          (8*1024)
-#define eh_debugfl(fmt, ...)                            dbg_debugfl(fmt, ##__VA_ARGS__)
 
 #endif // _EVENT_CONFIG_H_

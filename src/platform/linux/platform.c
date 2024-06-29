@@ -3,7 +3,6 @@
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "debug.h"
 #include "eh.h"
 #include "eh_event.h"
 #include "eh_timer.h"
@@ -17,38 +16,37 @@ static struct {
     eh_clock_t          expire;
     bool                is_idle_state;
 }linux_platform;
-static void  linux_global_lock(uint32_t *state){
-    (void) state;
-    pthread_mutex_lock(&linux_platform.eh_use_mutex);
-}
-static void  linux_global_unlock(uint32_t state){
-    (void) state;
-    pthread_mutex_unlock(&linux_platform.eh_use_mutex);
-}
 
-static eh_clock_t linux_get_clock_monotonic_time(void){
+
+eh_clock_t  platform_get_clock_monotonic_time(void){
     eh_clock_t microsecond;
         struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-
     microsecond = ((eh_clock_t)ts.tv_sec * 1000000) + ((eh_clock_t)ts.tv_nsec / 1000);
     return microsecond;
 }
+eh_save_state_t  platform_enter_critical(void){
+    pthread_mutex_lock(&linux_platform.eh_use_mutex);
+    return 0;
+}
+void  platform_exit_critical(eh_save_state_t state){
+    (void)state;
+    pthread_mutex_unlock(&linux_platform.eh_use_mutex);
+}
+void* platform_malloc(size_t size){
+    return malloc(size);
+}
+void  platform_free(void* ptr){
+    free(ptr);
+}
+void  platform_idle_break(void){
+    pthread_mutex_lock(&linux_platform.idle_break_mutex);
+    if(linux_platform.is_idle_state)
+        epoll_hub_set_wait_break_event();
+    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
+}
 
-// static uint64_t linux_get_clock_monotonic_time(void) {
-//     uint32_t low, high;
-//     asm volatile (
-//         "rdtsc"           // 执行RDTSC指令
-//         : "=a"(low), "=d"(high) // 输出到%eax（low）和%edx（high）
-//         :
-//         : "memory" // 确保内存副作用正确处理
-//     );
-    
-//     return ((uint64_t)high << 32) | low; // 结合高低32位为一个64位值
-// }
-
-
-static void linux_idle_or_extern_event_handler(void){
+void  platform_idle_or_extern_event_handler(void){
     eh_usec_t usec_timeout;
 
 
@@ -59,27 +57,9 @@ static void linux_idle_or_extern_event_handler(void){
     pthread_mutex_unlock(&linux_platform.idle_break_mutex);
 
     epoll_hub_poll(usec_timeout);
-    
+
     linux_platform.is_idle_state = false;
 }
-static void linux_idle_break( void ){
-    pthread_mutex_lock(&linux_platform.idle_break_mutex);
-    if(linux_platform.is_idle_state)
-        epoll_hub_set_wait_break_event();
-    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
-}
-
-static eh_platform_port_param_t linux_platform_port_param = {
-    .global_lock = linux_global_lock,
-    .global_unlock = linux_global_unlock,
-    .clocks_per_sec = 1000000,
-    //.clocks_per_sec = 2903998000,
-    .get_clock_monotonic_time = linux_get_clock_monotonic_time,
-    .idle_or_extern_event_handler = linux_idle_or_extern_event_handler,
-    .idle_break = linux_idle_break,
-    .malloc = malloc,
-    .free = free,
-};
 
 static int  __init linux_platform_init(void){
     int ret;
@@ -100,13 +80,8 @@ static int  __init linux_platform_init(void){
     if(ret < 0)
         goto pthread_mutex_idle_break_mutex_use_error;
 
-    ret = eh_platform_register_port_param(&linux_platform_port_param);
-    if(ret < 0)
-        goto eh_platform_register_port_param_error;
     ret = 0;
     return ret;
-eh_platform_register_port_param_error:
-    pthread_mutex_destroy(&linux_platform.idle_break_mutex);
 pthread_mutex_idle_break_mutex_use_error:
     pthread_mutex_destroy(&linux_platform.eh_use_mutex);
 pthread_mutex_init_eh_use_error:
