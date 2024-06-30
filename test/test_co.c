@@ -68,8 +68,8 @@ int main(void)
     init();
     dbg_debugln("test app start !");
     void *arg;
-    co_context_task1 = co_context_make((g_stack_main_task1 + sizeof(g_stack_main_task1)), test_co_task_1);
-    co_context_task2 = co_context_make((g_stack_main_task2 + sizeof(g_stack_main_task2)), test_co_task_2);
+    co_context_task1 = co_context_make(g_stack_main_task1, (g_stack_main_task1 + sizeof(g_stack_main_task1)), test_co_task_1);
+    co_context_task2 = co_context_make(g_stack_main_task2, (g_stack_main_task2 + sizeof(g_stack_main_task2)), test_co_task_2);
 
     dbg_debugfl("co_context_task1 = %p", co_context_task1);
 
