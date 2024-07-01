@@ -113,6 +113,17 @@ static void __exit(void){
     while(1){ }
 }
 
+
+static __attribute__((naked)) void __start_task(void){
+    __asm__ volatile(
+        "	.syntax unified									\n"
+        "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
+        "1: b           1b                                  \n"/* 若返回，则进入死循环 */
+        :::
+    );
+}
+
+
 context_t co_context_make( 
     __attribute__((unused)) void *stack_lim,
     __attribute__((unused)) void *stack_top, 
@@ -120,15 +131,12 @@ context_t co_context_make(
     uint32_t u32_stack_top = (uint32_t)(stack_top);
     uint32_t u32_stack_lim = (uint32_t)(stack_lim);
     struct context_m33 *context_m33;
-    uint32_t *func_retern_lr;
-    u32_stack_top = u32_stack_top & (~3);               /* 向4对齐 */
-    u32_stack_lim = (u32_stack_lim+3) & (~3);           /* 向4对齐 */
-
-    func_retern_lr = (uint32_t *)(u32_stack_top - 4);
-    *func_retern_lr = (uint32_t)__exit;
-    context_m33 = (struct context_m33 *)((uint8_t*)func_retern_lr - sizeof(struct context_m33));
+    u32_stack_top = u32_stack_top & (~7);               /* 向8对齐 */
+    u32_stack_lim = (u32_stack_lim+7) & (~7);           /* 向8对齐 */
+    context_m33 = (struct context_m33 *)(u32_stack_top - sizeof(struct context_m33));
     bzero(context_m33, sizeof(struct context_m33));
-    context_m33->lr = (uint32_t)func;
+    context_m33->lr = (uint32_t)__start_task;
+    context_m33->r7 = (uint32_t)func;
     context_m33->psplim = (uint32_t)u32_stack_lim;
     return (context_t)context_m33;
 }
