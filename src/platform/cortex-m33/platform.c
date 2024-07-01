@@ -31,8 +31,22 @@ __attribute__((naked)) void  platform_exit_critical(eh_save_state_t state){
     );
 }
 
-eh_clock_t  platform_get_clock_monotonic_time(void){
-    return 0;
+
+extern char __HeapBase[]; // 链接器脚本中定义的堆的开始地址
+extern char __heap_limit[]; // 链接器脚本中定义的堆的开始地址
+static char *heap_end = __HeapBase;
+
+caddr_t _sbrk(int incr) {
+    char *prev_heap_end = heap_end;
+
+    // 检查堆是否超出预定范围
+    if (prev_heap_end + incr > __heap_limit) {
+        // 如果超出范围，返回-1表示失败
+        return (caddr_t) -1;
+    }
+
+    heap_end += incr;
+    return (caddr_t) prev_heap_end;
 }
 
 
@@ -66,7 +80,7 @@ static void generic_idle_break( void ){
 
 
 static int  __init generic_platform_init(void){
-
+    return 0;
 }
 
 static void __exit generic_platform_deinit(void){
