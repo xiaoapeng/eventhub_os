@@ -33,12 +33,6 @@ void  platform_exit_critical(eh_save_state_t state){
     (void)state;
     pthread_mutex_unlock(&linux_platform.eh_use_mutex);
 }
-void* platform_malloc(size_t size){
-    return malloc(size);
-}
-void  platform_free(void* ptr){
-    free(ptr);
-}
 void  platform_idle_break(void){
     pthread_mutex_lock(&linux_platform.idle_break_mutex);
     if(linux_platform.is_idle_state)

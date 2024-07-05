@@ -74,7 +74,7 @@ extern __safety int eh_event_notify(eh_event_t *e);
  *                                  必须等待condition返回true才进行返回，若condition == NULL 那么就等待信号发生就直接返回
  * @param  e                        事件实例指针
  * @param  arv                      condition的参数
- * @param  condition                条件函数
+ * @param  condition                条件函数condition函数禁止任何形式的await函数
  * @param  timeout                  超时时间,EH_TIME_FOREVER为永不超时 因为事件无队列，
  *                              当condition为NULL时，超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
  * @return int 

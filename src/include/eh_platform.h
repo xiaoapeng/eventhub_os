@@ -14,8 +14,6 @@
 
 typedef unsigned long eh_save_state_t ;
 #include "platform_port.h"
-
-#include "eh_interior.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
@@ -45,17 +43,6 @@ extern "C"{
 #define eh_idle_break()                             (platform_idle_break())
 
 /**
- * @brief               动态内存分配
- * @return              void*
- */
-#define eh_malloc(size)                             (platform_malloc(size))
-
-/**
- * @brief               内存释放
- */
-#define eh_free(ptr)                                (platform_free(ptr))
-
-/**
  * @brief               空闲或外部事件处理函数
  */
 #define eh_idle_or_extern_event_handler()           (platform_idle_or_extern_event_handler())
@@ -65,16 +52,7 @@ extern "C"{
  * @brief                  获取当前最大的空闲时钟数
  * @return eh_sclock_t     返回能空闲的时钟数
  */
-static inline eh_sclock_t eh_get_loop_idle_time(void){
-    eh_save_state_t state;
-    eh_sclock_t half_time;
-    state = eh_enter_critical();
-    half_time = !eh_list_empty(&eh_task_get_current()->task_list_node) ? 
-        0 : eh_timer_get_first_remaining_time_on_lock();
-    eh_exit_critical(state);
-    return half_time;
-}
-
+extern eh_sclock_t eh_get_loop_idle_time(void);
 
 
 

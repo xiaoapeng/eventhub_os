@@ -24,8 +24,6 @@ extern "C"{
 extern eh_clock_t  platform_get_clock_monotonic_time(void);
 extern eh_save_state_t  platform_enter_critical(void);
 extern void  platform_exit_critical(eh_save_state_t state);
-extern void* platform_malloc(size_t size);
-extern void  platform_free(void* ptr);
 extern void  platform_idle_break(void);
 extern void  platform_idle_or_extern_event_handler(void);
 

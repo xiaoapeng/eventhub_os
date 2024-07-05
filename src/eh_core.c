@@ -15,6 +15,7 @@
 #include <string.h>
 #include <strings.h>
 #include "eh.h"
+#include "eh_mem.h"
 #include "eh_event.h"
 #include "eh_platform.h"
 #include "eh_interior.h"
@@ -235,7 +236,24 @@ eh_task_t* eh_task_self(void){
     return eh_task_get_current();
 }
 
+/**
+ * @brief                   获取当前最大的可空闲时间
+ * @return eh_sclock_t 
+ */
+extern eh_sclock_t eh_get_loop_idle_time(void){
+    eh_save_state_t state;
+    eh_sclock_t half_time;
+    state = eh_enter_critical();
+    half_time = !eh_list_empty(&eh_task_get_current()->task_list_node) ? 
+        0 : eh_timer_get_first_remaining_time_on_lock();
+    eh_exit_critical(state);
+    return half_time;
+}
 
+/**
+ * @brief                   退出系统loop
+ * @param  exit_code        退出代码
+ */
 void eh_loop_exit(int exit_code){
     eh_get_global_handle()->loop_stop_code = exit_code;
     eh_get_global_handle()->stop_flag = true;
@@ -266,6 +284,7 @@ int eh_loop_run(void){
     eh->state = EH_SCHEDULER_STATE_EXIT;
     return eh->loop_stop_code;
 }
+
 
 static int interior_init(void){
     eh_t *eh = eh_get_global_handle();

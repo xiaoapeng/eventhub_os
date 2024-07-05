@@ -14,6 +14,7 @@
 #include <string.h>
 #include "eh.h"
 #include "eh_event.h"
+#include "eh_mem.h"
 #include "eh_platform.h"
 #include "eh_interior.h"
 #include "eh_list.h"
@@ -253,11 +254,11 @@ int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     int ret = EH_RET_OK;
     struct eh_rbtree_node  *ret_rb;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
-    struct eh_event_epoll_receptor *receptor = 
-        eh_malloc(sizeof(struct eh_event_epoll_receptor));
+    struct eh_event_epoll_receptor *receptor;
     eh_param_assert(_epoll);
     eh_param_assert(e);
     
+    receptor = eh_malloc(sizeof(struct eh_event_epoll_receptor));
     if( receptor == NULL )
         return EH_RET_MALLOC_ERROR;
     eh_event_receptor_epoll_init(&receptor->receptor, NULL, epoll);

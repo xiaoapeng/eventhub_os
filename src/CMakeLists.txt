@@ -13,6 +13,7 @@ target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event_cb.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_mutex.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_sem.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/eh_mem.c"
 )
 
 target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/" )

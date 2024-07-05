@@ -19,8 +19,6 @@
 struct eh_module{
     int (*init)(void);
     void (*exit)(void);
-    char *modeule_name;
-    long section_id;
 };
 
 struct module_group{
@@ -40,22 +38,20 @@ struct module_group{
 
 #define __eh_define_modeule_null(_section_id) static EH_USED  const  char used_section_call_##_section_id[0]   \
     EH_SECTION( EH_STRINGIFY(.eh_init_fini_array.modeule_call_##_section_id) ) 
-#define __eh_define_modeule_export(_init__func_, _exit__func_, _section_id, _section)                        \
-    static EH_USED const  struct eh_module  EH_SECTION( EH_STRINGIFY(_section) ) _eh_module_  = {               \
+#define __eh_define_modeule_export(_init__func_, _exit__func_,  _section)                                    \
+    static EH_USED const  struct eh_module  EH_SECTION( _section ) _eh_module_  = {                          \
         .init = _init__func_,                                                                                \
         .exit = _exit__func_,                                                                                \
-        .modeule_name = NULL,                                                                                \
-        .section_id = _section_id,                                                                           \
     }
 
 #define _eh_define_modeule_export(_init__func_, _exit__func_, _section_id) \
-    __eh_define_modeule_export(_init__func_, _exit__func_, _section_id, .eh_init_fini_array.modeule_call_##_section_id )
+    __eh_define_modeule_export(_init__func_, _exit__func_, ".eh_init_fini_array." _section_id )
 
 
 
-#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, 0)
-#define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, 1)
-#define eh_module_export(_init__func_, _exit__func_)            _eh_define_modeule_export(_init__func_, _exit__func_, 7)
+#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.0")
+#define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, "1.1.0")
+#define eh_module_export(_init__func_, _exit__func_)            _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.0")
 #define EH_MODEULE_GROUP_MAX_CNT    8
 
 #define __init EH_SECTION(".eh_init")
