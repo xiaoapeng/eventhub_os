@@ -27,17 +27,18 @@
 
 #define TEST_MEM_MALLOC_MAX_SIZE (3000)
 #define TEST_MEM_HU_TIME         (1000*30)
+#define TEST_PTR_NUM             (3000)
 #define TEST_MEM_CYCLE           (1000)
-#define TEST_MEM_CYCLE_COUNT     (1000)
+#define TEST_MEM_CYCLE_COUNT     (8000)
 
 
-void *p[1000];
+void *p[TEST_PTR_NUM];
 
 typedef struct {
     eh_timer_event_t timer_event;
     int inode;
 }test_data_t;
-static test_data_t *test_data[1000] = {NULL};
+static test_data_t *test_data[TEST_PTR_NUM] = {NULL};
 static size_t max_block = 0;
 void dump_func(void* start, size_t size){
     (void)start;
@@ -63,12 +64,17 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
     struct eh_mem_heap_info info;
     size_t malloc_size;
     void* placeholder = NULL;
-    for(i=0; i<1000; i++){
+    for(i=0; i<TEST_PTR_NUM; i++){
         if(test_data[i]) continue;
         if(placeholder == NULL)
             placeholder = eh_malloc(0x100);
-        if(placeholder == NULL)
+        if(placeholder == NULL){
+            dbg_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, malloc_size);
+            dump_max_block();
+            eh_mem_get_heap_info(&info);
+            dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
             break;
+        }
         eh_mem_get_heap_info(&info);
         if(info.free_size < TEST_MEM_MALLOC_MAX_SIZE){
             malloc_size = info.free_size;
@@ -206,7 +212,7 @@ int task_app(void *arg){
     test_rand_exit:
         eh_epoll_del_event(epoll, eh_timer_to_event(&timer_test));
         eh_timer_clean(&timer_test);
-        for(int i=0; i<1000; i++){
+        for(int i=0; i<TEST_PTR_NUM; i++){
             if(test_data[i] != NULL){
                 eh_epoll_del_event(epoll, eh_timer_to_event(&test_data[i]->timer_event));
                 eh_timer_clean(&test_data[i]->timer_event);
@@ -220,15 +226,29 @@ int task_app(void *arg){
     }
     eh_mem_get_heap_info(&info);
     dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
-
     eh_loop_exit(0);
     return 0;
 }
 
+static uint8_t heap0_array[1024*1024];
+static const struct eh_mem_heap heap0 = {
+    .heap_start = heap0_array,
+    .heap_size = sizeof(heap0_array)
+};
+
+static uint8_t heap1_array[1024*1024];
+static const struct eh_mem_heap heap1 = {
+    .heap_start = heap1_array,
+    .heap_size = sizeof(heap1_array)
+};
 
 int main(void){
     debug_init();
     dbg_debugfl("test_eh start!!");
+
+    eh_mem_head_register(&heap0);
+    eh_mem_head_register(&heap1);
+
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);
     eh_loop_run();
