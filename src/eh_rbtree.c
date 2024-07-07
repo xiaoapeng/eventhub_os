@@ -81,7 +81,7 @@ __rb_insert(struct eh_rbtree_node *node, struct eh_rbtree_root *root)
 		/*
 		 * Loop invariant: node is red.
 		 */
-		if (unlikely(!parent)) {
+		if (eh_unlikely(!parent)) {
 			/*
 			 * The inserted node is root. Either this is the
 			 * first node, or we recursed at Case 1 below and

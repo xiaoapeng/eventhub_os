@@ -31,8 +31,15 @@
 #   define EH_CONFIG_MEM_HEAP_SIZE                               (1024*1024U)
 #endif
 
-/* 配置调试输出函数 */
-#include "debug.h"
-#define eh_debugfl                                               dbg_debugfl
+/**
+ *  配置标准输出缓存大小,该缓冲为单次输出的最大字节数，并不限制eh_printf的输出字节数
+ */
+#define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                          (32U)
+
+/*
+ * 是否支持浮点格式化 
+ */
+#define EH_CONFIG_PRINTF_SUPPORT_FLOAT_FORMAT                     1
+
 
 #endif // _EH_USER_CONFIG_H_

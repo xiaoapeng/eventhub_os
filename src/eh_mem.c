@@ -10,13 +10,13 @@
  * @par 修改日志:
  */
 
+#include <stdbool.h>
 #include "eh.h"
 #include "eh_error.h"
 #include "eh_mem.h"
 #include "eh_types.h"
 #include "eh_user_config.h"
 #include "eh_platform.h"
-#include <stdbool.h>
 
 typedef unsigned long eh_size_t;
 
@@ -55,7 +55,7 @@ struct eh_mem_block {
 
 
 #if defined(EH_CONFIG_MEM_HEAP_SIZE) && (EH_CONFIG_MEM_HEAP_SIZE > 0)
-static_assert(EH_CONFIG_MEM_HEAP_SIZE > EH_MEM_BLOCK_HEAD_SIZE, "Please set EH_CONFIG_MEM_HEAP_SIZE to 0 or greater");
+eh_static_assert(EH_CONFIG_MEM_HEAP_SIZE > EH_MEM_BLOCK_HEAD_SIZE, "Please set EH_CONFIG_MEM_HEAP_SIZE to 0 or greater");
 
 static uint8_t __attribute__((aligned(EH_MEM_ALIGN_SIZE))) mem_heap[EH_MEM_ALIGN_DOWN(EH_CONFIG_MEM_HEAP_SIZE)];
 static struct eh_mem_heap mem_heap_array[EH_MEM_HEAP_ARRAY_NUM] = {

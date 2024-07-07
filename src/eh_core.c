@@ -273,7 +273,7 @@ int eh_loop_run(void){
         /* 进行调度 */
         __await__ eh_task_next();
 
-        if(unlikely(eh->stop_flag))
+        if(eh_unlikely(eh->stop_flag))
             break;
 
         /* 调用用户外部处理函数 */

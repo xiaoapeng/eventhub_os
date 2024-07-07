@@ -73,5 +73,8 @@ if(NOT IS_SUB_PROJECT)
     target_link_libraries(test_sem general_test eventhub)
     add_executable( test_mem "${CMAKE_CURRENT_SOURCE_DIR}/test/test_mem.c")
     target_link_libraries(test_mem general_test eventhub)
+    add_executable( test_dbg "${CMAKE_CURRENT_SOURCE_DIR}/test/test_dbg.c")
+    target_link_libraries(test_dbg general_test eventhub)
+
 
 endif()

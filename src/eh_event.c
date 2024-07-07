@@ -164,7 +164,7 @@ void eh_event_clean(eh_event_t *e){
         if(pos->wakeup_task)
             eh_task_wake_up(pos->wakeup_task);
         if(pos->epoll){
-            epoll_receptor = container_of(pos, struct eh_event_epoll_receptor, receptor);
+            epoll_receptor = eh_container_of(pos, struct eh_event_epoll_receptor, receptor);
             if(eh_list_empty(&epoll_receptor->pending_list_node))
                 eh_list_add_tail(&epoll_receptor->pending_list_node, &pos->epoll->pending_list_head);
             if(pos->epoll->wakeup_task)
@@ -192,7 +192,7 @@ int eh_event_notify(eh_event_t *e){
         if(pos->wakeup_task)
             eh_task_wake_up(pos->wakeup_task);
         if(pos->epoll){
-            epoll_receptor = container_of(pos, struct eh_event_epoll_receptor, receptor);
+            epoll_receptor = eh_container_of(pos, struct eh_event_epoll_receptor, receptor);
             if(eh_list_empty(&epoll_receptor->pending_list_node))
                 eh_list_add_tail(&epoll_receptor->pending_list_node, &pos->epoll->pending_list_head);
         if(pos->epoll->wakeup_task)

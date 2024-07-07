@@ -3,6 +3,7 @@
 add_library(eventhub OBJECT)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/coroutine/")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/platform/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/general/")
 
 target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_core.c"
