@@ -10,6 +10,7 @@
  * @par 修改日志:
  */
 
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
@@ -40,55 +41,71 @@ union double_union{
     };
 };
 
+static char test_buf[1024];
 
 int task_app(void *arg){
     (void)arg;
-    // double d = 123.5, ds;
-    // int k;
-    // union double_union du = {.d = d};
-    // ds = (du.d - 1.5) * 0.289529654602168 + 0.1760912590558 + (du.exponent - 1023) * 0.301029995663981;
-    // k = (int)ds;
+    int n;
     
-    // if (ds < 0. && ds != k)
-    //     k--;			/* want k = floor(ds) */
-    // eh_printf("k:%d\n",k);
-    // eh_printf("v64:%#.16lx\n", du.v64);
-    // eh_printf("mantissa:%lu exponent:%lu sign:%lu \n", (uint64_t)du.mantissa, (uint64_t)du.exponent - 1023, (uint64_t)du.sign);
-    // eh_printf("mantissa:%lb exponent:%lu sign:%lu \n", (uint64_t)du.mantissa, (uint64_t)du.exponent - 1023, (uint64_t)du.sign);
 
-
-    eh_printf("test1 |x:%16x| |lx:%32lx| |llx:%32llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
-    eh_printf("test1 |x:%#16x| |lx:%#32lx| |llx:%#32llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
-    eh_printf("test1 |x:%#16.8x| |lx:%#32.16lx| |llx:%#32.16llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
-    eh_printf("test1 |x:%#16.8x| |lx:%#32.16lx| |llx:%#32.16llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
-    eh_printf("test1 |x:%-#16.8x| |lx:%-#32.16lx| |llx:%-#32.16llx|\n\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("test1 x:|%16x| lx:|%32lx| llx:|%32llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 x:|%#16x| lx:|%#32lx| llx:|%#32llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 x:|%#16.8x| lx:|%#32.16lx| llx:|%#32.16llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 x:|%#16.8x| lx:|%#32.16lx| llx:|%#32.16llx|\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 x:|%-#16.8x| lx:|%-#32.16lx| llx:|%-#32.16llx|\n\n", 0x1000, 0x1234UL, 0x34356ULL);
+    n = eh_printf("n=%d\n",n);
 
     
-    eh_printf("test2 |d:%16d| |ld:%32ld| |lld:%32lld|\n", 1000, 1234UL, 34356ULL);
-    eh_printf("test2 |d:%16d| |ld:%32ld| |lld:%32lld|\n", 02300, 1234UL, 34356ULL);
-    eh_printf("test2 |d:%16.8d| |ld:%32.16ld| |lld:%32.16lld|\n", 1000, 1234UL, 34356ULL);
-    eh_printf("test2 |d:%16.8d| |ld:%32.16ld| |lld:%32.16lld|\n", 1000, 1234UL, 34356ULL);
-    eh_printf("test2 |d:%-16.8d| |ld:%-32.16ld| |ld:%-32.16lld|\n\n", 1000, 1234UL, 34356ULL);
+    n = eh_printf("test2 d:|%16d| ld:|%32ld| lld:|%32lld|\n", 1000, 1234UL, 34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2 d:|%16d| ld:|%32ld| lld:|%32lld|\n", 02300, 1234UL, 34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2 d:|%16.8d| ld:|%32.16ld| lld:|%32.16lld|\n", 1000, 1234UL, 34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2 d:|%16.8d| ld:|%32.16ld| lld:|%32.16lld|\n", 1000, 1234UL, 34356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2 d:|%-16.8d| ld:|%-32.16ld| lld:|%-32.16lld|\n\n", 1000, 1234UL, 34356ULL);
+    n = eh_printf("n=%d\n",n);
 
     
-    eh_printf("test1 |o:%16o| |lo:%32lo| |llo:%32llo|\n", 01000, 01234UL, 04356ULL);
-    eh_printf("test1 |o:%#16o| |lo:%#32lo| |llo:%#32llo|\n", 01000, 01234UL, 034356ULL);
-    eh_printf("test1 |o:%#16.8o| |lo:%#32.16lo| |llo:%#32.16llo|\n", 01000, 01234UL, 034356ULL);
-    eh_printf("test1 |o:%#16.8o| |lo:%#32.16lo| |llo:%#32.16llo|\n", 01000, 01234UL, 034356ULL);
-    eh_printf("test1 |o:%-#16.8o| |lo:%-#32.16lo| |llo:%-#32.16llo|\n\n", 01000, 01234UL, 034356ULL);
+    n = eh_printf("test1 o:|%16o| lo:|%32lo| llo:|%32llo|\n", 01000, 01234UL, 04356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 o:|%#16o| lo:|%#32lo| llo:|%#32llo|\n", 01000, 01234UL, 034356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 o:|%#16.8o| lo:|%#32.16lo| llo:|%#32.16llo|\n", 01000, 01234UL, 034356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 o:|%#16.8o| lo:|%#32.16lo| llo:|%#32.16llo|\n", 01000, 01234UL, 034356ULL);
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test1 o:|%-#16.8o| lo:|%-#32.16lo| llo:|%-#32.16llo|\n\n", 01000, 01234UL, 034356ULL);
+    n = eh_printf("n=%d\n",n);
 
-    
-    // eh_printf("test1 |b:%16b| |lb:%32lb| |llb:%32llb|\n", 01000, 01234UL, 04356ULL);
-    // eh_printf("test1 |b:%#16b| |lb:%#32lb| |llb:%#32llb|\n", 01000, 01234UL, 034356ULL);
-    // eh_printf("test1 |b:%#16.8b| |lb:%#32.16lb| |llb:%#32.16llb|\n", 01000, 01234UL, 034356ULL);
-    // eh_printf("test1 |b:%#16.8b| |lb:%#32.16lb| |llb:%#32.16llb|\n", 01000, 01234UL, 034356ULL);
-    // eh_printf("test1 |b:%-#16.8b| |lb:%-#32.16lb| |llb:%-#32.16llb|\n\n", 01000, 01234UL, 034356ULL);
+    /* 扩展语法 */
+    // eh_printf("test1 b:|%16b| lb:|%32lb| llb:|%32llb|\n", 01000, 01234UL, 04356ULL);
+    // eh_printf("test1 b:|%#16b| lb:|%#32lb| llb:|%#32llb|\n", 01000, 01234UL, 034356ULL);
+    // eh_printf("test1 b:|%#16.8b| lb:|%#32.16lb| llb:|%#32.16llb|\n", 01000, 01234UL, 034356ULL);
+    // eh_printf("test1 b:|%#16.8b| lb:|%#32.16lb| llb:|%#32.16llb|\n", 01000, 01234UL, 034356ULL);
+    // eh_printf("test1 b:|%-#16.8b| lb:|%-#32.16lb| llb:|%-#32.16llb|\n\n", 01000, 01234UL, 034356ULL);
 
-    eh_printf("test2 |%s|\n","tesr hhh");
-    eh_printf("test2 |%.*s|\n", 5, "tesr hhh");
-    eh_printf("test2 |%8.*s|\n", 5, "tesr hhh");
+    n = eh_printf("test1   |%16.8f| xx:|%32.16f| xxx:|%-32.16f|\n", 1.23456789, 1.23456789, 1.23456789);
+    n = eh_printf("n=%d\n",n);
+  
+    n = eh_printf("test2   |%32s|\n","test hhh");
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2   |%32.*s|\n", 5, "test hhh");
+    n = eh_printf("n=%d\n",n);
+    n = eh_printf("test2   |%-32.*s|\n", 1000000000, "test hhh");
+    n = eh_printf("n=%d\n",n);
     
-    eh_printf("test2 |%zd|\n", sizeof(long double));
+    n = eh_printf("test2   |%zd|\n", sizeof(long double));
+    n = eh_printf("n=%d\n",n);
+
+    n = eh_snprintf(test_buf, sizeof(test_buf), "12345678123456781234567812345678123456781234567812345678123456781234567812345678");
+    n = eh_printf("test_buf:|%s|  n=%d\n", test_buf, n);
+
 
     eh_loop_exit(0);
     return 0;

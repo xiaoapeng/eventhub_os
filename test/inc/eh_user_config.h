@@ -36,10 +36,6 @@
  */
 #define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                          (32U)
 
-/*
- * 是否支持浮点格式化 
- */
-#define EH_CONFIG_PRINTF_SUPPORT_FLOAT_FORMAT                     1
 
 
 #endif // _EH_USER_CONFIG_H_
