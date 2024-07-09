@@ -20,6 +20,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include <endian.h>
 #include "eh_mem.h"
 #include "eh_types.h"
 #include "eh_formatio.h"
@@ -195,14 +196,16 @@ static int num_bit_count(unsigned long long number, int base){
 }
 
 static inline void streamout_in_byte(struct stream_out *stream, char ch){
+    bool out = false;
     switch(stream->type){
         case STREAM_TYPE_FUNCTION:
             if(stream->f.pos < stream->f.end){
                 *stream->f.pos = (uint8_t)ch;
                 stream->f.pos++;
+                if(ch == '\n') out = true;
             }
-            if(stream->f.pos >= stream->f.end){
-                stream->f.write(&stream, stream->f.cache,  (size_t)(stream->f.end - stream->f.cache));
+            if( stream->f.pos == stream->f.end || out ){
+                stream->f.write(&stream, stream->f.cache,  (size_t)(stream->f.pos - stream->f.cache));
                 stream->f.pos = stream->f.cache;
             }
             break;
@@ -218,10 +221,6 @@ static inline void streamout_in_byte(struct stream_out *stream, char ch){
 static inline void streamout_finish(struct stream_out *stream){
     switch(stream->type){
         case STREAM_TYPE_FUNCTION:
-            if(stream->f.pos > stream->f.cache){
-                stream->f.write(&stream, stream->f.cache,  (size_t)(stream->f.pos - stream->f.cache));
-                stream->f.pos = stream->f.cache;
-            }
             break;
         case STREAM_TYPE_MEMORY:
             if(stream->m.pos < stream->m.end){
@@ -617,7 +616,7 @@ static inline int vprintf_float_f_or_g(struct stream_out *stream, double num, in
     return vprintf_float_decimalism_or_normalized(stream, &components_num, field_width, precision, flags, 0);
 }
 
-static inline int vprintf_float(struct stream_out *stream, double num, int field_width, int precision, int flags){
+static int vprintf_float(struct stream_out *stream, double num, int field_width, int precision, int flags){
     int n=0;
     if(isinf(num) || isnan(num)){
         char *out_str = NULL;
@@ -647,6 +646,100 @@ static inline int vprintf_float(struct stream_out *stream, double num, int field
     flags &= (~(FORMAT_FLOAT_F|FORMAT_FLOAT_G));
     flags |= FORMAT_FLOAT_E;
     return vprintf_float_e(stream, num, field_width, precision, flags);
+}
+
+static int vprintf_array(struct stream_out *stream, const uint8_t *array, int field_width, 
+    int precision, int flags, enum format_qualifier qualifier){
+    const char *digits = small_digits;
+    const uint8_t *item;
+    char item_size;
+    int valid_len;
+    int array_len;
+    int array_reality_len;
+    int remainder;
+    int space_pad_len = 0;
+    int n = 0;
+
+    if(precision < 0) return 0;
+
+    if(flags & FORMAT_LARGE)
+        digits = large_digits;
+    switch(qualifier){
+        case FORMAT_QUALIFIER_LONG:
+            item_size = sizeof(unsigned long);
+            break;
+        case FORMAT_QUALIFIER_LONG_LONG:
+            item_size = sizeof(unsigned long long);
+            break;
+        case FORMAT_QUALIFIER_SHORT:
+            item_size = sizeof(unsigned short);
+            break;
+        case FORMAT_QUALIFIER_CHAR:
+            item_size = sizeof(unsigned char);
+            break;
+        default:
+            item_size = sizeof(unsigned int);
+            break;
+    }
+    array_len = precision/item_size;
+    remainder = precision % item_size;
+    array_reality_len = array_len - (remainder ? 1 : 0);
+    valid_len = (array_reality_len * (item_size * 2)) + (array_reality_len - 1);
+    if(field_width > valid_len){
+        space_pad_len = field_width - valid_len;
+    }
+    
+    if(!(flags & FORMAT_LEFT)){
+        for(int i=0; i<space_pad_len; i++,n++){
+            streamout_in_byte(stream, ' ');
+        }
+    }
+
+    item = array;
+    for(int i=0; i<array_len; i++, item += item_size){
+        if(i){
+            streamout_in_byte(stream, ' ');
+            n++;
+        }
+#if BYTE_ORDER == LITTLE_ENDIAN
+        for(int j=item_size - 1; j>=0; j--, n+=2){
+#else
+        for(int j=0; j<item_size; j++, n+=2){
+#endif
+            streamout_in_byte(stream, digits[(item[j] >> 4) & 0x0f]);
+            streamout_in_byte(stream, digits[     (item[j]) & 0x0f]);
+        }
+    }
+    if(remainder){
+        streamout_in_byte(stream, ' ');
+        n++;
+#if BYTE_ORDER == LITTLE_ENDIAN
+        for(int i=0;i<(item_size-remainder);i++,n+=2){
+            streamout_in_byte(stream, '?');
+            streamout_in_byte(stream, '?');
+        }
+        for(int j=remainder - 1; j>=0; j--, n+=2){
+            streamout_in_byte(stream, digits[(item[j] >> 4) & 0x0f]);
+            streamout_in_byte(stream, digits[     (item[j]) & 0x0f]);
+        }
+#else
+        for(int j=0; j<remainder; j++, n+=2){
+            streamout_in_byte(stream, digits[(item[j] >> 8) & 0x0f]);
+            streamout_in_byte(stream, digits[     (item[j]) & 0x0f]);
+        }
+        for(int i=0;i<(item_size-remainder);i++,n+=2){
+            streamout_in_byte(stream, '?');
+            streamout_in_byte(stream, '?');
+        }
+#endif
+    }
+
+    if(flags & FORMAT_LEFT){
+        for(int i=0; i<space_pad_len; i++,n++){
+            streamout_in_byte(stream, ' ');
+        }
+    }
+    return n;
 }
 static inline int vprintf_number(struct stream_out *stream, unsigned long long num, int field_width, int precision, int flags, enum base_type base){
     char _number_buf[FORMAT_STACK_CACHE_SIZE];
@@ -907,6 +1000,12 @@ static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list
             case 'f':
                 flags |= FORMAT_FLOAT_F;
                 goto _print_folat;
+            case 'Q':
+                flags |= FORMAT_LARGE;
+                /*FALLTHROUGH*/
+            case 'q':
+                n += vprintf_array(stream, va_arg(args, void *), field_width, precision, flags, qualifier);
+                break;
             default:{
                 streamout_in_byte(stream, '%');
                 fmt = fmt_start;
@@ -1016,6 +1115,12 @@ int eh_sprintf(char *buf, const char *fmt, ...){
     return n;
 }
 
+int eh_vprintf(const char *fmt, va_list args){
+    int n;
+    n = eh_stream_vprintf(&_stdout, fmt, args);
+    streamout_finish(&_stdout);
+    return n;
+}
 
 int eh_printf(const char *fmt, ...){
     int n;

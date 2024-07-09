@@ -70,10 +70,22 @@ static struct eh_mem_heap mem_heap_array[EH_MEM_HEAP_ARRAY_NUM];
 static size_t mem_heap_array_cnt = 0;
 #endif
 
-static struct eh_mem_block first_block;
-static eh_size_t mem_total_size;
-static eh_size_t mem_free_size;
-static eh_size_t mem_min_ever_free_size_level;
+/**
+ *   此处使用结构体将内部变量放在结构体中，避免编译器优化时将 first_block 
+ *   和 mem_heap_array优化为前后关系，这样会在插入时触发合并算法，
+ *   会导致eh_malloc运行异常
+ */
+struct {
+    struct eh_mem_block first_block;
+    eh_size_t mem_total_size;
+    eh_size_t mem_free_size;
+    eh_size_t mem_min_ever_free_size_level;
+}_eh_mem_run;
+
+#define first_block                     (_eh_mem_run.first_block)
+#define mem_total_size                  (_eh_mem_run.mem_total_size)
+#define mem_free_size                   (_eh_mem_run.mem_free_size)
+#define mem_min_ever_free_size_level    (_eh_mem_run.mem_min_ever_free_size_level)
 
 static void eh_mem_insert(struct eh_mem_block *new_free_block){
     struct eh_mem_block *prev_block;

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <sys/epoll.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "debug.h"
 #include "eh.h"
 #include "eh_event.h"
@@ -23,6 +24,7 @@
 #include "eh_formatio.h"
 #include "eh_timer.h" 
 #include "eh_types.h"
+#include "eh_debug.h"
 
 void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)stream;
@@ -106,7 +108,28 @@ int task_app(void *arg){
     n = eh_snprintf(test_buf, sizeof(test_buf), "12345678123456781234567812345678123456781234567812345678123456781234567812345678");
     n = eh_printf("test_buf:|%s|  n=%d\n", test_buf, n);
 
+    static uint8_t test_buf[] = {
+        0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
+        0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
+        0x55
+    };
+    n = eh_printf("|%-80.*Q|\n", (int)sizeof(test_buf), test_buf);
+    n = eh_printf("n=%d\n",n);
 
+    eh_debugfl("TEST %d",1234);
+    eh_infofl("TEST %d",1234);
+    eh_sysfl("TEST %d",1234);
+    eh_errfl("TEST %d\n",1234);
+
+    eh_debugln("TEST %d",1234);
+    eh_infoln("TEST %d",1234);
+    eh_sysln("TEST %d",1234);
+    eh_errln("TEST %d",1234);
+
+    
+    eh_debugln("|%.*hhq|", (int)sizeof(test_buf), test_buf);
+    eh_debughex(test_buf, sizeof(test_buf));
+    eh_errhex(test_buf, sizeof(test_buf));
     eh_loop_exit(0);
     return 0;
 }

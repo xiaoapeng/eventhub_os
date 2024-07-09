@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "debug.h"
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_event.h"
 #include "eh_interior.h"
 #include "eh_mem.h"
@@ -56,7 +56,7 @@ void dump_find_max_block_func(void* start, size_t size){
 void dump_max_block(void){
     max_block = 0;
     eh_free_block_dump(dump_find_max_block_func);
-    dbg_infoln("max_block %llu",max_block);
+    eh_infoln("max_block %llu",max_block);
 }
 
 void test_rand_malloc_add_epoll(eh_epoll_t epoll){
@@ -69,10 +69,10 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
         if(placeholder == NULL)
             placeholder = eh_malloc(0x100);
         if(placeholder == NULL){
-            dbg_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, malloc_size);
+            eh_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, 0x100);
             dump_max_block();
             eh_mem_get_heap_info(&info);
-            dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
+            eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
             break;
         }
         eh_mem_get_heap_info(&info);
@@ -87,10 +87,10 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
         }
 
         if(test_data[i] == NULL){
-            dbg_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, malloc_size);
+            eh_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, malloc_size);
             dump_max_block();
             eh_mem_get_heap_info(&info);
-            dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
+            eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
             eh_free_block_dump(dump_func);
             break;
         }
@@ -119,8 +119,8 @@ int task_app(void *arg){
 
     
     eh_mem_get_heap_info(&info);
-    dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);
-    dbg_infofl("基础测试:");
+    eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
 
 
@@ -134,7 +134,7 @@ int task_app(void *arg){
     p[7] = eh_malloc(2);
     p[8] = eh_malloc(6);
 
-    dbg_infofl("基础测试:");
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
 
     eh_free(p[0]);
@@ -143,18 +143,18 @@ int task_app(void *arg){
     eh_free(p[6]);
     eh_free(p[8]);
 
-    dbg_infofl("基础测试:");
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
 
     p[0] = eh_malloc(1);
-    dbg_infofl("基础测试:");
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
     p[2] = eh_malloc(7);
     p[4] = eh_malloc(8);
     p[6] = eh_malloc(53);
     p[8] = eh_malloc(6);
 
-    dbg_infofl("基础测试:");
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
 
     eh_free(p[0]);
@@ -166,7 +166,7 @@ int task_app(void *arg){
     eh_free(p[6]);
     eh_free(p[7]);
     eh_free(p[8]);
-    dbg_infofl("基础测试:");
+    eh_infofl("基础测试:");
     eh_free_block_dump(dump_func);
 
 
@@ -187,17 +187,17 @@ int task_app(void *arg){
             int ret;
             ret = eh_epoll_wait(epoll, epoll_slot, 12, EH_TIME_FOREVER);
             if(ret <= 0){
-                dbg_errfl("eh_epoll_wait failed!!");
+                eh_errfl("eh_epoll_wait failed!!");
                 goto test_rand_exit;
             }
             for(int i=0; i<ret; i++){
                 if(epoll_slot[i].event == eh_timer_to_event(&timer_test)){
-                    dbg_infofl("timer_test timeout!! %d %llu ", timer_timeout_cnt, eh_clock_to_msec(eh_get_clock_monotonic_time()));
+                    eh_infofl("timer_test timeout!! %d %llu ", timer_timeout_cnt, eh_clock_to_msec(eh_get_clock_monotonic_time()));
                     test_rand_malloc_add_epoll(epoll);
                     eh_free_block_dump(dump_func);
                     timer_timeout_cnt++;
                     if(timer_timeout_cnt > TEST_MEM_CYCLE_COUNT){
-                        dbg_infofl("随机测试结束...");
+                        eh_infofl("随机测试结束...");
                         goto test_rand_exit;
                     }
                 }else{
@@ -221,11 +221,11 @@ int task_app(void *arg){
             }
         }
         eh_epoll_del(epoll);
-        dbg_infofl("碎片化测试:");
+        eh_infofl("碎片化测试:");
         eh_free_block_dump(dump_func);
     }
     eh_mem_get_heap_info(&info);
-    dbg_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
+    eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
     eh_loop_exit(0);
     return 0;
 }
@@ -242,9 +242,14 @@ static const struct eh_mem_heap heap1 = {
     .heap_size = sizeof(heap1_array)
 };
 
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
+
 int main(void){
-    debug_init();
-    dbg_debugfl("test_eh start!!");
+    eh_debugfl("test_eh start!!");
 
     eh_mem_head_register(&heap0);
     eh_mem_head_register(&heap1);

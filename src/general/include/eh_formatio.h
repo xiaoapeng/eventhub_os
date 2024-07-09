@@ -22,9 +22,10 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-extern int eh_printf(const char *fmt, ...)  __attribute__((format(printf, 1, 2)));
-extern int eh_snprintf(char *buf, size_t size, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
-extern int eh_sprintf(char *buf, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+extern int eh_vprintf(const char *fmt, va_list args);
+extern int eh_printf(const char *fmt, ...);
+extern int eh_snprintf(char *buf, size_t size, const char *fmt, ...);
+extern int eh_sprintf(char *buf, const char *fmt, ...);
 
 #ifdef __cplusplus
 #if __cplusplus
