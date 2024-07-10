@@ -67,10 +67,6 @@ static void _clear(void){
     
 }
 
-/**
- * @brief             进行下一个任务的调度，调度成功返回0，调度失败返回-1
- * @return int        -1:调度失败 0:调度成功
- */
 int __async__ eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;
@@ -104,10 +100,6 @@ int __async__ eh_task_next(void){
     return 0;
 }
 
-/**
- * @brief                   进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环
- * @param  wakeup_task      被唤醒的任务
- */
 void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;
@@ -116,14 +108,18 @@ void eh_task_wake_up(eh_task_t *wakeup_task){
         goto out;
     eh_idle_break();
     wakeup_task->state = EH_TASK_STATE_READY;
-    eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
+    if(wakeup_task->is_system_task){
+        eh_list_move(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
+    }else{
+        eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
+    }
 out:
     eh_exit_critical(state);
 }
 
 
-static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, 
-            void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
+static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, uint32_t flags,
+            void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
     eh_task_t *task = (eh_task_t *)eh_malloc(sizeof(eh_task_t) + strlen(name) + 1);
     if(task == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     task->name = (char*)(task + 1);
@@ -137,45 +133,35 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack,
     task->context = co_context_make(stack, ((uint8_t*)stack) + stack_size, _task_entry);
     task->task_ret = 0;
     task->state = EH_TASK_STATE_WAIT;
-    task->is_static_stack = is_static_stack & 0x01;
+    task->flags = flags;
+    task->is_static_stack = !!is_static_stack;
     eh_event_init(&task->event, &task_event_type);
     eh_task_wake_up(task);
     return task;
 }
 
-/**
- * @brief 让出当前任务
- */
+static inline void _eh_poll_run(void){
+    eh_loop_poll_task_t *pos,*n;
+    eh_t *eh = eh_get_global_handle();
+    eh_list_for_each_prev_entry_safe(pos, n, &eh->loop_poll_task_head, list_node){
+        if(pos->poll_task)
+            pos->poll_task(pos->arg);
+    }
+}
+
 void __async__ eh_task_yield(void){
     eh_task_next();
 }
 
-/**
- * @brief                   使用静态方式创建一个协程任务
- * @param  name             任务名称
- * @param  stack            任务的静态栈
- * @param  stack_size       任务栈大小
- * @param  task_arg         任务参数
- * @param  task_function    任务执行函数
- * @return eh_task_t* 
- */
-eh_task_t* eh_task_static_stack_create(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
-    return _eh_task_create_stack(name, 1, stack, stack_size, task_arg, task_function);
+eh_task_t* eh_task_static_stack_create(const char *name,uint32_t flags, void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
+    return _eh_task_create_stack(name, 1, flags, stack, stack_size, task_arg, task_function);
 }
 
-/**
- * @brief                   使用动态方式创建一个协程任务
- * @param  name             任务名称
- * @param  stack_size       任务栈大小
- * @param  task_arg         任务参数
- * @param  task_function    任务执行函数
- * @return eh_task_t* 
- */
-eh_task_t* eh_task_create(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*)){
+eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
     eh_task_t *task;
     void *stack = eh_malloc(stack_size);
     if(stack == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
-    task = _eh_task_create_stack(name, 0, stack, stack_size, task_arg, task_function);
+    task = _eh_task_create_stack(name, 0, flags, stack, stack_size, task_arg, task_function);
     if(eh_ptr_to_error(task) < 0)
         eh_free(stack);
     return task;
@@ -228,18 +214,10 @@ void  eh_task_exit(int ret){
     eh_task_next();
 }
 
-/**
- * @brief                   任务获取自己的任务句柄
- * @return eh_task_t*       返回当前的任务句柄
- */
 eh_task_t* eh_task_self(void){
     return eh_task_get_current();
 }
 
-/**
- * @brief                   获取当前最大的可空闲时间
- * @return eh_sclock_t 
- */
 extern eh_sclock_t eh_get_loop_idle_time(void){
     eh_save_state_t state;
     eh_sclock_t half_time;
@@ -250,15 +228,12 @@ extern eh_sclock_t eh_get_loop_idle_time(void){
     return half_time;
 }
 
-/**
- * @brief                   退出系统loop
- * @param  exit_code        退出代码
- */
 void eh_loop_exit(int exit_code){
     eh_get_global_handle()->loop_stop_code = exit_code;
     eh_get_global_handle()->stop_flag = true;
     eh_task_exit(exit_code);
 }
+
 
 int eh_loop_run(void){
     eh_t *eh = eh_get_global_handle();
@@ -275,6 +250,8 @@ int eh_loop_run(void){
 
         if(eh_unlikely(eh->stop_flag))
             break;
+        
+        _eh_poll_run();
 
         /* 调用用户外部处理函数 */
         eh->state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
@@ -285,6 +262,10 @@ int eh_loop_run(void){
     return eh->loop_stop_code;
 }
 
+void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task){
+    eh_t *eh = eh_get_global_handle();
+    eh_list_add_tail(&poll_task->list_node, &eh->loop_poll_task_head);
+}
 
 static int interior_init(void){
     eh_t *eh = eh_get_global_handle();
@@ -293,6 +274,7 @@ static int interior_init(void){
     
     eh_list_head_init(&eh->task_wait_list_head);
     eh_list_head_init(&eh->task_finish_list_head);
+    eh_list_head_init(&eh->loop_poll_task_head);
 
     eh->state = EH_SCHEDULER_STATE_INIT;
 
@@ -307,6 +289,8 @@ static int interior_init(void){
     s_main_task.stack = NULL;
     s_main_task.stack_size = 0;
     s_main_task.state = EH_TASK_STATE_RUNING;
+    s_main_task.flags = 0;
+    s_main_task.is_static_stack = true;
 
     eh->eh_init_fini_array = (struct eh_module*)eh_modeule_section_begin();
     eh->eh_init_fini_array_len = ((struct eh_module*)eh_modeule_section_end() - (struct eh_module*)eh_modeule_section_begin());

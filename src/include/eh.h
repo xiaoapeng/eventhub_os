@@ -31,12 +31,15 @@ typedef uint64_t                            eh_msec_t;
 typedef uint64_t                            eh_clock_t;
 typedef int64_t                             eh_sclock_t;
 typedef struct eh_task                      eh_task_t;
+typedef struct eh_loop_poll_task            eh_loop_poll_task_t;
 
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
 #endif
 #endif /* __cplusplus */
+
+#define EH_TASK_FLAGS_SYSTEM_TASK          0x00000002
 
 
 enum EH_TASK_STATE{
@@ -49,17 +52,11 @@ enum EH_TASK_STATE{
 /* 永不到期 */
 #define EH_TIME_FOREVER                 (-1)
 
-struct eh_platform_port_param{
-    void                                (*global_lock)(uint32_t *state);                            /* 上锁， */
-    void                                (*global_unlock)(uint32_t state);                           /* 解锁 */
-    eh_clock_t                          clocks_per_sec;
-    eh_clock_t                          (*get_clock_monotonic_time)(void);                          /* 系统单调时钟的微秒数 */
-    void                                (*idle_or_extern_event_handler);                            /* 用户处理空闲和外部事件 */
-    void                                (*idle_break)(void);                                        /* 调用此函数通知"platform"从idle_or_extern_event_handler返回 */
-    void*                               (*malloc)(size_t size);
-    void                                (*free)(void* ptr);
+struct eh_loop_poll_task{
+    struct eh_list_head         list_node;
+    void                        *arg;
+    void                        (*poll_task)(void* arg);
 };
-
 
 
 /**
@@ -119,23 +116,24 @@ extern void __async__ eh_task_yield(void);
 /**
  * @brief                   使用静态方式创建一个协程任务
  * @param  name             任务名称
+ * @param  flags            任务标志    设置为EH_TASK_FLAGS_SYSTEM_TASK后将在事件发生后具有优先调用的权利
  * @param  stack            任务的静态栈
  * @param  stack_size       任务栈大小
  * @param  task_arg         任务参数
  * @param  task_function    任务执行函数
  * @return eh_task_t* 
  */
-extern eh_task_t* eh_task_static_stack_create(const char *name, void *stack, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
-
+extern eh_task_t* eh_task_static_stack_create(const char *name, uint32_t flags, void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*));
 /**
  * @brief                   使用动态方式创建一个协程任务
  * @param  name             任务名称
+ * @param  flags            任务标志    设置为EH_TASK_FLAGS_SYSTEM_TASK后将在事件发生后具有优先调用的权利
  * @param  stack_size       任务栈大小
  * @param  task_arg         任务参数
  * @param  task_function    任务执行函数
  * @return eh_task_t* 
  */
-extern eh_task_t* eh_task_create(const char *name, uint32_t stack_size, void *task_arg, int (*task_function)(void*));
+extern eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned long stack_size, void *task_arg, int (*task_function)(void*));
 
 /**
  * @brief                   退出任务
@@ -161,6 +159,24 @@ extern int __async__ eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout
  * @brief                   无条件回收任务，十分暴力，被回收的任务资源应该由回收者释放
  */
 extern void eh_task_destroy(eh_task_t *task);
+
+
+/**
+ * @brief                   添加一个轮询任务，轮询任务会在系统栈(系统任务中)内循环执行，
+ *                          在世界循环每次都会被执行到，请勿在此循环中做任何超时服务，包括await
+ *                          非必要，请不要使用，可使用timer event_cb代替
+ * @param  poll_task             
+ */
+extern void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task);
+
+
+/**
+ * @brief                   删除一个轮询任务
+ * @param  poll_task
+ */
+static inline void eh_loop_poll_task_del(eh_loop_poll_task_t *poll_task){
+    eh_list_del(&poll_task->list_node);
+}
 
 /**
  * @brief  初始化event_hub

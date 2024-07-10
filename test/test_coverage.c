@@ -96,7 +96,7 @@ int task_app(void *arg){
 int main(void){
 
     eh_global_init();
-    eh_task_create("task_app", 12*1024, "task_app", task_app);
+    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
     eh_loop_run();
     eh_global_exit();
     

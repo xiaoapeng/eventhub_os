@@ -131,13 +131,6 @@ unlock_out:
     return ret;
 }
 
-
-/**
- * @brief                           事件初始化
- * @param  e                        事件实例指针
- * @param  static_const_name        事件名称，可为NULL
- * @return int                      见eh_error.h
- */
 int eh_event_init(eh_event_t *e, const eh_event_type_t* type){
     eh_param_assert(e);
     eh_list_head_init(&e->receptor_list_head);
@@ -146,11 +139,6 @@ int eh_event_init(eh_event_t *e, const eh_event_type_t* type){
 }
 
 
-/**
- * @brief                           唤醒所有监听该事件的任务
- *                                  并将其剔除等待队列，一般在释放event实例前进行调用
- * @param  e                        事件实例指针
- */
 void eh_event_clean(eh_event_t *e){
     eh_save_state_t state;
     struct eh_event_receptor *pos ,*n;
@@ -176,11 +164,6 @@ void eh_event_clean(eh_event_t *e){
 }
 
 
-/**
- * @brief                           事件通知,唤醒所有监听该事件的任务
- * @param  e                        事件实例指针
- * @return int 
- */
 int eh_event_notify(eh_event_t *e){
     eh_save_state_t state;
     struct eh_event_receptor *pos;

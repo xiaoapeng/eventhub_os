@@ -13,10 +13,6 @@
 #ifndef _EH_INTERIOR_H_
 #define _EH_INTERIOR_H_
 
-#include "eh.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
@@ -37,6 +33,7 @@ enum EH_SCHEDULER_STATE{
 struct eh{
     struct      eh_list_head             task_wait_list_head;                                   /* 等待中的任务列表 */
     struct      eh_list_head             task_finish_list_head;                                 /* 完成待销毁的任务列表 */
+    struct      eh_list_head             loop_poll_task_head;
     enum        EH_SCHEDULER_STATE       state;
     struct      eh_task                  *current_task;                                         /* 当前被调度的任务 */
     struct      eh_task                  *main_task;                                            /* 系统栈任务 */
@@ -66,7 +63,7 @@ struct eh_task{
     int                                 (*task_function)(void*); /* 任务函数 */
     void                                *task_arg;               /* 任务相关参数 */
     void                                *stack;                  /* 协程栈内存 */
-    uint32_t                            stack_size;              /* 任务栈大小 */
+    unsigned long                       stack_size;              /* 任务栈大小 */
     context_t                           context;                 /* 协程上下文 */
     int                                 task_ret;                /* 任务返回值 */
     enum EH_TASK_STATE                  state;                   /* 任务运行状态*/
@@ -74,7 +71,9 @@ struct eh_task{
     union{
         uint32_t                        flags;
         struct{
-            uint32_t                    is_static_stack;          /* 是否是静态栈 */
+            /* 顺序很重要 */
+            uint32_t                    is_static_stack:1;          /* 是否是静态栈 */
+            uint32_t                    is_system_task:1;           /* 是否是系统任务 EH_TASK_FLAGS_SYSTEM_TASK */
         };
     };
     

@@ -69,21 +69,92 @@ struct eh_rbtree_root {
 		(node)->rb_right = NULL;			\
 	}while(0)
 
+/**
+ * @brief 					删除某个节点
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node * eh_rb_del(struct eh_rbtree_node *, struct eh_rbtree_root *);
+
+/**
+ * @brief 					添加节点
+ * @param  node             要添加的节点
+ * @param  tree             rb树对象
+ * @return 					正常返回NULL, 返回 node 说明 插入最左的节点
+ */
 extern struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree);
+
+/**
+ * @brief 					添加节点
+ * @param  node             要添加的节点
+ * @param  tree             rb树对象
+ * @return 					正常返回NULL, 返回非NULL说明find成功
+ */
 extern struct eh_rbtree_node * eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree);
+
+/**
+ * @brief 					找到一个与key匹配的节点
+ * @param  key              用于match函数比较的第一个参数
+ * @param  tree             rb树对象
+ * @param  match            匹配函数
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node * eh_rb_match_find(const void *key, struct eh_rbtree_root *tree, 
 	int (*match)(const void *key, const struct eh_rbtree_node *));
-/* Find logical next and previous nodes in a tree */
+
+/**
+ * @brief 					下一个节点
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *	eh_rb_next(const struct eh_rbtree_node *);
+
+/**
+ * @brief 					上一个节点
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *	eh_rb_prev(const struct eh_rbtree_node *);
+
+/**
+ * @brief 					第一个节点
+ */
 #define 						eh_rb_first(root)	((root)->rb_leftmost)
+
+/**
+ * @brief 					最后一个节点
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *	eh_rb_last(const struct eh_rbtree_root *);
-/* Postorder iteration - always visit the parent after its children */
+
+/**
+ * @brief 					找到后序遍历的第一个
+ * @param  root             rb树
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *rb_first_postorder(const struct eh_rbtree_root *root);
+
+/**
+ * @brief 					返回后续遍历的下一个
+ * @param  node             本次遍历的节点
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *);
+
+/**
+ * @brief 					找到一个与key匹配的节点,最左边的
+ * @param  key              用于match函数比较的第一个参数
+ * @param  tree             rb树对象
+ * @param  match            匹配函数
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *eh_rb_find_first(const void *key, const struct eh_rbtree_root *tree,
 	      int (*match)(const void *key, const struct eh_rbtree_node *));
+
+/**
+ * @brief 					找到下一个能匹配key的节点
+ * @param  key              用于match函数比较的第一个参数
+ * @param  node             本次用于匹配的节点
+ * @param  match            匹配函数
+ * @return struct eh_rbtree_node* 
+ */
 extern struct eh_rbtree_node *eh_rb_next_match(const void *key, struct eh_rbtree_node *node,
 	      int (*match)(const void *key, const struct eh_rbtree_node *));
 

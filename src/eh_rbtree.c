@@ -592,12 +592,7 @@ void rb_replace_node(struct eh_rbtree_node *victim, struct eh_rbtree_node *new,
 	__rb_change_child(victim, new, parent, root);
 }
 
-/**
- * @brief 					添加节点
- * @param  node             要添加的节点
- * @param  tree             rb树对象
- * @return 					正常返回NULL, 返回 node 说明 插入最左的节点
- */
+
 struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree)
 {
 	struct eh_rbtree_node **link = &tree->rb_node;
@@ -622,12 +617,7 @@ struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_
 	return leftmost ? node : NULL;
 }
 
-/**
- * @brief 					添加节点
- * @param  node             要添加的节点
- * @param  tree             rb树对象
- * @return 					正常返回NULL, 返回非NULL说明find成功
- */
+
 struct eh_rbtree_node *eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree)
 {
 	struct eh_rbtree_node **link = &tree->rb_node;
@@ -655,13 +645,7 @@ struct eh_rbtree_node *eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbt
 	return NULL;
 }
 
-/**
- * @brief 					找到一个与key匹配的节点
- * @param  key              用于match函数比较的第一个参数
- * @param  tree             rb树对象
- * @param  match            匹配函数
- * @return struct eh_rbtree_node* 
- */
+
 struct eh_rbtree_node * eh_rb_match_find(const void *key, struct eh_rbtree_root *tree, 
 	int (*match)(const void *key, const struct eh_rbtree_node *)){
 	struct eh_rbtree_node *node;
@@ -681,13 +665,7 @@ struct eh_rbtree_node * eh_rb_match_find(const void *key, struct eh_rbtree_root 
 	return NULL;
 }
 
-/**
- * @brief 					找到一个与key匹配的节点,最左边的
- * @param  key              用于match函数比较的第一个参数
- * @param  tree             rb树对象
- * @param  match            匹配函数
- * @return struct eh_rbtree_node* 
- */
+
 struct eh_rbtree_node *eh_rb_find_first(const void *key, const struct eh_rbtree_root *tree,
 	      int (*match)(const void *key, const struct eh_rbtree_node *))
 {
@@ -709,11 +687,6 @@ struct eh_rbtree_node *eh_rb_find_first(const void *key, const struct eh_rbtree_
 	return match_node;
 }
 
-/**
- * @brief 					返回后续遍历的下一个
- * @param  node             本次遍历的节点
- * @return struct eh_rbtree_node* 
- */
 struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *node)
 {
 	const struct eh_rbtree_node *parent;
@@ -732,11 +705,6 @@ struct eh_rbtree_node *rb_next_postorder(const struct eh_rbtree_node *node)
 		return (struct eh_rbtree_node *)parent;
 }
 
-/**
- * @brief 					找到后序遍历的第一个
- * @param  root             rb树
- * @return struct eh_rbtree_node* 
- */
 struct eh_rbtree_node *rb_first_postorder(const struct eh_rbtree_root *root)
 {
 	if (!root->rb_node)
@@ -745,14 +713,6 @@ struct eh_rbtree_node *rb_first_postorder(const struct eh_rbtree_root *root)
 	return rb_left_deepest_node(root->rb_node);
 }
 
-
-/**
- * @brief 					找到下一个能匹配key的节点
- * @param  key              用于match函数比较的第一个参数
- * @param  node             本次用于匹配的节点
- * @param  match            匹配函数
- * @return struct eh_rbtree_node* 
- */
 struct eh_rbtree_node *eh_rb_next_match(const void *key, struct eh_rbtree_node *node,
 	      int (*match)(const void *key, const struct eh_rbtree_node *))
 {
