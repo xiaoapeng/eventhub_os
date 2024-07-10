@@ -724,7 +724,7 @@ static int vprintf_array(struct stream_out *stream, const uint8_t *array, int fi
         }
 #else
         for(int j=0; j<remainder; j++, n+=2){
-            streamout_in_byte(stream, digits[(item[j] >> 8) & 0x0f]);
+            streamout_in_byte(stream, digits[(item[j] >> 4) & 0x0f]);
             streamout_in_byte(stream, digits[     (item[j]) & 0x0f]);
         }
         for(int i=0;i<(item_size-remainder);i++,n+=2){

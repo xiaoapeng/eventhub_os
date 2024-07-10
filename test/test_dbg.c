@@ -16,8 +16,8 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "debug.h"
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_event.h"
 #include "eh_sleep.h"
 #include "eh_platform.h"
@@ -30,6 +30,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)stream;
     printf("%.*s", (int)size, (const char*)buf);
 }
+
 
 union double_union{
     double d;
@@ -113,17 +114,21 @@ int task_app(void *arg){
         0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
         0x55
     };
-    n = eh_printf("|%-80.*Q|\n", (int)sizeof(test_buf), test_buf);
+    n = eh_printf("|%-.*Q|\n", (int)sizeof(test_buf), test_buf);
     n = eh_printf("n=%d\n",n);
 
     eh_debugfl("TEST %d",1234);
     eh_infofl("TEST %d",1234);
     eh_sysfl("TEST %d",1234);
+    eh_warnfl("TEST %d",1234);
     eh_errfl("TEST %d\n",1234);
+
+    eh_dbg_set_level(EH_DBG_WARNING);
 
     eh_debugln("TEST %d",1234);
     eh_infoln("TEST %d",1234);
     eh_sysln("TEST %d",1234);
+    eh_warnfl("TEST %d",1234);
     eh_errln("TEST %d",1234);
 
     

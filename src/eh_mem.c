@@ -196,7 +196,7 @@ void  eh_free(void* ptr){
 }
 
 
-int eh_mem_head_register(const struct eh_mem_heap *heap){
+int eh_mem_heap_register(const struct eh_mem_heap *heap){
     eh_param_assert(heap);
     mem_heap_array[mem_heap_array_cnt].heap_start = heap->heap_start;
     mem_heap_array[mem_heap_array_cnt].heap_size = heap->heap_size;

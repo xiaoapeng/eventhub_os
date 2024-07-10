@@ -39,7 +39,7 @@ extern void  eh_free(void* ptr);
  * @param  heap            注册堆空间用于内存分配
  * @return int             0: 成功, -1: 失败
  */
-extern int eh_mem_head_register(const struct eh_mem_heap *heap);
+extern int eh_mem_heap_register(const struct eh_mem_heap *heap);
 
 /**
  * @brief                   获取堆信息

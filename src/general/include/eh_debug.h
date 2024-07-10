@@ -48,6 +48,7 @@ enum eh_dbg_flags {
 #define EH_DEBUG_ENTER_SIGN "\r\n"
 #endif
 
+extern int eh_dbg_set_level(enum eh_dbg_level level);
 extern int eh_dbg_raw(enum eh_dbg_level level, enum eh_dbg_flags flags, const char *fmt, ...);
 extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t len, const void *buf);
 #define eh_dbg_println(level, fmt, ...)     eh_dbg_raw(level, EH_DBG_FLAGS, fmt EH_DEBUG_ENTER_SIGN , ##__VA_ARGS__)

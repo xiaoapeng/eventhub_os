@@ -15,8 +15,6 @@
 #include <sys/timerfd.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
-
-#include "debug.h"
 #include "eh.h"
 #include "eh_module.h"
 #include "epoll_hub.h"

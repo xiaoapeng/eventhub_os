@@ -33,6 +33,12 @@ const char *eh_dbg_level_str[] = {
     [EH_DBG_DEBUG] = "DBG",
 };
 
+int eh_dbg_set_level(enum eh_dbg_level level){
+    dbg_level = level;
+    return 0;
+}
+
+
 int eh_dbg_raw(enum eh_dbg_level level, 
     enum eh_dbg_flags flags, const char *fmt, ...){
     int n = 0;
@@ -46,7 +52,7 @@ int eh_dbg_raw(enum eh_dbg_level level,
     }
     if(flags & EH_DBG_FLAGS_MONOTONIC_CLOCK){
         n += eh_printf("[%5u.%06u] ", (unsigned int)(now_usec/1000000), 
-            (unsigned int)now_usec%1000000);
+            (unsigned int)(now_usec%1000000));
     }
     if(flags & EH_DBG_FLAGS_DEBUG_TAG && level >= EH_DBG_ERR && level <= EH_DBG_DEBUG){
         n += eh_printf("[%4s] ", eh_dbg_level_str[level]);

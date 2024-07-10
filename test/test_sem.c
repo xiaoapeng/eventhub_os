@@ -10,9 +10,11 @@
  * @par 修改日志:
  */
 
+#include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_co.h"
 #include "eh_event.h"
 #include "eh_platform.h"
@@ -20,14 +22,20 @@
 #include "eh_sleep.h" 
 #include "eh_interior.h"
 #include "eh_sem.h"
-#include "debug.h"
 
 eh_sem_t sem;
+
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
+
 int task_test(void *arg){
     int ret;
     for(;;){
         ret = __await__ eh_sem_wait(sem, EH_TIME_FOREVER);
-        dbg_debugfl("ret=%d %s",ret, arg);
+        eh_debugfl("ret=%d %s",ret, arg);
         if(ret < 0)
             return -1;
     }
@@ -49,12 +57,12 @@ int task_app(void *arg){
     pthread_t thread_id;
     int app_ret;
 
-    dbg_debugfl("%s", arg);
+    eh_debugfl("%s", arg);
     
     sem = eh_sem_create(0);
 
     if (pthread_create(&thread_id, NULL, thread_function, NULL) != 0) {
-        dbg_debugfl("pthread_create error!");
+        eh_debugfl("pthread_create error!");
         eh_loop_exit(1);
     }
 
@@ -77,7 +85,6 @@ int task_app(void *arg){
 
 int main(void){
     int ret;
-    debug_init();
 
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);

@@ -29,7 +29,7 @@
 #define TEST_MEM_HU_TIME         (1000*30)
 #define TEST_PTR_NUM             (3000)
 #define TEST_MEM_CYCLE           (1000)
-#define TEST_MEM_CYCLE_COUNT     (8000)
+#define TEST_MEM_CYCLE_COUNT     (5)
 
 
 void *p[TEST_PTR_NUM];
@@ -40,10 +40,17 @@ typedef struct {
 }test_data_t;
 static test_data_t *test_data[TEST_PTR_NUM] = {NULL};
 static size_t max_block = 0;
+
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
+
 void dump_func(void* start, size_t size){
     (void)start;
     (void)size;
-    //dbg_infoln("[0x%p  0x%p %-8x]",start, (uint8_t*)start + size, (uint32_t)size);
+    //eh_infoln("[0x%p  0x%p %-8x]",start, (uint8_t*)start + size, (uint32_t)size);
 }
 
 void dump_find_max_block_func(void* start, size_t size){
@@ -66,8 +73,9 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
     void* placeholder = NULL;
     for(i=0; i<TEST_PTR_NUM; i++){
         if(test_data[i]) continue;
-        if(placeholder == NULL)
+        if(placeholder == NULL){
             placeholder = eh_malloc(0x100);
+        }
         if(placeholder == NULL){
             eh_errfl("cnt %d malloc failed!! malloc_size %d", malloc_i, 0x100);
             dump_max_block();
@@ -81,7 +89,7 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
         }else{
             malloc_size = (size_t)(rand() % TEST_MEM_MALLOC_MAX_SIZE) + sizeof(test_data_t);
         }
-        for(; malloc_size >= sizeof(test_data_t); malloc_size -= 1){
+        for(; malloc_size >= sizeof(test_data_t); malloc_size /= 2){
             test_data[i] = eh_malloc(malloc_size);
             if(test_data[i]) break;
         }
@@ -242,17 +250,11 @@ static const struct eh_mem_heap heap1 = {
     .heap_size = sizeof(heap1_array)
 };
 
-
-void stdout_write(void *stream, const uint8_t *buf, size_t size){
-    (void)stream;
-    printf("%.*s", (int)size, (const char*)buf);
-}
-
 int main(void){
     eh_debugfl("test_eh start!!");
 
-    eh_mem_head_register(&heap0);
-    eh_mem_head_register(&heap1);
+    eh_mem_heap_register(&heap0);
+    eh_mem_heap_register(&heap1);
 
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);

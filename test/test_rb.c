@@ -1,7 +1,9 @@
 
+#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
-#include "debug.h"
+#include "eh_debug.h"
 #include "eh_rbtree.h"
 
 #define TEST_DATA_SIZE 1000
@@ -17,9 +19,15 @@ static int cmp(struct eh_rbtree_node *a, struct eh_rbtree_node *b){
     return a_data < b_data ? -1 : a_data > b_data ? 1 : 0;
 }
 
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
+
 int match(const void *key, const struct eh_rbtree_node *node){
     int a_data = eh_rb_entry(node, struct test_data, node)->data;
-    //dbg_debugfl("key:%d a_data:%d", (int)((unsigned long)key), a_data);
+    //eh_debugfl("key:%d a_data:%d", (int)((unsigned long)key), a_data);
     //return a_data == (int)((unsigned long)key) ? 0 : (int)((unsigned long)key) < a_data ? -1 : 1;
     (void)key;
     if(a_data < 300) return 0;
@@ -34,42 +42,42 @@ int main(void){
     srand((unsigned int)time(NULL));
     // 生成并打印
     eh_rb_root_init(&test_rb_root, cmp);
-    dbg_debugraw("test_data:");
+    eh_debugraw("test_data:");
     for (int i = 0; i < TEST_DATA_SIZE; i++){
         test_data[i].data = rand()%TEST_DATA_SIZE;
         eh_rb_node_init(&(test_data[i].node));
-        dbg_debugraw("%d ", test_data[i].data);
+        eh_debugraw("%d ", test_data[i].data);
         eh_rb_add(&(test_data[i].node), &test_rb_root);
     }
-    dbg_debugraw("\n");
+    eh_debugraw("\n");
 
     {
         struct test_data *pos;
-        dbg_debugraw("s-S:");
+        eh_debugraw("s-S:");
         eh_rb_next_for_each_entry(pos, &test_rb_root, node){
-            dbg_debugraw("%d ", pos->data);
+            eh_debugraw("%d ", pos->data);
         }
-        dbg_debugraw("\n");
+        eh_debugraw("\n");
     }
 
     
     {
         struct test_data *pos;
-        dbg_debugraw("S-s:");
+        eh_debugraw("S-s:");
         eh_rb_prev_for_each_entry(pos, &test_rb_root, node){
-            dbg_debugraw("%d ", pos->data);
+            eh_debugraw("%d ", pos->data);
         }
-        dbg_debugraw("\n");
+        eh_debugraw("\n");
     }
     {
         
-        dbg_debugraw("DEL:");
+        eh_debugraw("DEL:");
         struct test_data *pos;
         eh_rb_for_entry_each(pos, &test_rb_root, (void*)23, match, node){
-            dbg_debugraw("%d ", pos->data);
+            eh_debugraw("%d ", pos->data);
             test_data_ptr[test_data_ptr_len++] = pos;
         }
-        dbg_debugraw("\n");
+        eh_debugraw("\n");
     }
 
     /* 删除掉300以下的内容 */
@@ -79,11 +87,11 @@ int main(void){
 
     {
         struct test_data *pos;
-        dbg_debugraw("S-s:");
+        eh_debugraw("S-s:");
         eh_rb_prev_for_each_entry(pos, &test_rb_root, node){
-            dbg_debugraw("%d ", pos->data);
+            eh_debugraw("%d ", pos->data);
         }
-        dbg_debugraw("\n");
+        eh_debugraw("\n");
     }
 
     

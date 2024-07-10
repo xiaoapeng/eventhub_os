@@ -10,8 +10,10 @@
  * @par 修改日志:
  */
 
-#include "debug.h"
+
+#include <stdio.h>
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_co.h"
 #include "eh_event.h"
 #include "eh_platform.h"
@@ -19,6 +21,12 @@
 #include "eh_types.h"
 #include <stdlib.h>
 #include <sys/epoll.h>
+
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
 
 int task_app(void *arg){
     eh_timer_event_t timer1, timer2, timer3;
@@ -52,9 +60,9 @@ int task_app(void *arg){
 
     for(int i=0;i<40;i++){
         ret = __await__ eh_epoll_wait(epoll, &epoll_slot, 1, (eh_sclock_t)eh_msec_to_clock(5000));
-        dbg_debugfl("ret=%d",ret);
+        eh_debugfl("ret=%d",ret);
         if(ret > 0)
-            dbg_debugfl("%s timeout!! %lld", epoll_slot.userdata, eh_get_clock_monotonic_time());
+            eh_debugfl("%s timeout!! %lld", epoll_slot.userdata, eh_get_clock_monotonic_time());
     }
     
     eh_epoll_del(epoll);
@@ -69,7 +77,6 @@ int task_app(void *arg){
 
 
 int main(void){
-    debug_init();
 
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);

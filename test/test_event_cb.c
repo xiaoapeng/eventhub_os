@@ -10,8 +10,10 @@
  * @par 修改日志:
  */
 
-#include "debug.h"
+
+#include <stdio.h>
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_event.h"
 #include "eh_platform.h"
 #include "eh_timer.h" 
@@ -25,7 +27,13 @@ static eh_event_cb_slot_t slot1;
 static eh_event_cb_slot_t slot2;
 static void slot_function(eh_event_t *e, void *p){
     (void)e;
-    dbg_debugfl("slot_function %s %llu", p, eh_clock_to_usec(eh_get_clock_monotonic_time()));
+    eh_debugfl("slot_function %s %llu", p, eh_clock_to_usec(eh_get_clock_monotonic_time()));
+}
+
+
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
 }
 
 int task_app(void *arg){
@@ -62,8 +70,7 @@ int task_app(void *arg){
 
 
 int main(void){
-    debug_init();
-    dbg_debugfl("test_eh start!!");
+    eh_debugfl("test_eh start!!");
     eh_global_init();
     eh_task_create("task_app", 12*1024, "task_app", task_app);
     eh_loop_run();
