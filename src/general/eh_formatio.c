@@ -20,12 +20,14 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include <endian.h>
 #include "eh_mem.h"
 #include "eh_types.h"
 #include "eh_formatio.h"
 #include "eh_config.h"
 
+#ifndef BYTE_ORDER
+#error "BYTE_ORDER not defined"
+#endif
 
 #define FORMAT_FLOAT_F_RANGE_MAX        (1.e+18)
 #define FORMAT_FLOAT_F_RANGE_MIN        (-(1.e+18))

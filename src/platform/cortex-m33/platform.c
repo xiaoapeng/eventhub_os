@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "eh.h"
 #include "eh_event.h"
@@ -50,18 +51,6 @@ caddr_t _sbrk(int incr) {
 }
 
 
-void* platform_malloc(size_t size){
-    void *new_ptr;
-    eh_save_state_t state = platform_enter_critical();
-    new_ptr = malloc(size);
-    platform_exit_critical(state);
-    return new_ptr;
-}
-void  platform_free(void* ptr){
-    eh_save_state_t state = platform_enter_critical();
-    free(ptr);
-    platform_exit_critical(state);
-}
 void  platform_idle_break(void){
 
 }
