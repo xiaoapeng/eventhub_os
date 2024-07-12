@@ -85,6 +85,15 @@ __attribute__((naked)) void * co_context_swap(
         "	.syntax unified									\n"
         "   mrs         r3, msplim                          \n"/* 获取psplim寄存器值到r3 */
         "   push        {r3-r12,lr}                         \n"/* 保存r3-r12和lr寄存器的值 */
+
+        "   mov         r3, #0                              \n"
+        "   msr         msplim, r3                          \n"/* 将msplim设置为0相当于禁用msplim */
+
+        // "	mrs r4, primask									\n"/* 保存中断状态在r4中 */
+        // "	cpsid   i										\n"/* 失能中断 */
+        // "	dsb												\n"
+        // "	isb												\n"
+
 #if  (__FPU_USED_ == 1)
         "   vpush       {s0-s31}                            \n"/* 保存浮点寄存器的值 */
         "   vmrs        r3, fpscr                           \n"
@@ -94,14 +103,17 @@ __attribute__((naked)) void * co_context_swap(
 /* ---------------------------------------- restore context ---------------------------------------- */
         "   ldr         sp, [r2]                            \n"/* 恢复栈指针 */
         
-        "   sub         r3, sp, #0x100                      \n"
-        "   msr         msplim, r3                          \n"/* 临时的psplim寄存器值 */
         
 #if  (__FPU_USED_ == 1)
         "   pop         {r3}                                \n"/* 恢复浮点寄存器的值 */
         "   vmsr        fpscr, r3                           \n"
         "   vpop        {s0-s31}                            \n"
 #endif
+
+        // "	msr primask, r4									\n"/* 恢复中断状态 */
+        // "	dsb												\n"
+        // "	isb												\n"
+
         "   pop         {r3-r12,lr}                         \n"/* 恢复r3-r12和lr寄存器的值 */
         "   msr         msplim, r3                          \n"/* 从r3恢复psplim寄存器值 */
         "	bx lr											\n"/* Return. */
