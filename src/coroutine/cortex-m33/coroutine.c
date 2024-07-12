@@ -17,10 +17,36 @@
 #include "eh_config.h"
 #include "eh_co.h"
 
-#define __FPU_USED_     1
+
+#ifndef __FPU_USED__
+#define __FPU_USED__ 0
+#endif
+
+#ifndef CONTEXT_SWAP_DISABLEIRQ
+#if (__FPU_USED__ == 1)
+
+/*
+ *  当没有协处理器时，没有必要禁止中断，
+ *  因为节省不到栈空间
+ */
+
+/* 
+ *  CONTEXT_SWAP_DISABLEIRQ 为1时
+ *  在协程交换中会禁止中断，禁止中断会多几条汇编指令，
+ *  会降低性能，但是可以节省几十到上百字节的堆栈空间，
+ *  因为保存现场需要占用栈，中断后保存也需要栈，
+ *  会导致重复保存现场
+ */
+#define CONTEXT_SWAP_DISABLEIRQ 1
+#else
+#define CONTEXT_SWAP_DISABLEIRQ 0
+#endif /* __FPU_USED__ */
+
+#endif /* CONTEXT_SWAP_DISABLEIRQ */
+
 
 struct context_m33{
-#if (__FPU_USED_ == 1)
+#if (__FPU_USED__ == 1)
     unsigned long       fpscr;
     unsigned long       s0;
     unsigned long       s1;
@@ -89,12 +115,14 @@ __attribute__((naked)) void * co_context_swap(
         "   mov         r3, #0                              \n"
         "   msr         msplim, r3                          \n"/* 将msplim设置为0相当于禁用msplim */
 
-        // "	mrs r4, primask									\n"/* 保存中断状态在r4中 */
-        // "	cpsid   i										\n"/* 失能中断 */
-        // "	dsb												\n"
-        // "	isb												\n"
+#if     CONTEXT_SWAP_DISABLEIRQ == 1
+        "	mrs r4, primask									\n"/* 保存中断状态在r4中 */
+        "	cpsid   i										\n"/* 失能中断 */
+        "	dsb												\n"
+        "	isb												\n"
+#endif
 
-#if  (__FPU_USED_ == 1)
+#if  (__FPU_USED__ == 1)
         "   vpush       {s0-s31}                            \n"/* 保存浮点寄存器的值 */
         "   vmrs        r3, fpscr                           \n"
         "   push        {r3}                                \n"
@@ -104,15 +132,17 @@ __attribute__((naked)) void * co_context_swap(
         "   ldr         sp, [r2]                            \n"/* 恢复栈指针 */
         
         
-#if  (__FPU_USED_ == 1)
+#if  (__FPU_USED__ == 1)
         "   pop         {r3}                                \n"/* 恢复浮点寄存器的值 */
         "   vmsr        fpscr, r3                           \n"
         "   vpop        {s0-s31}                            \n"
 #endif
 
-        // "	msr primask, r4									\n"/* 恢复中断状态 */
-        // "	dsb												\n"
-        // "	isb												\n"
+#if     CONTEXT_SWAP_DISABLEIRQ == 1
+        "	msr primask, r4									\n"/* 恢复中断状态 */
+        "	dsb												\n"
+        "	isb												\n"
+#endif
 
         "   pop         {r3-r12,lr}                         \n"/* 恢复r3-r12和lr寄存器的值 */
         "   msr         msplim, r3                          \n"/* 从r3恢复psplim寄存器值 */
