@@ -33,6 +33,7 @@ enum EH_SCHEDULER_STATE{
 struct eh{
     struct      eh_list_head             task_wait_list_head;                                   /* 等待中的任务列表 */
     struct      eh_list_head             task_finish_list_head;                                 /* 完成待销毁的任务列表 */
+    struct      eh_list_head             task_finish_auto_destruct_list_head;                   /* 完成待销毁的任务列表 */
     struct      eh_list_head             loop_poll_task_head;
     enum        EH_SCHEDULER_STATE       state;
     struct      eh_task                  *current_task;                                         /* 当前被调度的任务 */
@@ -74,6 +75,7 @@ struct eh_task{
             /* 顺序很重要 */
             uint32_t                    is_static_stack:1;          /* 是否是静态栈 */
             uint32_t                    is_system_task:1;           /* 是否是系统任务 EH_TASK_FLAGS_SYSTEM_TASK */
+            uint32_t                    is_auto_destruct:1;         /* 是否是自动销毁任务 EH_TASK_FLAGS_DETACH */
         };
     };
     

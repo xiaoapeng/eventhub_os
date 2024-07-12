@@ -31,6 +31,16 @@ static const eh_event_type_t task_event_type = {
 
 static struct  eh_task s_main_task;
 
+static void _task_auto_destruct(void *arg);
+
+static eh_loop_poll_task_t auto_destruct_task = {
+    .poll_task = _task_auto_destruct,
+    .arg = NULL,
+    .list_node = EH_LIST_HEAD_INIT(auto_destruct_task.list_node),
+};
+
+
+
 static int _task_entry(void* arg){
     (void) arg;
     eh_task_t *current_task = eh_task_get_current();
@@ -41,10 +51,12 @@ static int _task_entry(void* arg){
     return current_task->task_ret;
 }
 
+
 static bool _task_is_finish(void *arg){
     eh_task_t *task = arg;
     return task->state == EH_TASK_STATE_FINISH;
 }
+
 
 static void _task_destroy(eh_task_t *task){
     eh_save_state_t state;
@@ -57,11 +69,24 @@ static void _task_destroy(eh_task_t *task){
     eh_free(task);
 }
 
+static void _task_auto_destruct(void *arg){
+    (void) arg;
+    eh_t *eh = eh_get_global_handle();
+    eh_task_t *pos,*n;
+    eh_list_for_each_entry_safe(pos, n, &eh->task_finish_auto_destruct_list_head, task_list_node)
+        _task_destroy(pos);
+    eh_loop_poll_task_del(&auto_destruct_task);
+}
+
 static void _clear(void){
     eh_t *eh = eh_get_global_handle();
     eh_task_t *pos,*n;
 
-    /* 清理已经完成的任务，未完成的任务该泄漏就泄漏，他应该是程序员的职责 */
+    /* 清理已经完成的任务，未完成的任务该泄漏就泄漏，这应该是程序员的职责 */
+
+    eh_list_for_each_entry_safe(pos, n, &eh->task_finish_auto_destruct_list_head, task_list_node)
+        _task_destroy(pos);
+
     eh_list_for_each_entry_safe(pos, n, &eh->task_finish_list_head, task_list_node)
         _task_destroy(pos);
     
@@ -90,7 +115,12 @@ int __async__ eh_task_next(void){
             eh_list_move_tail(&current_task->task_list_node, &eh->task_wait_list_head);
             break;
         case EH_TASK_STATE_FINISH:
-            eh_list_move_tail(&current_task->task_list_node, &eh->task_finish_list_head);
+            if(current_task->is_auto_destruct){
+                eh_list_move_tail(&current_task->task_list_node, &eh->task_finish_auto_destruct_list_head);
+                eh_loop_poll_task_add(&auto_destruct_task);
+            }else{
+                eh_list_move_tail(&current_task->task_list_node, &eh->task_finish_list_head);
+            }
             break;
     }
     to->state = EH_TASK_STATE_RUNING;
@@ -202,14 +232,13 @@ void eh_task_destroy(eh_task_t *task){
  * @brief                   退出任务
  * @param  ret              退出返回值
  */
-void  eh_task_exit(int ret){
+void eh_task_exit(int ret){
     eh_save_state_t state;
     eh_task_t *task = eh_task_get_current();
-    if(task == eh_get_global_handle()->main_task)
-        return ;
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     task->task_ret = ret;
-    task->state = EH_TASK_STATE_FINISH;
+    if(task != eh_get_global_handle()->main_task)
+        task->state = EH_TASK_STATE_FINISH;
     eh_exit_critical(state);
     eh_task_next();
 }
@@ -218,7 +247,7 @@ eh_task_t* eh_task_self(void){
     return eh_task_get_current();
 }
 
-extern eh_sclock_t eh_get_loop_idle_time(void){
+eh_sclock_t eh_get_loop_idle_time(void){
     eh_save_state_t state;
     eh_sclock_t half_time;
     state = eh_enter_critical();
@@ -264,7 +293,8 @@ int eh_loop_run(void){
 
 void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task){
     eh_t *eh = eh_get_global_handle();
-    eh_list_add_tail(&poll_task->list_node, &eh->loop_poll_task_head);
+    if(eh_list_empty(&poll_task->list_node))
+        eh_list_add_tail(&poll_task->list_node, &eh->loop_poll_task_head);
 }
 
 static int interior_init(void){
@@ -275,6 +305,7 @@ static int interior_init(void){
     eh_list_head_init(&eh->task_wait_list_head);
     eh_list_head_init(&eh->task_finish_list_head);
     eh_list_head_init(&eh->loop_poll_task_head);
+    eh_list_head_init(&eh->task_finish_auto_destruct_list_head);
 
     eh->state = EH_SCHEDULER_STATE_INIT;
 

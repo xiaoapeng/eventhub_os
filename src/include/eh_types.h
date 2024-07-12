@@ -56,7 +56,7 @@ extern "C"{
 
 #define __weak                         __attribute__((weak))
 #define __safety                    /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
-
+#define __noreturn                      __attribute__((noreturn))
 #define eh_container_of(ptr, type, member) ({				\
 	void *__mptr = (void *)(ptr);					\
 	eh_static_assert(eh_same_type(*(ptr), ((type *)0)->member) ||	\

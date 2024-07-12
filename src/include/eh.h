@@ -40,7 +40,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #define EH_TASK_FLAGS_SYSTEM_TASK          0x00000002
-
+#define EH_TASK_FLAGS_DETACH               0x00000004
 
 enum EH_TASK_STATE{
     EH_TASK_STATE_READY,                            /* 就绪状态 */
@@ -139,7 +139,7 @@ extern eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned lon
  * @brief                   退出任务
  * @param  ret              退出返回值
  */
-extern void       eh_task_exit(int ret);
+extern void  eh_task_exit(int ret);
 
 /**
  * @brief                   任务获取自己的任务句柄
@@ -175,7 +175,7 @@ extern void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task);
  * @param  poll_task
  */
 static inline void eh_loop_poll_task_del(eh_loop_poll_task_t *poll_task){
-    eh_list_del(&poll_task->list_node);
+    eh_list_del_init(&poll_task->list_node);
 }
 
 /**
