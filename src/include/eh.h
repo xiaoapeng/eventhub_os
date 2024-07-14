@@ -32,7 +32,7 @@ typedef uint64_t                            eh_clock_t;
 typedef int64_t                             eh_sclock_t;
 typedef struct eh_task                      eh_task_t;
 typedef struct eh_loop_poll_task            eh_loop_poll_task_t;
-
+typedef struct eh_task_sta                  eh_task_sta_t;
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
@@ -56,6 +56,14 @@ struct eh_loop_poll_task{
     struct eh_list_head         list_node;
     void                        *arg;
     void                        (*poll_task)(void* arg);
+};
+
+struct eh_task_sta{
+    enum EH_TASK_STATE           state;
+    void*                        stack;
+    uint32_t                     stack_size;
+    uint32_t                     stack_min_ever_free_size_level;
+    const char*                  task_name;
 };
 
 
@@ -146,6 +154,14 @@ extern void  eh_task_exit(int ret);
  * @return eh_task_t*       返回当前的任务句柄
  */
 extern eh_task_t* eh_task_self(void);
+
+/**
+ * @brief                   获取任务状态
+ * @param  task             任务句柄
+ * @param  sta              任务状态
+ * @return int 
+ */
+extern void eh_task_sta(const eh_task_t *task, eh_task_sta_t *sta);
 
 /**
  * @brief                   阻塞等待任务结束

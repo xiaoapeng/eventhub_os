@@ -21,6 +21,7 @@
 #include "eh_interior.h"
 #include "eh_timer.h"
 
+#define EH_STACK_PAD_BYTE               0xFF
 
 eh_t _global_eh;
 
@@ -154,7 +155,7 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, ui
     if(task == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     task->name = (char*)(task + 1);
     strcpy((char*)task->name, name);
-    bzero(stack,stack_size);
+    memset(stack, EH_STACK_PAD_BYTE, stack_size);
     eh_list_head_init(&task->task_list_node);
     task->task_function = task_function;
     task->task_arg = task_arg;
@@ -197,13 +198,6 @@ eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned long stack
     return task;
 }
 
-/**
- * @brief                   任务合并函数
- * @param  task             任务句柄
- * @param  ret              任务返回值
- * @param  timeout          合并等待时间
- * @return int              成功返回0
- */
 int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
     eh_t *eh = eh_get_global_handle();
     int wait_ret;
@@ -221,17 +215,10 @@ destroy:
     return EH_RET_OK;
 }
 
-/**
- * @brief                   无条件回收任务，十分暴力，被回收的任务资源应该由回收者释放
- */
 void eh_task_destroy(eh_task_t *task){
     _task_destroy(task);
 }
 
-/**
- * @brief                   退出任务
- * @param  ret              退出返回值
- */
 void eh_task_exit(int ret){
     eh_save_state_t state;
     eh_task_t *task = eh_task_get_current();
@@ -241,6 +228,21 @@ void eh_task_exit(int ret){
         task->state = EH_TASK_STATE_FINISH;
     eh_exit_critical(state);
     eh_task_next();
+}
+
+void eh_task_sta(const eh_task_t *task, eh_task_sta_t *sta){
+    uint32_t i;
+    sta->task_name = task->name;
+    sta->state = task->state;
+    sta->stack_size = task->stack_size;
+    sta->stack_min_ever_free_size_level = 0;
+    sta->stack = task->stack;
+    //EH_STACK_PAD_BYTE
+    for(i = 0; i < task->stack_size; i++){
+        if(((uint8_t*)task->stack)[i] != (uint8_t)EH_STACK_PAD_BYTE)
+            break;
+    }
+    sta->stack_min_ever_free_size_level = i;
 }
 
 eh_task_t* eh_task_self(void){
@@ -365,6 +367,7 @@ static void module_group_exit(void){
     }
 
 }
+
 int eh_global_init( void ){
     interior_init();
     module_group_init();

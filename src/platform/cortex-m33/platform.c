@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_event.h"
 #include "eh_timer.h"
 #include "eh_platform.h"
-
+#include "core_cm33.h"
 
 __attribute__((naked))  eh_save_state_t  platform_enter_critical(void){
     __asm__ volatile(
@@ -32,23 +33,104 @@ __attribute__((naked)) void  platform_exit_critical(eh_save_state_t state){
     );
 }
 
-
-extern char __HeapBase[]; // 链接器脚本中定义的堆的开始地址
-extern char __heap_limit[]; // 链接器脚本中定义的堆的开始地址
-static char *heap_end = __HeapBase;
-
-caddr_t _sbrk(int incr) {
-    char *prev_heap_end = heap_end;
-
-    // 检查堆是否超出预定范围
-    if (prev_heap_end + incr > __heap_limit) {
-        // 如果超出范围，返回-1表示失败
-        return (caddr_t) -1;
-    }
-
-    heap_end += incr;
-    return (caddr_t) prev_heap_end;
+__attribute__((naked)) void HardFault_Handler(void){
+    __asm__ volatile (
+        "	.syntax unified                                 \n"
+        "	push        {r4-r11}					        \n"/*   存储其他寄存器 */
+        "   mov         r0, sp                              \n"/*   保存当前SP*/
+        "   mov         r1, lr                              \n"/*   将 lr 的值移动到 r1*/
+        "   mrs         r2, control                         \n"/*   将 control 寄存器的值移动到 r2*/
+        "   b           hardfault_handler_c                 \n"/*   调用 c 函数*/
+        :
+        :
+        : "r0", "r1", "r2", "lr", "memory" // clobber list
+    );
 }
+
+struct StackStateContext{
+    unsigned long   r4;
+    unsigned long   r5;
+    unsigned long   r6;
+    unsigned long   r7;
+    unsigned long   r8;
+    unsigned long   r9;
+    unsigned long   r10;
+    unsigned long   r11;
+    unsigned long   r0;
+    unsigned long   r1;
+    unsigned long   r2;
+    unsigned long   r3;
+    unsigned long   r12;
+    unsigned long   lr_r14;
+    unsigned long   return_address;
+    unsigned long   xpsr;
+};
+
+struct StackStateFloatContext{
+    unsigned long   s0;
+    unsigned long   s1;
+    unsigned long   s2;
+    unsigned long   s3;
+    unsigned long   s4;
+    unsigned long   s5;
+    unsigned long   s6;
+    unsigned long   s7;
+    unsigned long   s8;
+    unsigned long   s9;
+    unsigned long   s10;
+    unsigned long   s11;
+    unsigned long   s12;
+    unsigned long   s13;
+    unsigned long   s14;
+    unsigned long   s15;
+    unsigned long   fpscr;
+};
+
+void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long control ){
+    eh_task_sta_t                       sta;
+    eh_task_t*                          hardfault_task;
+    struct StackStateContext*           stack_state = (struct StackStateContext*)sp;
+    //struct StackStateFloatContext*      fpu_stack_state = (struct StackStateFloatContext*)(stack_state+1);
+    float a = 1.0f;
+    eh_errln("");
+    eh_errln("");
+    eh_errln("######### hardfault_handler #########");
+    eh_errln("SP:0x%08lx", sp);
+    /* LR寄存器意义 DDI0553B_o_armv8m_arm.pdf 章节：D1.2.95*/
+    eh_errln("LR:0x%08lx", lr);
+    eh_errln("hardfault_handler  CONTROL:0x%08lx", control);
+    eh_errln("FPU->FPCCR:%p", FPU->FPCCR);
+
+
+    /* 关于发生异常时，上下文堆栈情况  DDI0553B_o_armv8m_arm.pdf 章节：  */
+    eh_errln("dump sp:");
+    eh_errln("r0:0x%08lx", stack_state->r0);
+    eh_errln("r1:0x%08lx", stack_state->r1);
+    eh_errln("r2:0x%08lx", stack_state->r2);
+    eh_errln("r3:0x%08lx", stack_state->r3);
+    eh_errln("r4:0x%08lx", stack_state->r4);
+    eh_errln("r5:0x%08lx", stack_state->r5);
+    eh_errln("r6:0x%08lx", stack_state->r6);
+    eh_errln("r7:0x%08lx", stack_state->r7);
+    eh_errln("r8:0x%08lx", stack_state->r8);
+    eh_errln("r9:0x%08lx", stack_state->r9);
+    eh_errln("r10:0x%08lx", stack_state->r10);
+    eh_errln("r11:0x%08lx", stack_state->r11);
+    eh_errln("r12:0x%08lx", stack_state->r12);
+    eh_errln("lr:0x%08lx", stack_state->lr_r14);
+    eh_errln("return_address:0x%08lx", stack_state->return_address);
+    eh_errln("xpsr:0x%08lx", stack_state->xpsr);
+
+    eh_task_sta(eh_task_self(), &sta);
+    eh_errln("### eventhub os sta: ###");
+    eh_errln("task:%s", sta.task_name);
+    eh_errln("stack:0x%p", sta.stack);
+    eh_errln("stack_size:%lu", sta.stack_size);
+    eh_errln("stack_min_ever_free_size_level:%lu", sta.stack_min_ever_free_size_level);
+
+    while(1){   }
+}
+
 
 
 void  platform_idle_break(void){
