@@ -51,6 +51,11 @@
  */
 #define EH_CONFIG_DEBUG_FLAGS                                    (EH_DBG_FLAGS_DEBUG_TAG|EH_DBG_FLAGS_MONOTONIC_CLOCK)
 
+/**
+ *  中断栈的大小
+ *  该栈仅仅在单片机时才能使用到，默认使用1024即可
+ */
+#define EH_CONFIG_INTERRUPT_STACK_SIZE                          1024
 
 
 #endif // _EH_USER_CONFIG_H_
