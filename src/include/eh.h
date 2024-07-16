@@ -40,7 +40,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #define EH_TASK_FLAGS_SYSTEM_TASK          0x00000002
-#define EH_TASK_FLAGS_DETACH               0x00000004
+#define EH_TASK_FLAGS_DETACH               0x00000004   /* 自动分离，指定此参数在任务退出时自动释放 */
 
 enum EH_TASK_STATE{
     EH_TASK_STATE_READY,                            /* 就绪状态 */
@@ -135,7 +135,8 @@ extern eh_task_t* eh_task_static_stack_create(const char *name, uint32_t flags, 
 /**
  * @brief                   使用动态方式创建一个协程任务
  * @param  name             任务名称
- * @param  flags            任务标志    设置为EH_TASK_FLAGS_SYSTEM_TASK后将在事件发生后具有优先调用的权利
+ * @param  flags            任务标志     设置为EH_TASK_FLAGS_SYSTEM_TASK后将在事件发生后具有优先调用的权利
+ *                                      设置为EH_TASK_FLAGS_DETACH将自动释放任务
  * @param  stack_size       任务栈大小
  * @param  task_arg         任务参数
  * @param  task_function    任务执行函数

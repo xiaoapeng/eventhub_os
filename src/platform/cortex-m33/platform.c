@@ -64,7 +64,7 @@ static __attribute__((aligned(8))) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_S
 /**
  *  将当前上下文转换为 PSP任务上下文
  */
-static __attribute__((naked))   void context_convert_to_psp(void){
+__attribute__((naked))   void context_convert_to_psp(void){
     __asm__ volatile(
         "    .syntax unified                                    \n"
         "                                                       \n"
@@ -82,7 +82,7 @@ static __attribute__((naked))   void context_convert_to_psp(void){
 /**
  *  将当前上下文转换为 MSP任务上下文
  */
-static __attribute__((naked))   void context_convert_to_msp(void){
+__attribute__((naked))   void context_convert_to_msp(void){
     __asm__ volatile(
         "    .syntax unified                                    \n"
         "                                                       \n"
@@ -97,12 +97,12 @@ static __attribute__((naked))   void context_convert_to_msp(void){
     );
 }
 
-static void svc_handler_c(unsigned long *sp, uint8_t svc_number){
+void svc_handler_c(unsigned long *sp, uint8_t svc_number){
     struct stack_auto_push_context *context = (struct stack_auto_push_context *)sp;
     /* 目前无任何实现 */
 }
 
-static void context_convert(unsigned long *sp, uint8_t svc_number){
+void context_convert(unsigned long *sp, uint8_t svc_number){
     /* sp-> svc_num psplim msplim psp msp lr */
     struct fsp{
         unsigned long svc_num;
@@ -131,46 +131,46 @@ static void context_convert(unsigned long *sp, uint8_t svc_number){
 __attribute__((naked))  void  SVC_Handler( void )
 {
     __asm__ volatile(
-        "    .syntax unified                                    \n"
-        "                                                       \n"
-        "   tst         lr, #4                                  \n"
-        "   ite         eq                                      \n"
-        "   mrseq       r0, msp                                 \n"
-        "   mrsne       r0, psp                                 \n"
-        /* r0[6*4] -> retaddr  retaddr[-2]  获取svc服务编号      */
-        "   ldr         r1, [r0, #24]                           \n"
-        "   ldrb        r1, [r1, #-2]                           \n"
-        "   cmp         r1, #1                                  \n"
-        "   bgt         1f                                      \n"
+        "    .syntax unified                                            \n"
+        "                                                               \n"
+        "   tst         lr, #4                                          \n"
+        "   ite         eq                                              \n"
+        "   mrseq       r0, msp                                         \n"
+        "   mrsne       r0, psp                                         \n"
+        /* r0[6*4] -> retaddr  retaddr[-2]  获取svc服务编号              */
+        "   ldr         r1, [r0, #24]                                   \n"
+        "   ldrb        r1, [r1, #-2]                                   \n"
+        "   cmp         r1, #1                                          \n"
+        "   bgt         1f                                              \n"
         /*
          * 小于等于1,说明要进行堆栈转换的系统调用                 
          *  
          */
-        "   mrs         r0, msp                                 \n"
-        "   push        {r0,lr}                                 \n"/* msp lr */
-        "   mov         r0, r1                                  \n"
-        "	mrs         r1, psplim								\n"
-        "	mrs         r2, msplim								\n"
-        "   mrs         r3, psp                                 \n"
-        "   push        {r0-r3}                                 \n"/* svc_num psplim msplim psp */
-        "   mov         r1,r0                                   \n"
-        "   mov         r0,sp                                   \n"/* 当前栈作为第一个参数给 context_convert_c_address_const */
-        "   ldr         r2, context_convert_c_address_const     \n"
-        "   blx         r2                                      \n"
-        "   pop         {r0-r3}                                 \n"/* svc_num psplim msplim psp */
-        "   msr         psplim, r1                              \n"
-        "   pop         {r0-r1}                                 \n"/* msp lr */
-        "   msr         msp, r0                                 \n"
-        "   msr         msplim, r2                              \n"
-        "   msr         psp, r3                                 \n"
-        "   bx          r1                                      \n" /* 返回 */
-        "1:                                                     \n"
-        "   ldr         r3, svc_handler_c_address_const         \n"
-        "   bx          r3                                      \n"
-        "                                                       \n"
-        "    .align 4                                           \n"
-        "svc_handler_c_address_const: .word svc_handler_c       \n"
-        "context_convert_c_address_const: .word context_convert \n"
+        "   mrs         r0, msp                                         \n"
+        "   push        {r0,lr}                                         \n"/* msp lr */
+        "   mov         r0, r1                                          \n"
+        "	mrs         r1, psplim								        \n"
+        "	mrs         r2, msplim								        \n"
+        "   mrs         r3, psp                                         \n"
+        "   push        {r0-r3}                                         \n"/* svc_num psplim msplim psp */
+        "   mov         r1,r0                                           \n"
+        "   mov         r0,sp                                           \n"/* 当前栈作为第一个参数给 context_convert_c_address_const */
+        "   ldr         r2, context_convert_c_address_const             \n"
+        "   blx         r2                                              \n"
+        "   pop         {r0-r3}                                         \n"/* svc_num psplim msplim psp */
+        "   msr         psplim, r1                                      \n"
+        "   pop         {r0-r1}                                         \n"/* msp lr */
+        "   msr         msp, r0                                         \n"
+        "   msr         msplim, r2                                      \n"
+        "   msr         psp, r3                                         \n"
+        "   bx          r1                                              \n" /* 返回 */
+        "1:                                                             \n"
+        "   ldr         r3, svc_handler_c_address_const                 \n"
+        "   bx          r3                                              \n"
+        "                                                               \n"
+        "    .align 4                                                   \n"
+        "svc_handler_c_address_const: .word svc_handler_c               \n"
+        "context_convert_c_address_const: .word context_convert         \n"
     );
 }
 
@@ -178,37 +178,41 @@ __attribute__((naked))  void  SVC_Handler( void )
 
 __attribute__((naked))  eh_save_state_t  platform_enter_critical(void){
     __asm__ volatile(
-        "    .syntax unified                                    \n"
-        "                                                       \n"
-        "    mrs r0, primask                                    \n"/* 保存中断状态在R0中 */
-        "    cpsid   i                                          \n"/* 失能中断 */
-        "    dsb                                                \n"
-        "    isb                                                \n"
-        "    bx lr                                              \n"/* Return. */
+        "    .syntax unified                                            \n"
+        "                                                               \n"
+        "    mrs r0, primask                                            \n"/* 保存中断状态在R0中 */
+        "    cpsid   i                                                  \n"/* 失能中断 */
+        "    dsb                                                        \n"
+        "    isb                                                        \n"
+        "    bx lr                                                      \n"/* Return. */
         ::: "r0", "memory"
     );
 }
 
 __attribute__((naked)) void  platform_exit_critical(eh_save_state_t state){
     __asm__ volatile(
-        "    .syntax unified                                    \n"
-        "                                                       \n"
-        "    msr primask, r0                                    \n"/* 恢复中断状态 */
-        "    dsb                                                \n"
-        "    isb                                                \n"
-        "    bx lr                                              \n"/* Return. */
+        "    .syntax unified                                            \n"
+        "                                                               \n"
+        "    msr primask, r0                                            \n"/* 恢复中断状态 */
+        "    dsb                                                        \n"
+        "    isb                                                        \n"
+        "    bx lr                                                      \n"/* Return. */
         ::: "memory"
     );
 }
 
 __attribute__((naked)) void HardFault_Handler(void){
     __asm__ volatile (
-        "    .syntax unified                                    \n"
-        "    push        {r4-r11}                               \n"/*   存储其他寄存器 */
-        "    mov         r0, sp                                 \n"/*   保存当前SP*/
-        "    mov         r1, lr                                 \n"/*   将 lr 的值移动到 r1*/
-        "    mrs         r2, control                            \n"/*   将 control 寄存器的值移动到 r2*/
-        "    b           hardfault_handler_c                    \n"/*   调用 c 函数*/
+        "    .syntax unified                                            \n"
+        "    push        {r4-r11}                                       \n"/*   存储其他寄存器 */
+        "    mov         r0, sp                                         \n"/*   保存当前SP*/
+        "    mov         r1, lr                                         \n"/*   将 lr 的值移动到 r1*/
+        "    mrs         r2, control                                    \n"/*   将 control 寄存器的值移动到 r2*/
+        "   ldr          r3, hardfault_handler_c_address_const          \n"
+        "   bx           r3                                             \n"
+        "                                                               \n"
+        "    .align 4                                                   \n"
+        "hardfault_handler_c_address_const: .word hardfault_handler_c   \n"
         ::: "memory"
     );
 }
@@ -269,31 +273,11 @@ void  platform_idle_or_extern_event_handler(void){
     
 }
 
-
-static void generic_idle_or_extern_event_handler(void){
-    //(void)eh_clock_to_usec(eh_get_loop_idle_time());
-}
-static void generic_idle_break( void ){
-
-}
-
-
-
 static int  __init generic_platform_init(void){
-    /* 设置SVC PendCV优先级  Cotex-M3权威指南 8.4.1 */
-    SCB->SHPR[7] = 0x00; /* SVC 优先级最高 */
-    SCB->SHPR[10] = 0xFF; /* PendSV 优先级最低 */
-
-    /* 触发svc中断，将当前的上下文任务化，MSP -> PSP，然后使用新MSP准备栈空间 */
-    context_convert_to_psp();
-    eh_infofl("hello PSP");
-    context_convert_to_msp();
-    eh_infofl("hello MSP");
     return 0;
 }
 
 static void __exit generic_platform_deinit(void){
-    
 }
 
 eh_core_module_export(generic_platform_init, generic_platform_deinit);

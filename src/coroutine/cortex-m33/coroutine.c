@@ -1,9 +1,28 @@
 /**
  * @file coroutine.c
- * @brief x64架构协程相关代码
+ * @brief arm m33 架构协程相关代码,MSP模式下的协程切换代码，
+ *    此代码准备遗弃，与pendsv悬挂中断相比，有如下缺点（但毕竟费了一番心血，不进行删除），
+ *  1. 任务使用MSP栈空间，而中断也使用MSP栈空间，每个任务都要给中断预留栈，会导致栈空间浪费严重。
+ *  2. 在使用FPU时，切换协程需要保存浮点寄存器，无法利用 Lazy FP技术 减少开销。
+ *    优点：
+ *  1. 代码简单很多。
+ *  2. 协程切换时间确定，每次切换时长基本一致。
+ *
+ *  单协程 + MAIN协程 -O3 优化编译结果 全速切换 RTT打印 28微秒左右， 相比于隔壁 pendsv要慢一微秒
+ *  测试结果包含打印时间
+ *  [    1.222165] [ DBG] run!
+ *  [    1.248174] [ DBG] run!
+ *  [    1.248201] [ DBG] run!
+ *  [    1.248229] [ DBG] run!
+ *  [    1.248257] [ DBG] run!
+ *  [    1.248285] [ DBG] run!
+ *  [    1.248313] [ DBG] run!
+ *  [    1.248341] [ DBG] run!
+ *
+ *
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @version 1.0
- * @date 2024-05-01
+ * @date 2024-06-29
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
