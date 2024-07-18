@@ -55,11 +55,7 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         eh_exit_critical(state);
 
-        ret = __await__ eh_task_next();
-        if(ret < 0){
-            state = eh_enter_critical();;
-            goto unlock_out;
-        }
+        __await__ eh_task_next();
     }
 
 unlock_out:
@@ -115,11 +111,7 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         eh_exit_critical(state);
 
-        ret = __await__ eh_task_next();
-        if(ret < 0){
-            state = eh_enter_critical();;
-            goto unlock_out;
-        }
+        __await__ eh_task_next();
     }
 
 unlock_out:
@@ -321,9 +313,7 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
         epoll->wakeup_task = eh_task_get_current();
         eh_exit_critical(state);
 
-        ret = __await__ eh_task_next();
-        if(ret < 0)
-            return ret;
+        __await__ eh_task_next();
     }
 
 unlock_exit:
@@ -359,9 +349,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
         epoll->wakeup_task = eh_task_get_current();
         eh_exit_critical(state);
 
-        ret = __await__ eh_task_next();
-        if(ret < 0)
-            goto out;
+        __await__ eh_task_next();
     }
 
 unlock_out:

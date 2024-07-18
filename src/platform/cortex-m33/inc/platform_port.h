@@ -26,9 +26,8 @@ extern eh_save_state_t  platform_enter_critical(void);
 
 extern void  platform_exit_critical(eh_save_state_t state);
 
-extern void  platform_idle_break(void);
-extern void  platform_idle_or_extern_event_handler(void);
-
+#define platform_idle_break()
+#define platform_idle_or_extern_event_handler() 
 
 #ifdef __cplusplus
 #if __cplusplus

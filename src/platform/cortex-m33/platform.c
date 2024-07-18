@@ -264,15 +264,6 @@ void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long cont
 }
 
 
-
-void  platform_idle_break(void){
-
-}
-
-void  platform_idle_or_extern_event_handler(void){
-    
-}
-
 static int  __init generic_platform_init(void){
     return 0;
 }

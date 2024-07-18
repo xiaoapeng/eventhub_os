@@ -93,18 +93,56 @@ static void _clear(void){
     
 }
 
-int __async__ eh_task_next(void){
+static inline void _eh_poll_run(void){
+    eh_loop_poll_task_t *pos,*n;
+    eh_t *eh = eh_get_global_handle();
+    eh_list_for_each_prev_entry_safe(pos, n, &eh->loop_poll_task_head, list_node){
+        if(pos->poll_task)
+            pos->poll_task(pos->arg);
+    }
+}
+
+static void eh_poll(void){
+    eh_t *eh = eh_get_global_handle();
+
+    /* 检查定时器是否超时，超时后进行相关事件通知 */
+    eh_timer_check();
+    
+    _eh_poll_run();
+
+    /* 调用用户外部处理函数 */
+    eh_idle_or_extern_event_handler();
+}
+
+void __async__ eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;
     eh_task_t *current_task = eh_task_get_current();
     eh_task_t *to;
     
-    state = eh_enter_critical();;
-    if(eh_list_empty(&current_task->task_list_node)){
-        current_task->state = EH_TASK_STATE_RUNING;
-        eh_exit_critical(state);
-        return EH_RET_SCHEDULING_ERROR;
+    if( eh->dispatch_cnt % EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL == 0 ){
+        eh_poll();
     }
+    
+
+    for(;;){
+        state = eh_enter_critical();;
+        if(!eh_list_empty(&current_task->task_list_node))
+            break;
+
+        if( current_task->state == EH_TASK_STATE_READY || 
+            current_task->state == EH_TASK_STATE_RUNING
+        ){
+            current_task->state = EH_TASK_STATE_RUNING;
+        }
+        eh_exit_critical(state);
+
+        /* task list 为空，说明已经没有任务了*/
+        eh_poll();
+        if(current_task->state == EH_TASK_STATE_RUNING)
+            return ;
+    }
+
     to = eh_list_entry(current_task->task_list_node.next, eh_task_t, task_list_node);
     eh_task_set_current(to);
     switch (current_task->state) {
@@ -127,8 +165,8 @@ int __async__ eh_task_next(void){
     to->state = EH_TASK_STATE_RUNING;
     eh_exit_critical(state);
     co_context_swap(NULL, &current_task->context, &to->context);
+    eh->dispatch_cnt++;
 
-    return 0;
 }
 
 void eh_task_wake_up(eh_task_t *wakeup_task){
@@ -171,14 +209,8 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, ui
     return task;
 }
 
-static inline void _eh_poll_run(void){
-    eh_loop_poll_task_t *pos,*n;
-    eh_t *eh = eh_get_global_handle();
-    eh_list_for_each_prev_entry_safe(pos, n, &eh->loop_poll_task_head, list_node){
-        if(pos->poll_task)
-            pos->poll_task(pos->arg);
-    }
-}
+
+
 
 void __async__ eh_task_yield(void){
     eh_task_next();
@@ -202,13 +234,11 @@ int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
     eh_t *eh = eh_get_global_handle();
     int wait_ret;
     eh_param_assert( task != NULL );
-    if(eh->state == EH_SCHEDULER_STATE_EXIT)
-        goto destroy;
 
     wait_ret = __await__ eh_event_wait_condition_timeout(&task->event, task, _task_is_finish, timeout);
     if(wait_ret < 0)
         return wait_ret;
-destroy:
+
     if(ret)
         *ret = task->task_ret;
     _task_destroy(task);
@@ -259,39 +289,7 @@ eh_sclock_t eh_get_loop_idle_time(void){
     return half_time;
 }
 
-void eh_loop_exit(int exit_code){
-    eh_get_global_handle()->loop_stop_code = exit_code;
-    eh_get_global_handle()->stop_flag = true;
-    eh_task_exit(exit_code);
-}
 
-
-int eh_loop_run(void){
-    eh_t *eh = eh_get_global_handle();
-    eh->state = EH_SCHEDULER_STATE_RUN;
-    eh->stop_flag = false;
-
-    for(;;){
-
-        /* 检查定时器是否超时，超时后进行相关事件通知 */
-        eh_timer_check();
-        
-        /* 进行调度 */
-        __await__ eh_task_next();
-
-        if(eh_unlikely(eh->stop_flag))
-            break;
-        
-        _eh_poll_run();
-
-        /* 调用用户外部处理函数 */
-        eh->state = EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER;
-        eh_idle_or_extern_event_handler();
-        eh->state = EH_SCHEDULER_STATE_RUN;
-    }
-    eh->state = EH_SCHEDULER_STATE_EXIT;
-    return eh->loop_stop_code;
-}
 
 void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task){
     eh_t *eh = eh_get_global_handle();
@@ -309,7 +307,6 @@ static int interior_init(void){
     eh_list_head_init(&eh->loop_poll_task_head);
     eh_list_head_init(&eh->task_finish_auto_destruct_list_head);
 
-    eh->state = EH_SCHEDULER_STATE_INIT;
 
     eh->main_task = &s_main_task;
     eh->current_task = &s_main_task;
@@ -325,6 +322,7 @@ static int interior_init(void){
     s_main_task.flags = 0;
     s_main_task.is_static_stack = true;
 
+    eh->dispatch_cnt = 0;
     eh->eh_init_fini_array = (struct eh_module*)eh_modeule_section_begin();
     eh->eh_init_fini_array_len = ((struct eh_module*)eh_modeule_section_end() - (struct eh_module*)eh_modeule_section_begin());
     return 0;

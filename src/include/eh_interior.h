@@ -35,13 +35,11 @@ struct eh{
     struct      eh_list_head             task_finish_list_head;                                 /* 完成待销毁的任务列表 */
     struct      eh_list_head             task_finish_auto_destruct_list_head;                   /* 完成待销毁的任务列表 */
     struct      eh_list_head             loop_poll_task_head;
-    enum        EH_SCHEDULER_STATE       state;
     struct      eh_task                  *current_task;                                         /* 当前被调度的任务 */
     struct      eh_task                  *main_task;                                            /* 系统栈任务 */
-    struct eh_module                     *eh_init_fini_array;
+    struct      eh_module                *eh_init_fini_array;
     long                                 eh_init_fini_array_len;
-    int                                  loop_stop_code;
-    int                                  stop_flag;
+    unsigned    long                     dispatch_cnt;                                          /* 调度次数 */
 };
 
 /* 事件接收器  */
@@ -67,7 +65,7 @@ struct eh_task{
     unsigned long                       stack_size;              /* 任务栈大小 */
     context_t                           context;                 /* 协程上下文 */
     int                                 task_ret;                /* 任务返回值 */
-    enum EH_TASK_STATE                  state;                   /* 任务运行状态*/
+    volatile enum EH_TASK_STATE         state;                   /* 任务运行状态*/
     eh_event_t                          event;                   /* 任务相关事件，任务退出 */
     union{
         uint32_t                        flags;
@@ -176,9 +174,8 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
 
 /**
  * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
- * @return int          -1:调度失败 0:调度成功
  */
-extern int __async__ eh_task_next(void);
+extern void __async__ eh_task_next(void);
 
 /**
  * @brief                进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环

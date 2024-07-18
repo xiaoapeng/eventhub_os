@@ -23,29 +23,29 @@ extern "C"{
 /**
  * @brief                  获取系统的单调时钟数,由平台方实现，精度越高越好
  */
-#define eh_get_clock_monotonic_time()               (platform_get_clock_monotonic_time())
+#define eh_get_clock_monotonic_time()               platform_get_clock_monotonic_time()
 
 
 /**
  * @brief               进入临界区
  */
-#define eh_enter_critical()                         (platform_enter_critical())
+#define eh_enter_critical()                         platform_enter_critical()
 
 /**
  * @brief               解锁
  * @param   state       退出临界区
  */
-#define eh_exit_critical(state)                     (platform_exit_critical(state))
+#define eh_exit_critical(state)                     platform_exit_critical(state)
 
 /**
  * @brief               打断空闲状态
  */
-#define eh_idle_break()                             (platform_idle_break())
+#define eh_idle_break()                              platform_idle_break()
 
 /**
  * @brief               空闲或外部事件处理函数
  */
-#define eh_idle_or_extern_event_handler()           (platform_idle_or_extern_event_handler())
+#define eh_idle_or_extern_event_handler()           platform_idle_or_extern_event_handler()
 
 
 /**
