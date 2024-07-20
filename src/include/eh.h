@@ -43,6 +43,7 @@ extern "C"{
 #define EH_TASK_FLAGS_DETACH               0x00000004   /* 自动分离，指定此参数在任务退出时自动释放 */
 
 enum EH_TASK_STATE{
+    /* 顺序很重要，不要轻易调整 */
     EH_TASK_STATE_READY,                            /* 就绪状态 */
     EH_TASK_STATE_RUNING,                           /* 运行状态 */
     EH_TASK_STATE_WAIT,                             /* 等待状态 */
@@ -61,8 +62,8 @@ struct eh_loop_poll_task{
 struct eh_task_sta{
     enum EH_TASK_STATE           state;
     void*                        stack;
-    uint32_t                     stack_size;
-    uint32_t                     stack_min_ever_free_size_level;
+    unsigned long                stack_size;
+    unsigned long                stack_min_ever_free_size_level;
     const char*                  task_name;
 };
 

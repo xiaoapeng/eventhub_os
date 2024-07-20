@@ -16,6 +16,7 @@
 #include <string.h>
 #include <time.h>
 #include "eh.h"
+#include "eh_config.h"
 #include "eh_debug.h"
 #include "eh_event.h"
 #include "eh_interior.h"
@@ -24,6 +25,7 @@
 #include "eh_timer.h" 
 #include "eh_types.h"
 
+#if  defined(EH_CONFIG_USE_LIBC_MEM_MANAGE) && EH_CONFIG_USE_LIBC_MEM_MANAGE == 0
 
 #define TEST_MEM_MALLOC_MAX_SIZE (3000)
 #define TEST_MEM_HU_TIME         (1000*30)
@@ -233,8 +235,8 @@ int task_app(void *arg){
         eh_free_block_dump(dump_func);
     }
     eh_mem_get_heap_info(&info);
-    eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);   
-    eh_loop_exit(0);
+    eh_infoln("%llu %llu %llu ",info.free_size, info.total_size, info.min_ever_free_size_level);
+
     return 0;
 }
 
@@ -257,8 +259,15 @@ int main(void){
     eh_mem_heap_register(&heap1);
 
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    eh_loop_run();
+    task_app("task_app");
     eh_global_exit();
     return 0;
 }
+
+#else
+
+int main(void){
+    eh_debugfl("Do not test the c library.");
+    return 0;
+}
+#endif

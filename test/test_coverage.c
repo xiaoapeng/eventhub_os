@@ -60,7 +60,7 @@ int task_app(void *arg){
 
     eh_epoll_add_event(epoll, eh_timer_to_event(&timer1), "timer1");
     eh_epoll_add_event(epoll, eh_timer_to_event(&timer2), "timer2");
-    eh_epoll_add_event(epoll, eh_timer_to_event(&timer3), "timer3");
+    eh_epoll_add_event(epoll, eh_timer_to_event(&timer3), "timer3 once");
     eh_epoll_add_event(epoll, eh_timer_to_event(&timer4), "timer4");
 
     for(int i=0;i<40;i++){
@@ -88,7 +88,6 @@ int task_app(void *arg){
 
     eh_epoll_del(epoll);
 
-    eh_loop_exit(0);
     return 0;
 }
 
@@ -96,8 +95,7 @@ int task_app(void *arg){
 int main(void){
 
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    eh_loop_run();
+    task_app("task_app");
     eh_global_exit();
     
     return 0;

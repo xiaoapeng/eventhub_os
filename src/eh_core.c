@@ -15,6 +15,7 @@
 #include <string.h>
 #include <strings.h>
 #include "eh.h"
+#include "eh_debug.h"
 #include "eh_mem.h"
 #include "eh_event.h"
 #include "eh_platform.h"
@@ -103,15 +104,13 @@ static inline void _eh_poll_run(void){
 }
 
 static void eh_poll(void){
-    eh_t *eh = eh_get_global_handle();
-
-    /* 检查定时器是否超时，超时后进行相关事件通知 */
-    eh_timer_check();
-    
     _eh_poll_run();
 
     /* 调用用户外部处理函数 */
     eh_idle_or_extern_event_handler();
+    
+    /* 检查定时器是否超时，超时后进行相关事件通知 */
+    eh_timer_check();
 }
 
 void __async__ eh_task_next(void){
@@ -129,18 +128,15 @@ void __async__ eh_task_next(void){
         state = eh_enter_critical();;
         if(!eh_list_empty(&current_task->task_list_node))
             break;
-
-        if( current_task->state == EH_TASK_STATE_READY || 
-            current_task->state == EH_TASK_STATE_RUNING
-        ){
-            current_task->state = EH_TASK_STATE_RUNING;
-        }
         eh_exit_critical(state);
 
         /* task list 为空，说明已经没有任务了*/
         eh_poll();
-        if(current_task->state == EH_TASK_STATE_RUNING)
+        if( current_task->state == EH_TASK_STATE_RUNING || 
+            current_task->state == EH_TASK_STATE_READY ){
+            current_task->state = EH_TASK_STATE_RUNING;
             return ;
+        }
     }
 
     to = eh_list_entry(current_task->task_list_node.next, eh_task_t, task_list_node);
@@ -170,17 +166,18 @@ void __async__ eh_task_next(void){
 }
 
 void eh_task_wake_up(eh_task_t *wakeup_task){
-    eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     if(wakeup_task->state != EH_TASK_STATE_WAIT)
         goto out;
     eh_idle_break();
     wakeup_task->state = EH_TASK_STATE_READY;
+    if(wakeup_task == eh_task_get_current())
+        goto out;
     if(wakeup_task->is_system_task){
-        eh_list_move(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
+        eh_list_move(&wakeup_task->task_list_node, &eh_task_get_current()->task_list_node);
     }else{
-        eh_list_move_tail(&wakeup_task->task_list_node, &eh->current_task->task_list_node);
+        eh_list_move_tail(&wakeup_task->task_list_node, &eh_task_get_current()->task_list_node);
     }
 out:
     eh_exit_critical(state);
@@ -231,7 +228,6 @@ eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned long stack
 }
 
 int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
-    eh_t *eh = eh_get_global_handle();
     int wait_ret;
     eh_param_assert( task != NULL );
 
@@ -261,7 +257,7 @@ void eh_task_exit(int ret){
 }
 
 void eh_task_sta(const eh_task_t *task, eh_task_sta_t *sta){
-    uint32_t i;
+    unsigned long i;
     sta->task_name = task->name;
     sta->state = task->state;
     sta->stack_size = task->stack_size;
@@ -283,8 +279,9 @@ eh_sclock_t eh_get_loop_idle_time(void){
     eh_save_state_t state;
     eh_sclock_t half_time;
     state = eh_enter_critical();
-    half_time = !eh_list_empty(&eh_task_get_current()->task_list_node) ? 
-        0 : eh_timer_get_first_remaining_time_on_lock();
+    half_time = (!eh_list_empty(&eh_task_get_current()->task_list_node)) || 
+                 eh_task_get_current()->state <= EH_TASK_STATE_RUNING ?  0 
+                    : eh_timer_get_first_remaining_time_on_lock();
     eh_exit_critical(state);
     return half_time;
 }

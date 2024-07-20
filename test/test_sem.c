@@ -53,7 +53,7 @@ void* thread_function(void* arg) {
 }
 int task_app(void *arg){
     eh_task_t *test_1,*test_2;
-    eh_task_t *test_3,*test_4;
+    eh_task_t *test_3,*test_4,*test_5;
     pthread_t thread_id;
     int app_ret;
 
@@ -63,7 +63,7 @@ int task_app(void *arg){
 
     if (pthread_create(&thread_id, NULL, thread_function, NULL) != 0) {
         eh_debugfl("pthread_create error!");
-        eh_loop_exit(1);
+        return -1;
     }
 
 
@@ -71,15 +71,15 @@ int task_app(void *arg){
     test_2 = eh_task_create("test_2", 0, 12*1024, "2", task_test);
     test_3 = eh_task_create("test_3", 0, 12*1024, "3", task_test);
     test_4 = eh_task_create("test_4", 0, 12*1024, "4", task_test);
+    test_5 = eh_task_create("test_5", 0, 12*1024, "5", task_test);
 
     __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
     __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     __await__ eh_task_join(test_3, &app_ret, EH_TIME_FOREVER);
     __await__ eh_task_join(test_4, &app_ret, EH_TIME_FOREVER);
+    __await__ eh_task_join(test_5, &app_ret, EH_TIME_FOREVER);
 
-    //eh_sem_destroy(sem);
 
-    eh_loop_exit(0);
     return 0;
 }
 
@@ -87,8 +87,7 @@ int main(void){
     int ret;
 
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    ret = eh_loop_run();
+    ret = task_app("task_app");
     eh_global_exit();
 
     return ret;

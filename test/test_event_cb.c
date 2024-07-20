@@ -63,8 +63,7 @@ int task_app(void *arg){
     eh_event_cb_unregister(eh_timer_to_event(&timer1));
 
     eh_timer_clean(&timer1);
-
-    eh_loop_exit(0);
+    
     return 0;
 }
 
@@ -72,8 +71,7 @@ int task_app(void *arg){
 int main(void){
     eh_debugfl("test_eh start!!");
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    eh_loop_run();
+    task_app("task_app");
     eh_global_exit();
     
     return 0;

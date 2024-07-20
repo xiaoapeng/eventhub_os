@@ -26,8 +26,8 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-extern eh_sem_t eh_sem_create(uint32_t value);
-extern void eh_sem_destroy(eh_sem_t sem);
+extern __safety eh_sem_t eh_sem_create(uint32_t value);
+extern __safety void eh_sem_destroy(eh_sem_t sem);
 extern int __async__ eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
 extern __safety int eh_sem_post(eh_sem_t sem);
 

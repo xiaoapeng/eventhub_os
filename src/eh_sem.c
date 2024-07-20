@@ -80,7 +80,7 @@ int eh_sem_post(eh_sem_t _sem){
         goto out;
     }
     sem->sem_num_v++;
-    ret = eh_event_notify(&sem->wakeup_event);
+    ret = eh_event_notify_and_reorder(&sem->wakeup_event, 1);
 out:
     eh_exit_critical(state);
     return ret;

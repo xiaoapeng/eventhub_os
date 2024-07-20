@@ -95,19 +95,15 @@ int task_app(void *arg){
     eh_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
 
     eh_mutex_destroy(sem);
-
-    eh_loop_exit(0);
     return 0;
 }
 
 int main(void){
-    int ret;
 
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    ret = eh_loop_run();
+    task_app("task_app");
     eh_global_exit();
 
-    return ret;
+    return 0;
 }
 

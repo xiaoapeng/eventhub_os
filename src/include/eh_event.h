@@ -70,6 +70,16 @@ extern __safety void eh_event_clean(eh_event_t *e);
 extern __safety int eh_event_notify(eh_event_t *e);
 
 /**
+ * @brief                           事件通知,唤醒指定个数监听事件的任务,并重新排序
+ *                                  此函数作为信号量的优化，唤醒指定数量的任务，并重新排序，
+ *                                  可优化任务唤醒的效率，避免无效唤醒，更加公平
+ * @param  e                        事件实例指针
+ * @param  num                      要唤醒任务的个数
+ * @return int 
+ */
+extern __safety int eh_event_notify_and_reorder(eh_event_t *e, int num);
+
+/**
  * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
  *                                  必须等待condition返回true才进行返回，若condition == NULL 那么就等待信号发生就直接返回
  * @param  e                        事件实例指针

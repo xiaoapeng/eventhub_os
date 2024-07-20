@@ -135,7 +135,6 @@ int task_app(void *arg){
     eh_debugln("|%.*hhq|", (int)sizeof(test_buf), test_buf);
     eh_debughex(test_buf, sizeof(test_buf));
     eh_errhex(test_buf, sizeof(test_buf));
-    eh_loop_exit(0);
     return 0;
 }
 
@@ -146,9 +145,8 @@ int main(void){
     
     eh_global_init();
     
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-
-    eh_loop_run();
+    task_app("task_app");
+    
     eh_global_exit();
     return 0;
 }

@@ -78,10 +78,12 @@ int eh_mutex_unlock(eh_mutex_t _mutex){
         return EH_RET_OK;
     if(mutex->lock_task != eh_task_self())
         return EH_RET_INVALID_STATE;
+    
+    /* 协程无需考虑内存屏障 */
     mutex->lock_cnt--;
     if(mutex->lock_cnt)
         return EH_RET_OK;
-    return eh_event_notify(&mutex->wakeup_event);
+    return eh_event_notify_and_reorder(&mutex->wakeup_event, 1);
 }
 
 

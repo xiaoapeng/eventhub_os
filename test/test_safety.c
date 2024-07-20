@@ -93,7 +93,7 @@ int task_app(void *arg){
 
     if (pthread_create(&thread_id, NULL, thread_function, &gpio_debounce_timer) != 0) {
         eh_debugfl("pthread_create error!");
-        eh_loop_exit(1);
+        return -1;
     }
     for(;;){
         ret = __await__ eh_event_wait_timeout(eh_timer_to_event(&gpio_debounce_timer), EH_TIME_FOREVER);
@@ -109,8 +109,7 @@ int task_app(void *arg){
 int main(void){
 
     eh_global_init();
-    eh_task_create("task_app", 0, 12*1024, "task_app", task_app);
-    eh_loop_run();
+    task_app("task_app");
     eh_global_exit();
     
     return 0;

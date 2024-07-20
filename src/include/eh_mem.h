@@ -13,6 +13,7 @@
 #define _EH_MEM_H_
 
 #include <stddef.h>
+#include "eh_types.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -31,8 +32,8 @@ struct eh_mem_heap_info{
     size_t min_ever_free_size_level;
 };
 
-extern void* eh_malloc(size_t size);
-extern void  eh_free(void* ptr);
+extern __safety void* eh_malloc(size_t size);
+extern __safety void  eh_free(void* ptr);
 
 /**
  * @brief 
