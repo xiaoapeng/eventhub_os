@@ -76,11 +76,22 @@ extern __safety int eh_timer_stop(eh_timer_event_t *timer);
 extern __safety int eh_timer_restart(eh_timer_event_t *timer);
 
 /**
+ * @brief                   定时器高级初始化
+ * @param  timer            定时器实例指针
+ * @param  clock_interval   定时器间隔
+ * @param  attr             定时器属性
+ * @return __safety 
+ */
+extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr);
+
+/**
  * @brief                   定时器初始化
  * @param  timer            实例指针
  * @return int              见eh_error.h
  */
-extern __safety int eh_timer_init(eh_timer_event_t *timer);
+static __safety inline int eh_timer_init(eh_timer_event_t *timer){
+    return eh_timer_advanced_init(timer, 0, 0);
+}
 
 
 /**
