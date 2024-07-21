@@ -8,18 +8,6 @@
  *  1. 代码简单很多。
  *  2. 协程切换时间确定，每次切换时长基本一致。
  *
- *  单协程 + MAIN协程 -O3 优化编译结果 全速切换 RTT打印 28微秒左右， 相比于隔壁 pendsv要慢一微秒
- *  测试结果包含打印时间
- *  [    1.222165] [ DBG] run!
- *  [    1.248174] [ DBG] run!
- *  [    1.248201] [ DBG] run!
- *  [    1.248229] [ DBG] run!
- *  [    1.248257] [ DBG] run!
- *  [    1.248285] [ DBG] run!
- *  [    1.248313] [ DBG] run!
- *  [    1.248341] [ DBG] run!
- *
- *
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @version 1.0
  * @date 2024-06-29
