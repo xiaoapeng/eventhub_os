@@ -9,7 +9,6 @@ target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_core.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_timer.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/eh_rbtree.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_sleep.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event_cb.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_mutex.c"
