@@ -102,8 +102,9 @@ int eh_timer_start(eh_timer_event_t *timer){
     state = eh_enter_critical();;
     timer_now = eh_get_clock_monotonic_time();
     ret = _eh_timer_start_no_lock(timer_now, timer);
-    if(ret == FIRST_TIMER_UPDATE)
+    if(ret == FIRST_TIMER_UPDATE){
         eh_idle_break();
+    }
     eh_exit_critical(state);
     return ret;
 }
@@ -146,8 +147,9 @@ int eh_timer_restart(eh_timer_event_t *timer){
     ret = _eh_timer_start_no_lock(timer_now, timer);
 
 out:
-    if(ret == FIRST_TIMER_UPDATE)
+    if(ret == FIRST_TIMER_UPDATE){
         eh_idle_break();
+    }
     eh_exit_critical(state);
     return ret;
 }

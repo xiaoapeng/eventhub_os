@@ -236,7 +236,7 @@ static inline void streamout_finish(struct stream_out *stream){
 static inline int skip_atoi(const char **s)
 {
     int i = 0;
-    while (isdigit(**s))
+    while (isdigit((int)(**s)))
         i = i * 10 + (*((*s)++) - '0');
     return i;
 }
@@ -888,7 +888,7 @@ static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list
         }
 
         field_width = -1;
-        if (isdigit(*fmt)){
+        if (isdigit((int)(*fmt))){
             field_width = skip_atoi(&fmt);
         }else if (*fmt == '*'){
             ++fmt;
@@ -902,7 +902,7 @@ static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list
         precision = -1;
         if (*fmt == '.'){
             ++fmt;
-            if (isdigit(*fmt)){
+            if (isdigit((int)(*fmt))){
                 precision = skip_atoi(&fmt);
             }
             else if (*fmt == '*'){

@@ -100,6 +100,8 @@ __attribute__((naked))   void context_convert_to_msp(void){
 void svc_handler_c(unsigned long *sp, uint8_t svc_number){
     struct stack_auto_push_context *context = (struct stack_auto_push_context *)sp;
     /* 目前无任何实现 */
+    (void) context;
+    (void) svc_number;
 }
 
 void context_convert(unsigned long *sp, uint8_t svc_number){
@@ -189,7 +191,8 @@ __attribute__((naked))  eh_save_state_t  platform_enter_critical(void){
     );
 }
 
-__attribute__((naked)) void  platform_exit_critical(eh_save_state_t state){
+__attribute__((naked)) void  platform_exit_critical( 
+        __attribute__((unused)) eh_save_state_t state) {
     __asm__ volatile(
         "    .syntax unified                                            \n"
         "                                                               \n"
@@ -219,11 +222,9 @@ __attribute__((naked)) void HardFault_Handler(void){
 
 
 void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long control ){
-    eh_task_sta_t                       sta;
-    eh_task_t*                          hardfault_task;
+    eh_task_sta_t                         sta;
     struct stack_state_context*           stack_state = (struct stack_state_context*)sp;
     //struct StackStateFloatContext*      fpu_stack_state = (struct StackStateFloatContext*)(stack_state+1);
-    float a = 1.0f;
     eh_errln("");
     eh_errln("");
     eh_errln("######### hardfault_handler #########");

@@ -147,8 +147,8 @@ context_t co_context_make(
     uint32_t u32_stack_top = (uint32_t)(stack_top);
     uint32_t u32_stack_lim = (uint32_t)(stack_lim);
     struct stack_init_context *context_m33;
-    u32_stack_top = u32_stack_top & (~7);               /* 向8对齐 */
-    u32_stack_lim = (u32_stack_lim+7) & (~7);           /* 向8对齐 */
+    u32_stack_top = u32_stack_top & (~7UL);               /* 向8对齐 */
+    u32_stack_lim = (u32_stack_lim+7) & (~7UL);           /* 向8对齐 */
     context_m33 = (struct stack_init_context *)(u32_stack_top - sizeof(struct stack_init_context));
     bzero(context_m33, sizeof(struct stack_init_context));
     context_m33->psplim = u32_stack_lim;
