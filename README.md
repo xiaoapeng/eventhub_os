@@ -59,7 +59,7 @@ add_executable(you_target)
 
 | 平台 | 定义方式 | 备注 |
 | --- | --- | --- |
-| linux x86_64 | `CMAKE_SYSTEM_NAME`=Linux<br>`CMAKE_SYSTEM_PROCESSOR`=x86_64  | 一般选择系统gcc都会自动指定好 |
+| linux x86_64 | `CMAKE_SYSTEM_NAME`=Linux<br>`CMAKE_SYSTEM_PROCESSOR`=x86_64  | 一般选择系统都会自动指定好 |
 | Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33<br>浮点: `__FPU_USED__`=0/1  | 一般要手动指定 |
 
 
