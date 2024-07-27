@@ -581,7 +581,7 @@ static int vprintf_float_e(struct stream_out *stream, double num, int field_widt
     union double_union du = {.d = num};
     double abs_number =  du.sign ? -num : num;
     int floored_exp10;
-    bool abs_exp10_covered_by_powers_table;
+    bool abs_exp10_covered_by_powers_table = false;
     struct double_components components;
     struct scaling_factor normalization = {0};
     

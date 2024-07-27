@@ -12,7 +12,6 @@
 static struct {
     pthread_mutexattr_t attr;
     pthread_mutex_t     eh_use_mutex;
-    pthread_mutex_t     idle_break_mutex;
     eh_clock_t          expire;
     bool                is_idle_state;
 }linux_platform;
@@ -34,21 +33,21 @@ void  platform_exit_critical(eh_save_state_t state){
     pthread_mutex_unlock(&linux_platform.eh_use_mutex);
 }
 void  platform_idle_break(void){
-    pthread_mutex_lock(&linux_platform.idle_break_mutex);
+    pthread_mutex_lock(&linux_platform.eh_use_mutex);
     if(linux_platform.is_idle_state)
         epoll_hub_set_wait_break_event();
-    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
+    pthread_mutex_unlock(&linux_platform.eh_use_mutex);
 }
 
 void  platform_idle_or_extern_event_handler(void){
     eh_usec_t usec_timeout;
 
 
-    pthread_mutex_lock(&linux_platform.idle_break_mutex);
+    pthread_mutex_lock(&linux_platform.eh_use_mutex);
     linux_platform.is_idle_state = true;
     usec_timeout = eh_clock_to_usec(eh_get_loop_idle_time());
     epoll_hub_clean_wait_break_event();
-    pthread_mutex_unlock(&linux_platform.idle_break_mutex);
+    pthread_mutex_unlock(&linux_platform.eh_use_mutex);
 
     epoll_hub_poll(usec_timeout);
 
@@ -69,15 +68,9 @@ static int  __init linux_platform_init(void){
     ret = pthread_mutex_init(&linux_platform.eh_use_mutex, &linux_platform.attr);
     if(ret < 0)
         goto pthread_mutex_init_eh_use_error;
-        
-    ret = pthread_mutex_init(&linux_platform.idle_break_mutex, NULL);
-    if(ret < 0)
-        goto pthread_mutex_idle_break_mutex_use_error;
 
     ret = 0;
     return ret;
-pthread_mutex_idle_break_mutex_use_error:
-    pthread_mutex_destroy(&linux_platform.eh_use_mutex);
 pthread_mutex_init_eh_use_error:
 pthread_mutexattr_settype_error:
     pthread_mutexattr_destroy(&linux_platform.attr);
@@ -87,7 +80,6 @@ mutex_attr_init_error:
 }
 
 static void __exit linux_platform_deinit(void){
-    pthread_mutex_destroy(&linux_platform.idle_break_mutex);
     pthread_mutex_destroy(&linux_platform.eh_use_mutex);
     pthread_mutexattr_destroy(&linux_platform.attr);
     epoll_hub_exit();

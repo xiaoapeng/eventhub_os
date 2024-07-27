@@ -243,12 +243,12 @@ void eh_epoll_del(eh_epoll_t _epoll){
     struct eh_event_epoll_receptor *pos,*n;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     eh_save_state_t state;
+    state = eh_enter_critical();
     eh_rb_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
-        state = eh_enter_critical();;
         eh_event_remove_receptor_no_lock(&pos->receptor);
-        eh_exit_critical(state);
         eh_free(pos);
     }
+    eh_exit_critical(state);
     eh_free(epoll);
 }
 
