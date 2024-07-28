@@ -26,11 +26,6 @@
 
 eh_t _global_eh;
 
-
-static const eh_event_type_t task_event_type = {
-    .name = "task_event"
-};
-
 static struct  eh_task s_main_task;
 
 static void _task_auto_destruct(void *arg);
@@ -201,7 +196,7 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, ui
     task->state = EH_TASK_STATE_WAIT;
     task->flags = flags;
     task->is_static_stack = !!is_static_stack;
-    eh_event_init(&task->event, &task_event_type);
+    eh_event_init(&task->event);
     eh_task_wake_up(task);
     return task;
 }

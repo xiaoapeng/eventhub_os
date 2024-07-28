@@ -33,10 +33,6 @@ struct eh_sem {
     uint32_t                    sem_num_v; /* post */
 };
 
-static const eh_event_type_t eh_sem_type = {
-    .name = "sem_type"
-};
-
 static bool condition_sem(void *arg){
     struct eh_sem *sem = (struct eh_sem *)arg;
     return !(sem->sem_num_p == sem->sem_num_v) ;
@@ -49,7 +45,7 @@ eh_sem_t eh_sem_create(uint32_t value){
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     new_sem->sem_num_v = value;
     new_sem->sem_num_p = 0;
-    eh_event_init(&new_sem->wakeup_event, &eh_sem_type);
+    eh_event_init(&new_sem->wakeup_event);
     return (eh_sem_t)new_sem;
 }
 

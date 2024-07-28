@@ -103,11 +103,20 @@ extern int32_t eh_ringbuf_read_skip(eh_ringbuf_t *ringbuf, int32_t len);
  */
 extern const uint8_t* eh_ringbuf_peek(eh_ringbuf_t *ringbuf, int32_t offset, uint8_t *buf, int32_t *len);
 
+
 /**
- * @brief                           清空环形缓冲区
+ * @brief                           清空环形缓冲区(单读写安全)
  * @param  ringbuf                  环形缓冲区指针
  */
 extern void eh_ringbuf_clear(eh_ringbuf_t *ringbuf);
+
+
+/**
+ * @brief                           清空环形缓冲区,并设置wr到0（单读写不安全）
+ * @param  ringbuf                  环形缓冲区指针
+ */
+extern void eh_ringbuf_reset(eh_ringbuf_t *ringbuf);
+
 
 
 #ifdef __cplusplus

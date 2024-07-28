@@ -136,10 +136,9 @@ static void _eh_event_trigger_receptor_no_lock(struct eh_event_receptor *recepto
     }
 }
 
-int eh_event_init(eh_event_t *e, const eh_event_type_t* type){
+int eh_event_init(eh_event_t *e){
     eh_param_assert(e);
     eh_list_head_init(&e->receptor_list_head);
-    e->type = type;
     return EH_RET_OK;
 }
 

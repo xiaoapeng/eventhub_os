@@ -32,9 +32,6 @@ struct eh_mutex {
     enum eh_mutex_type          type;
     eh_task_t                   *lock_task;
 };
-static const eh_event_type_t eh_mutex_type = {
-    .name = "mutex_type"
-};
 
 static bool condition_mutex(void *arg){
     struct eh_mutex *mutex = (struct eh_mutex *)arg;
@@ -52,7 +49,7 @@ eh_mutex_t eh_mutex_create(enum eh_mutex_type type){
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     new_mutex->lock_cnt = 0;
     new_mutex->type = type;
-    eh_event_init(&new_mutex->wakeup_event, &eh_mutex_type);
+    eh_event_init(&new_mutex->wakeup_event);
     return (eh_mutex_t)new_mutex;
 }
 void eh_mutex_destroy(eh_mutex_t _mutex){

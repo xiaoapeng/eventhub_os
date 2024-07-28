@@ -13,17 +13,19 @@
 #define _EH_EVENT_H_
 
 #include "eh_types.h"
-
-typedef struct eh_event                     eh_event_t;
-typedef struct eh_event_type                eh_event_type_t;
-typedef int*                                eh_epoll_t;
-typedef struct eh_epoll_slot                eh_epoll_slot_t;
+#include "eh_list.h"
 
 #ifdef __cplusplus
 #if __cplusplus
 extern "C"{
 #endif
 #endif /* __cplusplus */
+
+typedef struct eh_event                     eh_event_t;
+typedef struct eh_event_type                eh_event_type_t;
+typedef int*                                eh_epoll_t;
+typedef struct eh_epoll_slot                eh_epoll_slot_t;
+
 
 
 enum EH_EPOLL_AFFAIR{
@@ -37,7 +39,6 @@ struct eh_event_type{
 
 struct eh_event{
     struct eh_list_head                 receptor_list_head;    /* 事件产生时的受体链表 */
-    const struct eh_event_type          *type;
 };
 
 struct eh_epoll_slot{
@@ -46,6 +47,23 @@ struct eh_epoll_slot{
     enum EH_EPOLL_AFFAIR                affair;
 };
 
+#define EH_EVENT_INIT(e) {                                                          \
+        .receptor_list_head = EH_LIST_HEAD_INIT(e.receptor_list_head),              \
+    }
+
+/**
+ * @brief                           定义并初始化一个事件（.c中使用）
+ * @param  event_name               事件名称
+ * @param  type_ptr                 事件类型
+ */
+#define EH_DEFINE_EVENT(event_name) eh_event_t event_name =                         \
+    EH_EVENT_INIT(event_name)
+
+/**
+ * @brief                           声明一个事件 （.h中使用）
+ */
+#define EH_EXTERN_EVENT(event_name) extern eh_event_t event_name
+
 
 /**
  * @brief                           事件初始化
@@ -53,7 +71,7 @@ struct eh_epoll_slot{
  * @param  static_const_name        事件名称，可为NULL
  * @return int                      见eh_error.h
  */
-extern __safety int eh_event_init(eh_event_t *e, const eh_event_type_t* type);
+extern __safety int eh_event_init(eh_event_t *e);
 
 /**
  * @brief                           唤醒所有监听该事件的任务

@@ -15,6 +15,7 @@
 #define _EH_TIMER_H_
 
 #include "eh_types.h"
+#include "eh_rbtree.h"
 
 typedef struct eh_timer_event eh_timer_event_t;
 
@@ -23,15 +24,19 @@ typedef struct eh_timer_event eh_timer_event_t;
 
 struct eh_timer_event {
     eh_event_t                      event;
-    struct eh_rbtree_node           rb_node;                 /* 定时器链，挂在在eh->timer_tree_root */
-    eh_clock_t                      expire;                  /* 定时器到期时间 */
-    eh_sclock_t                     interval;                /* 定时器间隔时间 */
+    struct eh_rbtree_node           rb_node;                    /* 定时器链，挂在在eh->timer_tree_root */
+    eh_clock_t                      expire;                     /* 定时器到期时间 */
+    eh_sclock_t                     interval;                   /* 定时器间隔时间 */
     uint32_t                        attrribute;
 };
 
-
-
-
+#define EH_TIMER_INIT(timer)    {                                               \
+        .event = EH_EVENT_INIT(timer.event),                                    \
+        .rb_node = EH_RBTREE_NODE_INIT(timer.rb_node),                          \
+        .expire = 0,                                                            \
+        .interval = 0,                                                          \
+        .attrribute = 0,                                                        \
+    }
 
 #ifdef __cplusplus
 #if __cplusplus

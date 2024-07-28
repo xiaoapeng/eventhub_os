@@ -24,6 +24,11 @@
 #include "eh_co.h"
 #include "eh_module.h"
 
+#ifdef __cplusplus
+#if __cplusplus
+extern "C"{
+#endif
+#endif /* __cplusplus */
 
 typedef struct eh                           eh_t;
 typedef uint64_t                            eh_usec_t;
@@ -33,11 +38,6 @@ typedef int64_t                             eh_sclock_t;
 typedef struct eh_task                      eh_task_t;
 typedef struct eh_loop_poll_task            eh_loop_poll_task_t;
 typedef struct eh_task_sta                  eh_task_sta_t;
-#ifdef __cplusplus
-#if __cplusplus
-extern "C"{
-#endif
-#endif /* __cplusplus */
 
 #define EH_TASK_FLAGS_SYSTEM_TASK          0x00000002
 #define EH_TASK_FLAGS_DETACH               0x00000004   /* 自动分离，指定此参数在任务退出时自动释放 */

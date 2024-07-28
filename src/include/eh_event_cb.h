@@ -33,8 +33,9 @@ struct eh_event_cb_trigger{
     struct eh_list_head     cb_head;
 };
 
-
-
+#define EH_EVENT_CB_TRIGGER_INIT(trigger)   {               \
+        .cb_head = EH_LIST_HEAD_INIT(trigger.cb_head),  \
+    }
 
 static inline void eh_event_cb_slot_init(eh_event_cb_slot_t *slot, 
     void (*slot_function)(eh_event_t *e, void *slot_param), void *slot_param){

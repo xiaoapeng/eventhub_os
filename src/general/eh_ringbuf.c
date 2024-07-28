@@ -138,6 +138,9 @@ void eh_ringbuf_clear(eh_ringbuf_t *ringbuf){
     ringbuf->r = ringbuf->w;
 }
 
+void eh_ringbuf_reset(eh_ringbuf_t *ringbuf){
+    ringbuf->r = ringbuf->w = 0;
+}
 
 
 

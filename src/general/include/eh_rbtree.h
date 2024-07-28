@@ -25,6 +25,17 @@ struct eh_rbtree_root {
 	int (*cmp)(struct eh_rbtree_node *a, struct eh_rbtree_node *b);
 };
 
+#define EH_RBTREE_ROOT_INIT(root, _cmp) {			\
+		.rb_node = NULL,							\
+		.rb_leftmost = NULL,						\
+		.cmp = _cmp,								\
+	}
+#define EH_RBTREE_NODE_INIT(root) {					\
+		.parent_and_color = (parent_node_t)&root,	\
+		.rb_left = NULL,							\
+		.rb_right = NULL,							\
+	}
+
 #define	RB_RED		0
 #define	RB_BLACK	1
 

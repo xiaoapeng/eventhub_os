@@ -154,14 +154,10 @@ out:
     return ret;
 }
 
-static const eh_event_type_t eh_timer_event_type = {
-    .name = "timer_event",
-};
-
 int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr){
     int ret;
     eh_param_assert(timer);
-    ret = eh_event_init(&timer->event, &eh_timer_event_type);
+    ret = eh_event_init(&timer->event);
     if(ret < 0) return ret;
     eh_rb_node_init(&timer->rb_node);
     timer->expire = 0;
