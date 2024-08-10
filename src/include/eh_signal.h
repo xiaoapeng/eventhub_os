@@ -40,17 +40,17 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 #define EH_SIGNAL_INIT_VAL_NONE             {0}
 
 /**
- * @brief 定义并初步初始化一个内部（静态）通用信号，在.c中使用，建议将自定义部分初始化后再进行注册
+ * @brief 定义并初步初始化一个局部（静态）自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册
  *         .c中使用
  */
 #define EH_DEFINE_STATIC_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)        \
-        EH_STRUCT_CUSTOM_SIGNAL(event_type)  signal_name = {                            \
+        static EH_STRUCT_CUSTOM_SIGNAL(event_type)  signal_name = {                     \
             .trigger = EH_EVENT_CB_TRIGGER_INIT(signal_name.trigger),                   \
             .custom_event = signal_init_val,                                            \
         }
 
 /**
- * @brief 定义并初步初始化一个内部（静态）通用信号，在.c中使用，建议将自定义部分初始化后再进行注册
+ * @brief 定义并初步初始化一个全局自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册
  *         .c中使用
  */
 #define EH_DEFINE_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)               \
@@ -60,7 +60,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
         }
 
 /**
- * @brief 声明一个自定义信号，在头文件中使用此宏,外部模块可以使用此信号
+ * @brief 声明一个全局自定义信号，在头文件中使用此宏,外部模块可以使用此信号
  *         .h中使用
  */
 #define EH_EXTERN_CUSTOM_SIGNAL(signal_name, event_type)                                \
