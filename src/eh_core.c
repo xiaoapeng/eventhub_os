@@ -108,6 +108,33 @@ static void eh_poll(void){
     eh_timer_check();
 }
 
+
+eh_clock_t eh_msec_to_clock(eh_msec_t msec){
+    eh_clock_t clock = ((msec)/1000ULL) * (eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC;
+    clock += ((((msec)%1000ULL)) * (eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC)/1000ULL;
+    return clock ? clock : !!(msec);
+}
+
+eh_clock_t eh_usec_to_clock(eh_usec_t usec){
+    eh_clock_t clock = ((usec)/1000000ULL) * (eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC;
+    clock += ((((usec)%1000000ULL)) * (eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC)/1000000ULL;
+    return clock ? clock : !!(usec);
+}
+
+eh_msec_t eh_clock_to_msec(eh_clock_t clock){
+    eh_msec_t msec = ((eh_msec_t)((clock/(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC) * 1000ULL));
+    msec += ((clock%(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC) * 1000ULL)/(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC;
+    return msec ? msec : !!(clock);
+}
+
+
+eh_usec_t eh_clock_to_usec(eh_clock_t clock){
+    eh_usec_t usec = ((eh_usec_t)((clock/(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC) * 1000000ULL));
+    usec += ((clock%(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC) * 1000000ULL)/(eh_clock_t)EH_CONFIG_CLOCKS_PER_SEC;
+    return usec ? usec : !!(clock);
+}
+
+
 void __async__ eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;

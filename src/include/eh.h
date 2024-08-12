@@ -73,48 +73,28 @@ struct eh_task_sta{
  * @param   _msec   毫秒数
  * return   eh_clock_t
  */
-#define  eh_msec_to_clock(_msec) ({                                                                 \
-        eh_msec_t __msec = (eh_msec_t)(_msec);                                                      \
-        eh_clock_t clock = ((__msec)/1000) * EH_CONFIG_CLOCKS_PER_SEC;                              \
-        clock += ((((__msec)%1000)) * EH_CONFIG_CLOCKS_PER_SEC)/1000;                               \
-        clock ? clock : !!(__msec);                                                                 \
-    })
+extern eh_clock_t eh_msec_to_clock(eh_msec_t msec);
 
 /**
  * @brief   微秒转换为时钟数
  * @param   _usec   微秒数
  * return   eh_clock_t
  */
-#define  eh_usec_to_clock(_usec) ({                                                                 \
-        eh_usec_t __usec = (_usec);                                                                 \
-        eh_clock_t clock = ((__usec)/1000000) * EH_CONFIG_CLOCKS_PER_SEC;                           \
-        clock += ((((__usec)%1000000)) * EH_CONFIG_CLOCKS_PER_SEC)/1000000;                         \
-        clock ? clock : !!(__usec);                                                                 \
-    })
+ extern eh_clock_t eh_usec_to_clock(eh_usec_t usec);
 
 /**
  * @brief   时钟数转换为毫秒数
- * @param   _clock  时钟数
+ * @param   clock  时钟数
  * return   eh_msec_t
  */
-#define  eh_clock_to_msec(_clock) ({                                                                \
-        eh_clock_t __clock = (eh_clock_t)(_clock);                                                  \
-        eh_msec_t msec = ((eh_msec_t)((__clock/EH_CONFIG_CLOCKS_PER_SEC) * 1000));                  \
-        msec += ((__clock%EH_CONFIG_CLOCKS_PER_SEC) * 1000)/EH_CONFIG_CLOCKS_PER_SEC;               \
-        msec ? msec : !!(__clock);                                                                  \
-    })
+extern eh_msec_t eh_clock_to_msec(eh_clock_t clock);
 
 /**
  * @brief   时钟数转换为微秒数
- * @param   _clock  时钟数
+ * @param   clock  时钟数
  * return   eh_usec_t
  */
-#define  eh_clock_to_usec(_clock) ({                                                                \
-        eh_clock_t __clock = (eh_clock_t)(_clock);                                                  \
-        eh_msec_t msec = ((eh_msec_t)((__clock/EH_CONFIG_CLOCKS_PER_SEC) * 1000000));               \
-        msec += ((__clock%EH_CONFIG_CLOCKS_PER_SEC) * 1000000)/EH_CONFIG_CLOCKS_PER_SEC;            \
-        msec ? msec : !!(__clock);                                                                  \
-    })
+extern eh_usec_t eh_clock_to_usec(eh_clock_t clock);
 
 /**
  * @brief 让出当前任务
