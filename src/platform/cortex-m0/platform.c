@@ -36,26 +36,6 @@ struct stack_state_context{
     struct stack_auto_push_context auto_push_context;
 };
 
-struct stack_state_float_context{
-    unsigned long   s0;
-    unsigned long   s1;
-    unsigned long   s2;
-    unsigned long   s3;
-    unsigned long   s4;
-    unsigned long   s5;
-    unsigned long   s6;
-    unsigned long   s7;
-    unsigned long   s8;
-    unsigned long   s9;
-    unsigned long   s10;
-    unsigned long   s11;
-    unsigned long   s12;
-    unsigned long   s13;
-    unsigned long   s14;
-    unsigned long   s15;
-    unsigned long   fpscr;
-};
-
 
 
 static __attribute__((aligned(8))) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_STACK_SIZE];
@@ -200,26 +180,44 @@ __attribute__((naked)) void  platform_exit_critical(
 }
 
 __attribute__((naked)) void HardFault_Handler(void){
-    // __asm__ volatile (
-    //     "    .syntax unified                                            \n"
-    //     "    push        {r4-r11}                                       \n"/*   存储其他寄存器 */
-    //     "    mov         r0, sp                                         \n"/*   保存当前SP*/
-    //     "    mov         r1, lr                                         \n"/*   将 lr 的值移动到 r1*/
-    //     "    mrs         r2, control                                    \n"/*   将 control 寄存器的值移动到 r2*/
-    //     "    ldr          r3, hardfault_handler_c_address_const         \n"
-    //     "    bx           r3                                            \n"
-    //     "                                                               \n"
-    //     "    .align 4                                                   \n"
-    //     "hardfault_handler_c_address_const: .word hardfault_handler_c   \n"
-    //     ::: "memory"
-    // );
+    __asm__ volatile (
+        "    .syntax unified                                            \n"
+
+        "    movs        r1, #4                                         \n"  // 将立即数4加载到r1
+        "    mov         r2, lr                                         \n"  // 将lr的值复制到r2
+        "    ands        r2, r1                                         \n"  // r2 = lr & 4
+        "    beq         1f                                             \n"  // 如果结果为0，跳转到标签1
+        "    mrs         r0, psp                                        \n"  // 否则，将进程堆栈指针加载到r0
+        "    b           2f                                             \n"  // 跳转到标签2
+        "1:                                                             \n"
+        "    mrs         r0, msp                                        \n"  // 如果结果为0，将主堆栈指针加载到r0
+        "2:                                                             \n"
+        
+        "    subs        r0, r0, #32					                \n" /* 预留其他寄存器空间 */
+        "    mov         r1, r0                                         \n"
+     
+        "	 stmia       r1!, {r4-r7}								    \n" /* 保存 {r4 - r11} */
+        " 	 mov         r4, r8							                \n" 
+        " 	 mov         r5, r9							                \n"
+        " 	 mov         r6, r10							            \n"
+        " 	 mov         r7, r11							            \n"
+        "	 stmia       r1!, {r4-r7}								    \n"
+
+        "    mov         r1, lr                                         \n"/*   将 lr 的值移动到 r1*/
+        "    mrs         r2, control                                    \n"/*   将 control 寄存器的值移动到 r2*/
+        "    ldr         r3, hardfault_handler_c_address_const          \n"
+        "    bx          r3                                             \n"
+        "                                                               \n"
+        "    .align 4                                                   \n"
+        "hardfault_handler_c_address_const: .word hardfault_handler_c   \n"
+        ::: "memory"
+    );
 }
 
 
 void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long control ){
     eh_task_sta_t                         sta;
     struct stack_state_context*           stack_state = (struct stack_state_context*)sp;
-    //struct StackStateFloatContext*      fpu_stack_state = (struct StackStateFloatContext*)(stack_state+1);
     eh_errln("");
     eh_errln("");
     eh_errln("######### hardfault_handler #########");

@@ -207,8 +207,11 @@ __attribute__((naked)) void  platform_exit_critical(
 __attribute__((naked)) void HardFault_Handler(void){
     __asm__ volatile (
         "    .syntax unified                                            \n"
-        "    push        {r4-r11}                                       \n"/*   存储其他寄存器 */
-        "    mov         r0, sp                                         \n"/*   保存当前SP*/
+        "    tst         lr, #4                                         \n"
+        "    ite         eq                                             \n"
+        "    mrseq       r0, msp                                        \n"
+        "    mrsne       r0, psp                                        \n"
+        "	 stmdb       r0!, {r4-r11}								    \n"
         "    mov         r1, lr                                         \n"/*   将 lr 的值移动到 r1*/
         "    mrs         r2, control                                    \n"/*   将 control 寄存器的值移动到 r2*/
         "   ldr          r3, hardfault_handler_c_address_const          \n"
