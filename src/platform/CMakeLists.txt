@@ -5,6 +5,8 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL 
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/cortex-m33/")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "cortex-m0")
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/cortex-m0/")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Generic" AND CMAKE_SYSTEM_PROCESSOR STREQUAL "cortex-m3")
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/cortex-m3/")
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
