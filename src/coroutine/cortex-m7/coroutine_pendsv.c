@@ -1,10 +1,10 @@
 /**
  * @file coroutine.c
- * @brief arm m4 架构协程相关代码,PSP模式下PendSV的协程切换代码
+ * @brief arm m7 架构协程相关代码,PSP模式下PendSV的协程切换代码
  *
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @version 1.0
- * @date 2024-08-14
+ * @date 2024-08-17
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
@@ -148,15 +148,15 @@ context_t co_context_make(
     __attribute__((unused)) void *stack_top, 
     __attribute__((unused)) int (*func)(void *arg)){
     uint32_t u32_stack_top = (uint32_t)(stack_top);
-    struct stack_init_context *context_m4;
+    struct stack_init_context *context_m7;
     u32_stack_top = u32_stack_top & (~7UL);               /* 向8对齐 */
-    context_m4 = (struct stack_init_context *)(u32_stack_top - sizeof(struct stack_init_context));
-    bzero(context_m4, sizeof(struct stack_init_context));
-    context_m4->auto_push_context.return_address = (uint32_t)(__start_task);
-    context_m4->auto_push_context.xpsr = 0x01000000;
-    context_m4->r7 = (uint32_t)func;
-    context_m4->exc_return_lr = 0xfffffffd;
-    return (context_t)context_m4;
+    context_m7 = (struct stack_init_context *)(u32_stack_top - sizeof(struct stack_init_context));
+    bzero(context_m7, sizeof(struct stack_init_context));
+    context_m7->auto_push_context.return_address = (uint32_t)(__start_task);
+    context_m7->auto_push_context.xpsr = 0x01000000;
+    context_m7->r7 = (uint32_t)func;
+    context_m7->exc_return_lr = 0xfffffffd;
+    return (context_t)context_m7;
 }
 
 extern void context_convert_to_psp(void);

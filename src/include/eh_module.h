@@ -36,8 +36,6 @@ struct module_group{
             (void *)__end_eh_init_fini_array;                       \
         })
 
-#define __eh_define_modeule_null(_section_id) static EH_USED  const  char used_section_call_##_section_id[0]   \
-    EH_SECTION( EH_STRINGIFY(.eh_init_fini_array.modeule_call_##_section_id) ) 
 #define __eh_define_modeule_export(_init__func_, _exit__func_,  _section)                                    \
     static EH_USED const  struct eh_module  EH_SECTION( _section ) _eh_module_  = {                          \
         .init = _init__func_,                                                                                \
