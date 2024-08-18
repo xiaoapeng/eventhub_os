@@ -16,14 +16,16 @@
 
 ## 平台支持
 
-目前(2024/07/21)所支持平台不多
+支持 linux x86_64 平台和 Cortex-M0/M3/M4/M33 架构
 
-| 芯片                       | 平台/架构          | 工具链                         | 备注                             |
+| 测试芯片                    | 平台/架构          | 工具链                         | 备注                             |
 |----------------------------|-------------------|--------------------------------|---------------------------------|
-| x86_64                     | linux             | gcc 11.4.0                     |                                 |
-| MCXN947                    | Cortex-M33        | arm-none-eabi-gcc  10.3.1      | 可支持所有的M33核                |
+| i7-10700                   | linux             | gcc 11.4.0                     |                                 |
+| stm32f030c8t6              | Cortex-M0        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M0核               |
+| stm32f103c6t6              | Cortex-M3        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M3核               |
+| stm32f401vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M4核              |
+| mcxn947                    | Cortex-M33        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M33核             |
 
-为何还不支持主流的M0核M3/M4呢？因为我手上暂时没有其他单片机，后续会支持其他单片机，包括RISC-V架构。
 
 ## 如何移植到项目中使用
 
@@ -60,7 +62,10 @@ add_executable(you_target)
 | 平台 | 定义方式 | 备注 |
 | --- | --- | --- |
 | linux x86_64 | `CMAKE_SYSTEM_NAME`=Linux<br>`CMAKE_SYSTEM_PROCESSOR`=x86_64  | 一般选择系统都会自动指定好 |
-| Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33<br>浮点: `__FPU_USED__`=0/1  | 一般要手动指定 |
+| Cortex-M0 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m0  | 一般要手动指定 |
+| Cortex-M3 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m3  | 一般要手动指定 |
+| Cortex-M4 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m4  | 一般要手动指定 |
+| Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33  | 一般要手动指定 |
 
 
 * *其他方式集成*
@@ -101,17 +106,20 @@ add_executable(you_target)
     ├── eh_timer.h
     └── eh_types.h
 ```
-#### 根据你选择的平台添加 src/coroutine/<XX平台>/ 的代码到你的项目中
+#### 根据你选择的平台添加 src/<span style="color: red;">coroutine</span>/<XX平台>/ 的代码到你的项目中
 
-假如选择m33平台，那么添加src/coroutine/cortex-m33/的代码到你的项目中，如果该目录下有多个文件，一般代表有多种任务切换实现,选择其中一种即可，若选择多种，会产生重定义
+假如选择m33平台，那么添加src/coroutine/cortex-m33/的代码到你的项目中，如果该目录下有多个文件，一般代表有多种任务切换实现,选择其中一种即可，若选择多种，会产生重定义,一般选择CMakeLists.txt文件中使用的默认实现即可
 
+```
+# 以cm33实现为例，CMakeLists.txt中 默认使用 coroutine_pendsv.c
+.
+├── CMakeLists.txt
+├── coroutine_msp.c
+└── coroutine_pendsv.c (default)
 
-| M33任务切换代码 | 解释 |
-| --- | --- |
-| cortex-m33/coroutine_pendsv.c | 推荐：系统悬挂中断方式任务切换 |
-| cortex-m33/coroutine_msp.c | MSP系统栈方式切换 |
+```
 
-#### 根据你选择的平台添加src/platform/<XX平台>/ 的代码到你的项目中
+#### 根据你选择的平台添加src/<span style="color: red;">platform</span>/<XX平台>/ 的代码到你的项目中
 
 假如选择m33平台，那么添加src/platform/cortex-m33/的代码到你的项目中
 ```
