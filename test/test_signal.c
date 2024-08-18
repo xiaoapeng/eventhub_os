@@ -37,13 +37,13 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
     printf("%.*s", (int)size, (const char*)buf);
 }
 
-EH_DEFINE_CUSTOM_SIGNAL(
+EH_DEFINE_STATIC_CUSTOM_SIGNAL(
     timer_1000ms_signal, 
     eh_timer_event_t, 
     EH_TIMER_INIT(timer_1000ms_signal.custom_event)
 );
 
-EH_DEFINE_SIGNAL(test_signal);
+EH_STATIC_SIGNAL(test_signal);
 
 static void slot_test_function(eh_event_t *e, void *slot_param);
 

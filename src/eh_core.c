@@ -44,7 +44,7 @@ static int _task_entry(void* arg){
     current_task->task_ret = current_task->task_function(current_task->task_arg);
     current_task->state = EH_TASK_STATE_FINISH;
     eh_event_notify(&current_task->event);
-    __await__ eh_task_next();
+    __await eh_task_next();
     return current_task->task_ret;
 }
 
@@ -135,7 +135,7 @@ eh_usec_t eh_clock_to_usec(eh_clock_t clock){
 }
 
 
-void __async__ eh_task_next(void){
+void __async eh_task_next(void){
     eh_t *eh = eh_get_global_handle();
     eh_save_state_t state;
     eh_task_t *current_task = eh_task_get_current();
@@ -231,7 +231,7 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, ui
 
 
 
-void __async__ eh_task_yield(void){
+void __async eh_task_yield(void){
     eh_task_next();
 }
 
@@ -249,11 +249,11 @@ eh_task_t* eh_task_create(const char *name, uint32_t flags,  unsigned long stack
     return task;
 }
 
-int __async__  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
+int __async  eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout){
     int wait_ret;
     eh_param_assert( task != NULL );
 
-    wait_ret = __await__ eh_event_wait_condition_timeout(&task->event, task, _task_is_finish, timeout);
+    wait_ret = __await eh_event_wait_condition_timeout(&task->event, task, _task_is_finish, timeout);
     if(wait_ret < 0)
         return wait_ret;
 
@@ -387,8 +387,7 @@ static void module_group_exit(void){
 
 int eh_global_init( void ){
     interior_init();
-    module_group_init();
-    return 0;
+    return module_group_init();
 }
 
 void eh_global_exit(void){

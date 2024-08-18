@@ -64,7 +64,7 @@ int task_app(void *arg){
     eh_epoll_add_event(epoll, eh_timer_to_event(&timer4), "timer4");
 
     for(int i=0;i<40;i++){
-        ret = __await__ eh_epoll_wait(epoll, epoll_slot, 3, (eh_sclock_t)eh_msec_to_clock(5000));
+        ret = __await eh_epoll_wait(epoll, epoll_slot, 3, (eh_sclock_t)eh_msec_to_clock(5000));
         eh_debugfl("ret=%d",ret);
         for(int i=0; i < ret; i++){
             if(epoll_slot[i].affair == EH_EPOLL_AFFAIR_EVENT_TRIGGER){

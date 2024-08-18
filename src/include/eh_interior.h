@@ -175,7 +175,7 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
 /**
  * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
  */
-extern void __async__ eh_task_next(void);
+extern void __async eh_task_next(void);
 
 /**
  * @brief                进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环

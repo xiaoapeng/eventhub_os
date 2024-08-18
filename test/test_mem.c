@@ -111,7 +111,7 @@ void test_rand_malloc_add_epoll(eh_epoll_t epoll){
             placeholder = NULL;
         }
         eh_timer_init(&test_data[i]->timer_event);
-        eh_timer_config_interval(&test_data[i]->timer_event, eh_msec_to_clock( (((rand() % TEST_MEM_HU_TIME)+1)) ) );
+        eh_timer_config_interval(&test_data[i]->timer_event, eh_msec_to_clock( (eh_msec_t)((rand() % TEST_MEM_HU_TIME)+1) ) );
         eh_epoll_add_event(epoll, eh_timer_to_event(&test_data[i]->timer_event), test_data[i]);
         eh_timer_start(&test_data[i]->timer_event);
     }

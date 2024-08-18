@@ -23,7 +23,7 @@ extern "C"{
  * @brief                   定时器事件的封装，在在指定协程上睡眠 usec 微秒
  * @param  usec             微秒
  */
-extern void __async__ eh_usleep(eh_usec_t usec);
+extern void __async eh_usleep(eh_usec_t usec);
 
 #ifdef __cplusplus
 #if __cplusplus

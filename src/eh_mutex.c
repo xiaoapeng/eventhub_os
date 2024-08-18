@@ -1,8 +1,8 @@
 /**
  * @file eh_mutex.c
  * @brief 任务互斥锁的实现，虽然协程大部分情况下是不需要锁的，
- *    但是，在宏观资源面前，还是存在加锁的，比如，
- *    在遍历链表时调用 __await类型函数，在其他任务上就
+ *    但是，在宏观资源面前，还是有加锁的场景的，比如
+ *    在遍历链表时调用__async类型函数，在其他任务上就
  *    可能操作到该链表导致链表指针无效出现段错误，所以
  *    在非必要情况，是用不到本模块的。
  *      使用限制: 此模块所有的函数都只能在协程上下文中使用，
@@ -57,10 +57,10 @@ void eh_mutex_destroy(eh_mutex_t _mutex){
     eh_event_clean(&mutex->wakeup_event);
     eh_free(mutex);
 }
-int __async__ eh_mutex_lock(eh_mutex_t _mutex, eh_sclock_t timeout){
+int __async eh_mutex_lock(eh_mutex_t _mutex, eh_sclock_t timeout){
     struct eh_mutex *mutex = (struct eh_mutex *)_mutex;
     int ret;
-    ret = __await__ eh_event_wait_condition_timeout(&mutex->wakeup_event, mutex, condition_mutex, timeout);
+    ret = __await eh_event_wait_condition_timeout(&mutex->wakeup_event, mutex, condition_mutex, timeout);
     if(ret < 0)
         return ret;
     if( mutex->lock_cnt == EH_MUTEX_LOCK_CNT_MAX )

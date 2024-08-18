@@ -31,7 +31,7 @@ int task_test_2(void *arg){
     (void) arg;
     for(int i=0; i < 20; i++){
         eh_debugfl("debug!! %llu", eh_clock_to_usec(eh_get_clock_monotonic_time()));
-        __await__ eh_usleep(1000*500);
+        __await eh_usleep(1000*500);
     }
     return 2;
 }
@@ -40,7 +40,7 @@ int task_test_1(void *arg){
     (void) arg;
     for(int i=0; i < 10; i++){
         eh_debugfl("debug!! %llu", eh_clock_to_usec(eh_get_clock_monotonic_time()));
-        __await__ eh_usleep(1000*1000);
+        __await eh_usleep(1000*1000);
     }
     return 1;
 }
@@ -53,9 +53,9 @@ int task_app(void *arg){
     eh_debugfl("%s", arg);
     test_1 = eh_task_create("test_1", 0, 12*1024, "1", task_test_1);
     test_2 = eh_task_create("test_2", 0, 12*1024, "2", task_test_2);
-    ret = __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
+    ret = __await eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
     eh_debugfl("test_1: ret=%d app_ret=%d", ret, app_ret);
-    ret = __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
+    ret = __await eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
     eh_debugfl("test_2: ret=%d app_ret=%d", ret, app_ret);
     return 0;
 }

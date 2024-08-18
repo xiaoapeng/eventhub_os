@@ -45,7 +45,7 @@ void  platform_idle_or_extern_event_handler(void){
 
     pthread_mutex_lock(&linux_platform.eh_use_mutex);
     linux_platform.is_idle_state = true;
-    usec_timeout = eh_clock_to_usec(eh_get_loop_idle_time());
+    usec_timeout = eh_clock_to_usec((eh_clock_t)eh_get_loop_idle_time());
     epoll_hub_clean_wait_break_event();
     pthread_mutex_unlock(&linux_platform.eh_use_mutex);
 

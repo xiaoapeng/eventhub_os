@@ -34,7 +34,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
 int task_test(void *arg){
     int ret;
     for(;;){
-        ret = __await__ eh_sem_wait(sem, EH_TIME_FOREVER);
+        ret = __await eh_sem_wait(sem, EH_TIME_FOREVER);
         eh_debugfl("ret=%d %s",ret, arg);
         if(ret < 0)
             return -1;
@@ -73,11 +73,11 @@ int task_app(void *arg){
     test_4 = eh_task_create("test_4", 0, 12*1024, "4", task_test);
     test_5 = eh_task_create("test_5", 0, 12*1024, "5", task_test);
 
-    __await__ eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
-    __await__ eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
-    __await__ eh_task_join(test_3, &app_ret, EH_TIME_FOREVER);
-    __await__ eh_task_join(test_4, &app_ret, EH_TIME_FOREVER);
-    __await__ eh_task_join(test_5, &app_ret, EH_TIME_FOREVER);
+    __await eh_task_join(test_1, &app_ret, EH_TIME_FOREVER);
+    __await eh_task_join(test_2, &app_ret, EH_TIME_FOREVER);
+    __await eh_task_join(test_3, &app_ret, EH_TIME_FOREVER);
+    __await eh_task_join(test_4, &app_ret, EH_TIME_FOREVER);
+    __await eh_task_join(test_5, &app_ret, EH_TIME_FOREVER);
 
 
     return 0;

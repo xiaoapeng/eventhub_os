@@ -96,7 +96,7 @@ int task_app(void *arg){
         return -1;
     }
     for(;;){
-        ret = __await__ eh_event_wait_timeout(eh_timer_to_event(&gpio_debounce_timer), EH_TIME_FOREVER);
+        ret = __await eh_event_wait_timeout(eh_timer_to_event(&gpio_debounce_timer), EH_TIME_FOREVER);
         if(ret != EH_RET_OK)
             break;
         eh_debugfl("gpio_status:%s %llu", gpio_status ? "H":"L", eh_clock_to_msec(eh_get_clock_monotonic_time()));

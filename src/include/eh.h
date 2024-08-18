@@ -97,10 +97,10 @@ extern eh_msec_t eh_clock_to_msec(eh_clock_t clock);
 extern eh_usec_t eh_clock_to_usec(eh_clock_t clock);
 
 /**
- * @brief 让出当前任务
+ * @brief 让出当前CPU
  * @return int 返回0
  */
-extern void __async__ eh_task_yield(void);
+extern void __async eh_task_yield(void);
 
 /**
  * @brief                   使用静态方式创建一个协程任务
@@ -151,10 +151,10 @@ extern void eh_task_sta(const eh_task_t *task, eh_task_sta_t *sta);
  * @param  ret              成功返回0，成功时任务将会被 eh_task_destroy 释放掉
  * @return int 
  */
-extern int __async__ eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
+extern int __async eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
 
 /**
- * @brief                   无条件回收任务，十分暴力，被回收的任务资源应该由回收者释放
+ * @brief                   无条件回收任务，回收前应确认任务相关资源已经全部销毁（不建议使用）
  */
 extern void eh_task_destroy(eh_task_t *task);
 
@@ -178,9 +178,6 @@ static inline void eh_loop_poll_task_del(eh_loop_poll_task_t *poll_task){
 
 /**
  * @brief  初始化event_hub
- *  1.考虑到配合系统多线程编程时在其他线程产生事件的操作，所以设计了互斥锁接口.
- *  2.给lock预留了state参数，考虑在裸机编程时，中断禁止时，需要记录获得锁前的中断状态，所以需要预留state参数。
- * @param  param                     初始化参数
  * @return int 
  */
 extern int eh_global_init(void);
@@ -189,18 +186,6 @@ extern int eh_global_init(void);
  * @brief 反初始化event_hub
  */
 extern void eh_global_exit(void);
-
-/**
- * @brief 世界循环，调用后将开始进行协程的调度
- */
-extern int eh_loop_run(void);
-
-/**
- * @brief                   退出任务
- * @param  exit_code        退出返回值
- */
-extern void eh_loop_exit(int exit_code);
-
 
 #ifdef __cplusplus
 #if __cplusplus

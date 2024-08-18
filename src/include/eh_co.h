@@ -20,8 +20,8 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define __async__
-#define __await__
+#define __async
+#define __await
 
 typedef void* context_t;
 

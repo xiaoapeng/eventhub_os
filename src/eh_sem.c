@@ -59,7 +59,7 @@ void eh_sem_destroy(eh_sem_t _sem){
 int eh_sem_wait(eh_sem_t _sem, eh_sclock_t timeout){
     struct eh_sem *sem = (struct eh_sem *)_sem;
     int ret;
-    ret = __await__ eh_event_wait_condition_timeout(&sem->wakeup_event, sem, condition_sem, timeout);
+    ret = __await eh_event_wait_condition_timeout(&sem->wakeup_event, sem, condition_sem, timeout);
     if(ret < 0)
         return ret;
     sem->sem_num_p++;

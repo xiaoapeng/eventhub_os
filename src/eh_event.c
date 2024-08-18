@@ -23,7 +23,7 @@
 #include "eh_types.h"
 
 
-static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(void* arg)){
+static int __async _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(void* arg)){
     eh_save_state_t state;
     int ret;
     struct eh_event_receptor receptor;
@@ -55,7 +55,7 @@ static int __async__ _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         eh_exit_critical(state);
 
-        __await__ eh_task_next();
+        __await eh_task_next();
     }
 
 unlock_out:
@@ -64,7 +64,7 @@ unlock_out:
     return ret;
 }
 
-static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
+static int __async _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
     eh_save_state_t state;
     int ret;
     eh_timer_event_t timeout_timer;
@@ -111,7 +111,7 @@ static int __async__ _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*con
         eh_task_set_current_state(EH_TASK_STATE_WAIT);
         eh_exit_critical(state);
 
-        __await__ eh_task_next();
+        __await eh_task_next();
     }
 
 unlock_out:
@@ -205,16 +205,16 @@ int eh_event_notify_and_reorder(eh_event_t *e, int num){
 
 
 
-int __async__ eh_event_wait_condition_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
+int __async eh_event_wait_condition_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
     if(eh_time_is_forever(timeout)){
-        return __await__ _eh_event_wait(e, arg, condition);
+        return __await _eh_event_wait(e, arg, condition);
     }
     if(timeout == 0){
         if(condition && condition(arg))
             return EH_RET_OK;
         return EH_RET_TIMEOUT;
     }
-    return __await__ _eh_event_wait_timeout(e, arg, condition, timeout);
+    return __await _eh_event_wait_timeout(e, arg, condition, timeout);
 }
 
 static int __epoll_rbtree_cmp(struct eh_rbtree_node *a, struct eh_rbtree_node *b){
@@ -328,7 +328,7 @@ static int _eh_epoll_pending_read_on_lock(struct eh_epoll *epoll, eh_epoll_slot_
     return slot_i;
 }
 
-static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size){
+static int __async _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size){
     eh_save_state_t state;
     int ret;
     for(;;){
@@ -340,7 +340,7 @@ static int __async__ _eh_epoll_wait(struct eh_epoll *epoll, eh_epoll_slot_t *epo
         epoll->wakeup_task = eh_task_get_current();
         eh_exit_critical(state);
 
-        __await__ eh_task_next();
+        __await eh_task_next();
     }
 
 unlock_exit:
@@ -348,7 +348,7 @@ unlock_exit:
     return ret;
 }
 
-static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
+static int __async _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
     eh_save_state_t state;
     eh_timer_event_t timeout_timer;
     struct eh_event_receptor receptor_timer;
@@ -376,7 +376,7 @@ static int __async__ _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slo
         epoll->wakeup_task = eh_task_get_current();
         eh_exit_critical(state);
 
-        __await__ eh_task_next();
+        __await eh_task_next();
     }
 
 unlock_out:
@@ -385,14 +385,14 @@ unlock_out:
     eh_event_remove_receptor_no_lock(&receptor_timer);
     return ret;
 }
-int __async__ eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
+int __async eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
     eh_save_state_t state;
     int ret;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     if(eh_time_is_forever(timeout))
-        return __await__ _eh_epoll_wait(epoll, epool_slot, slot_size);
+        return __await _eh_epoll_wait(epoll, epool_slot, slot_size);
     if(timeout > 0)
-        return __await__  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
+        return __await  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
     /* timeout == 0 || timeout != EH_TIME_FOREVER 时，不进行任何等待 */
     state = eh_enter_critical();;
     ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);

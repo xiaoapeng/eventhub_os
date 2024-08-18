@@ -107,7 +107,7 @@ extern __safety int eh_event_notify_and_reorder(eh_event_t *e, int num);
  *                              当condition为NULL时，超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
  * @return int 
  */
-extern int __async__ eh_event_wait_condition_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout);
+extern int __async eh_event_wait_condition_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout);
 
 /**
  * @brief                           事件等待,若事件e在此函数调用前发生，将无法捕获到事件(事件无队列)
@@ -116,8 +116,8 @@ extern int __async__ eh_event_wait_condition_timeout(eh_event_t *e, void* arg, b
                                 所以超时时间为0将毫无意义，若想使用0，请使用epoll监听事件
  * @return int 
  */
-static inline int __async__ eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout){
-    return __await__ eh_event_wait_condition_timeout(e, NULL, NULL, timeout);
+static inline int __async eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout){
+    return __await eh_event_wait_condition_timeout(e, NULL, NULL, timeout);
 }
 
 /**
@@ -158,7 +158,7 @@ extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
  * @param  timeout          超时时间，当0则立即返回,当EH_TIME_FOREVER永久等待，其他大于0的值则进行相应时间的等待
  * @return int              成功返回拿到event事件的个数，失败返回负数错误码
  */
-extern int __async__ eh_epoll_wait(eh_epoll_t epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout);
+extern int __async eh_epoll_wait(eh_epoll_t epoll,eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout);
 
 
 

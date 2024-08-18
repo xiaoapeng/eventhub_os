@@ -52,7 +52,7 @@ extern "C"{
 #define eh_diff_time(time_a, time_b)    (eh_sclock_t)(((time_a) - (time_b)))
 
 /**
- * @brief   计算定时器剩余时间
+ * @brief   计算定时器剩余时钟数
  * @param  now_time         当前时间
  * @param  timer            定时器句柄指针
  * return                  剩余时间,为正数时表示还有时间，为负数时表示已经到期
@@ -98,6 +98,12 @@ static __safety inline int eh_timer_init(eh_timer_event_t *timer){
     return eh_timer_advanced_init(timer, 0, 0);
 }
 
+/**
+ * @brief                   判断定时器是否在运行
+ * @param  timer            实例指针
+ * @return 
+ */
+extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
 
 /**
  * @brief                   清除占用资源

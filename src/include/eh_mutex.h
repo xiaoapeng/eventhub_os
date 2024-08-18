@@ -37,7 +37,7 @@ enum eh_mutex_type {
 
 extern eh_mutex_t eh_mutex_create(enum eh_mutex_type type);
 extern void eh_mutex_destroy(eh_mutex_t mutex);
-extern int __async__ eh_mutex_lock(eh_mutex_t mutex, eh_sclock_t timeout);
+extern int __async eh_mutex_lock(eh_mutex_t mutex, eh_sclock_t timeout);
 extern int eh_mutex_unlock(eh_mutex_t mutex);
 
 

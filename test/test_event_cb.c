@@ -53,7 +53,7 @@ int task_app(void *arg){
     
     eh_timer_start(&timer1);
 
-    __await__ eh_usleep(1000*1000*10);
+    __await eh_usleep(1000*1000*10);
 
     eh_timer_stop(&timer1);
 

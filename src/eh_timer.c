@@ -133,7 +133,7 @@ int eh_timer_restart(eh_timer_event_t *timer){
     eh_param_assert(timer);
     eh_param_assert(timer->interval > 0);
 
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     timer_now = eh_get_clock_monotonic_time();
 
     /* 如果节点为空，说明不在工作，直接start */
@@ -164,6 +164,15 @@ int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, 
     timer->interval = clock_interval;
     timer->attrribute = attr;
     return 0;
+}
+
+extern bool eh_timer_is_running(eh_timer_event_t *timer){
+    eh_save_state_t state;
+    bool is_running;
+    state = eh_enter_critical();
+    is_running = !eh_rb_node_is_empty(&timer->rb_node);
+    eh_exit_critical(state);
+    return is_running;
 }
 
 void eh_timer_clean(eh_timer_event_t *timer){
