@@ -212,16 +212,323 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 | `EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL` | 配置任务调度多少次后进行一次轮询 |
 
 ## API文档
+
+### 全局初始化和销毁
+#### 1.全局初始化
+调用此函数后内部自动初始化eh module,调用该函数后才可使用协程相关API,调用成功返回0，调用失败返回负数, 返回值来自模块返回的错误值，应该要遵守eh_error.h中定义的错误值。
+```
+extern int eh_global_init(void);
+```
+
+#### 2.全局销毁
+调用此函数后内部自动销毁eh module,调用该函数后才不能使用协程相关API
+```
+extern void eh_global_exit(void)
+```
+
+
+### 协程任务相关API
+#### 1.创建任务
+创建一个协程任务，返回一个任务句柄，可用于回收任务，获取任务状态。
+```
+extern eh_task_t* eh_task_create(
+    const char *name, 
+    uint32_t flags,  
+    unsigned long stack_size, 
+    void *task_arg, 
+    int (*task_function)(void*) );
+```
+| 参数 | 解释 |
+| --- | --- |
+| name | 任务名称，用于打印 |
+| flags | 任务属性，目前支持`EH_TASK_FLAGS_DETACH`，若设置此属性，则任务会自动销毁，不设置任何属性时填0 |
+| stack_size | 任务堆栈大小 |
+| task_arg | 任务参数 |
+| task_function | 任务函数 |
+
+#### 2.使用用户提供静态栈创建任务
+使用用户提供的静态堆栈创建一个任务
+```
+extern eh_task_t* eh_task_static_stack_create(
+    const char *name, uint32_t flags, 
+    void *stack, 
+    unsigned long stack_size, 
+    void *task_arg, 
+    int (*task_function)(void*) );
+```
+| 参数 | 解释 |
+| --- | --- |
+| name | 任务名称，用于打印 |
+| flags | 任务属性，目前支持`EH_TASK_FLAGS_DETACH`，若设置此属性，则任务会自动销毁，不设置任何属性时填0 |
+| stack | 任务静态堆栈 |
+| stack_size | 任务静态堆栈大小 |
+| task_arg | 任务参数 |
+| task_function | 任务函数 |
+
+#### 3.退出任务
+退出任务，在任务上下文中调用，退出任务后，若设置了`EH_TASK_FLAGS_DETACH`，将会自动销毁，若没有设置，则需要手动销毁，在其他任务中调用eh_task_join。
+```
+extern void  eh_task_exit(int ret);
+```
+
+#### 4.任务合并/任务回收
+进行任务合并（等待任务退出并销毁），该调用为一个阻塞调用，会触发异步等待机制。成功返回0，失败返回负数。
+```
+extern int __async eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
+```
+| 参数 | 解释 |
+| --- | --- |
+| task | 任务句柄，创建任务时获得|
+| ret | 接收任务退出返回值的实例化指针，可填NULL |
+| timeout | 超时时间，若为0则不超时，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
+#### 5.强制任务回收
+强制回收任务，不建议直接使用,唯一应用场景只有在模块销毁时使用，非该场景时视为未定义行为。
+```
+extern void eh_task_destroy(eh_task_t *task);
+```
+
+#### 6.获取任务状态
+获取任务状态，成功返回0，失败返回负数。
+```
+extern int eh_task_get_state(eh_task_t *task, eh_task_state_t *state);
+```
+| 参数 | 解释 |
+| --- | --- |
+| task | 任务句柄，创建任务时获得|
+| state | 接收任务状态的实例化指针 |
+```
+    struct eh_task_sta{
+        enum EH_TASK_STATE           state;
+        void*                        stack;
+        unsigned long                stack_size;
+        unsigned long                stack_min_ever_free_size_level;
+        const char*                  task_name;
+    };
+```
+| 状态成员 | 解释 |
+| --- | --- |
+| state | 任务状态:<br> `EH_TASK_STATE_READY`:就绪<br>`EH_TASK_STATE_RUNNING`:运行<br>`EH_TASK_STATE_WAIT`:等待<br>`EH_TASK_STATE_FINISH`:结束<br>|
+| stack | 任务栈起始地址 |
+| stack_size | 任务栈大小 |
+| stack_min_ever_free_size_level | 任务栈最小空闲大小 |
+| task_name | 任务名称 |
+
+#### 7.获取当前任务句柄
+获取当前任务句柄，成功返回任务句柄
+```
+extern eh_task_t* eh_task_self(void);
+```
+#### 8.让出当前CPU时间片
+让出当前CPU时间片,在CPU密集型任务处调用，提高系统实时性
+```
+extern void __async eh_task_yield(void);
+```
+
+### 事件相关API
+#### 1.创建初始化函数
+初始事件，填充结构体各成员，成功返回0，若e为NULL则返回断言结果EH_RET_INVALID_PARAM。<br>安全函数，可在其他并行或并发任务中安全调用
+```
+extern __safety int eh_event_init(eh_event_t *e);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 2.事件清理
+清理事件内的等待队列，等待该事件的任务将收到 EH_RET_EVENT_ERROR
+```
+extern void eh_event_clean(eh_event_t *e);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 3.事件通知
+通知事件，成功返回0，若e为NULL则返回断言结果EH_RET_INVALID_PARAM。<br>安全函数，可在其他并行或并发任务中安全调用
+```
+extern __safety int eh_event_notify(eh_event_t *e);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 4.事件通知，唤醒指定个数的任务
+事件通知,唤醒指定个数监听事件的任务,并重新排序，此函数作为信号量的优化，唤醒指定数量的任务，并重新排序，可优化任务唤醒的效率，避免无效唤醒，更加公平。<br>安全函数，可在其他并行或并发任务中安全调用
+```
+extern __safety int eh_event_notify_and_reorder(eh_event_t *e, int num);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 5.事件等待,且同时满足某条件
+事件等待，当被唤醒时，会判断条件是否满足，若满足则返回，若不满足则重新等待。成功返回0，失败返回eh_error.h中定义的错误码。<br>
+在调用此函数之前发生的事件，无法被本函数捕获到，但可以通过条件函数查询用户定义变量。<br>
+本函数为异步等待函数。
+```
+extern int __async eh_event_wait_condition_timeout(
+    eh_event_t *e, 
+    void* arg, 
+    bool (*condition)(void* arg), 
+    eh_sclock_t timeout );
+```
+| 参数 | 解释 |
+| --- | --- |
+| e | 事件句柄 |
+| arg | 用户自定义参数 |
+| condition | 条件函数，返回true则表示条件满足，返回false则表示条件不满足 |
+| timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 6.事件等待
+事件等待，成功返回0，失败返回eh_error.h中定义的错误码。<br>
+在调用此函数之前发生的事件，无法被本函数捕获到，但可以通过条件函数查询用户定义变量。<br>
+本函数为异步等待函数。
+```
+static inline int __async eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout)
+```
+| 参数 | 解释 |
+| --- | --- |
+| e | 事件句柄 |
+| timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 7.创建一个epoll句柄
+创建一个epoll句柄，返回值需要使用eh_ptr_to_error转换为错误码，若错误码为0则成功，为负数则失败。<br>安全函数，可在其他并行或并发任务中安全调用
+```
+extern __safety eh_epoll_t eh_epoll_new(void);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 8.销毁一个epoll句柄
+关闭一个epoll句柄。<br>安全函数，可在其他并行或并发任务中安全调用
+```
+extern __safety void eh_epoll_del(eh_epoll_t epoll);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+#### 9.添加一个事件到epoll中
+添加一个事件到epoll中，成功返回0，失败返回eh_error.h中定义的错误码。
+```
+extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
+```
+| 参数 | 解释 |
+| --- | --- |
+| epoll | epoll句柄 |
+| e | 事件句柄 |
+| userdata | 用户自定义参数 |
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 10.从epoll中删除一个事件
+从epoll中删除一个事件，成功返回0，失败返回eh_error.h中定义的错误码。
+```
+extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
+```
+| 参数 | 解释 |
+| --- | --- |
+| epoll | epoll句柄 |
+| e | 事件句柄 |
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 11.epoll等待事件
+epoll等待事件，成功返回等待到事件的数量,失败返回eh_error.h中定义的错误码。
+```
+extern int __async eh_epoll_wait(
+    eh_epoll_t epoll,
+    eh_epoll_slot_t *epool_slot, 
+    int slot_size, 
+    eh_sclock_t timeout );
+```
+| 参数 | 解释 |
+| --- | --- |
+| epoll | epoll句柄 |
+| epool_slot | epoll槽，用于存放epoll等待到的事件 |
+| slot_size | epoll槽大小 |
+| timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+### 系统事件，定时器事件相关API
+#### 1.定时器初始化（全参数版）
+填充结构体内容
+```
+extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr);
+```
+| 参数 | 解释 |
+| --- | --- |
+| timer | 定时器句柄 |
+| clock_interval | 定时器间隔，单位为时钟数 |
+| attr | 定时器属性，默认为0，属性之间使用'\|'组合<br>`EH_TIMER_ATTR_AUTO_CIRCULATION`: 表示定时器为重复定时器<br>`EH_TIMER_ATTR_NOW_TIME_BASE`: 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 |
+
+#### 2.定时器初始化（简化版）
+填充结构体内容
+```
+static __safety inline int eh_timer_init(eh_timer_event_t *timer);
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+#### 3.定时器清理
+清理定时器，把本定时器从系统定时器树中移除，内部调用eh_event_clean函数
+```
+extern __safety void eh_timer_clean(eh_timer_event_t *timer);
+```
+
+#### 4.启动定时器
+将定时器加入系统定时器树中，成功返回0，失败返回eh_error.h中定义的错误码。
+```
+extern int eh_timer_start(eh_timer_event_t *timer);
+```
+
+#### 5.停止定时器
+将定时器从系统定时器树中移除，成功返回0，失败返回eh_error.h中定义的错误码。
+```
+extern int eh_timer_stop(eh_timer_event_t *timer);
+```
+
+#### 6.定时器重新启动
+将定时器重新加入系统定时器树中，若已经start则重新设置到期时间，成功返回0，失败返回eh_error.h中定义的错误码。
+```
+extern int eh_timer_restart(eh_timer_event_t *timer);
+```
+
+#### 7.设置定时器超时时间
+设置定时器超时时间
+```
+#define  eh_timer_config_interval(timer, clock_interval)
+```
+| 参数 | 解释 |
+| --- | --- |
+| timer | 定时器句柄 |
+| clock_interval | 定时器间隔，单位为时钟数,若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
+
+#### 8.设置定时器属性
+设置定时器属性
+```
+#define eh_timer_set_attr(timer, attr)
+```
+| 参数 | 解释 |
+| --- | --- |
+| timer | 定时器句柄 |
+| attr | 定时器属性，默认为0，属性之间使用'\|'组合<br>`EH_TIMER_ATTR_AUTO_CIRCULATION`: 表示定时器为重复定时器<br>`EH_TIMER_ATTR_NOW_TIME_BASE`: 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 |
+
+#### 9.计算定时器剩余时间
+计算定时器剩余时钟数,为正数时表示还有时间，为负数时表示已经到期
+```
+#define eh_remaining_time(now_time, timer_ptr)
+```
+| 参数 | 解释 |
+| --- | --- |
+| now_time | 当前时间,典型值:eh_get_clock_monotonic_time() |
+| timer_ptr | 定时器句柄 |
+
+#### 10.获取定时器运行状态
+获取定时器运行状态，运行返回true,否则返回false
+```
+extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
+```
+### 互斥锁相关API
+虽然协程大部分情况下是不需要锁的
+但是，在宏观资源面前，还是存在加锁的，比如,
+在遍历链表时调用__async类型函数，在其他任务上就
+可能操作到该链表,导致链表指针无效出现段错误，所以
+在非必要情况，是用不到本模块的。
+此模块所有的函数都只能在协程上下文中使用，
+也就是说，不要在中断上下文，或者其他线程（posix线程，系统线程）上下文中调用本函数
+
 TODO
-
-
-
-
-
-
-
-
-
 
 
 
