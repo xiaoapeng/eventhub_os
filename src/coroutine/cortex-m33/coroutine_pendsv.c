@@ -24,11 +24,14 @@
 #include "eh.h"
 #include "eh_co.h"
 #include "eh_config.h"
-#include "core_cm33.h"
 
 
 #define ICSR_REGISTER_ADDRESS (0xE000ED04UL)
+#define SHPR2_REGISTER_ADDRESS (0xE000ED1CUL)
+#define SHPR3_REGISTER_ADDRESS (0xE000ED20UL)
+
 #define ICSR_PENDSVSET_BIT    ( 1UL << 28UL)
+
 
 #ifndef __FPU_USED__
 #if defined (__VFP_FP__)
@@ -168,8 +171,10 @@ extern void context_convert_to_msp(void);
 
 static int  __init coroutine_init(void){
     /* 设置SVC PendCV优先级  Cotex-M3权威指南 8.4.1 */
-    SCB->SHPR[7] = 0x00; /* SVC 优先级最高 */
-    SCB->SHPR[10] = 0xFF; /* PendSV 优先级最低 */
+    /* SVC 优先级设置为0 */
+    *((volatile uint32_t*)SHPR2_REGISTER_ADDRESS) =  ((*((volatile uint32_t*)SHPR2_REGISTER_ADDRESS)) & (~0xFF000000U)) | ((0x00U) << 24);
+    /* PendSV 优先级设置为0xFF */
+    *((volatile uint32_t*)SHPR3_REGISTER_ADDRESS) =  ((*((volatile uint32_t*)SHPR3_REGISTER_ADDRESS)) & (~0x00FF0000U)) | ((0xFFU) << 16);
 
     /* 触发svc中断，将当前的上下文任务化，MSP -> PSP，然后使用新MSP准备栈空间 */
     context_convert_to_psp();

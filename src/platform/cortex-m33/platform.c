@@ -6,7 +6,6 @@
 #include "eh_event.h"
 #include "eh_timer.h"
 #include "eh_platform.h"
-#include "core_cm33.h"
 
 
 
@@ -235,8 +234,6 @@ void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long cont
     /* LR寄存器意义 DDI0553B_o_armv8m_arm.pdf 章节：D1.2.95*/
     eh_errln("LR:0x%08lx", lr);
     eh_errln("hardfault_handler  CONTROL:0x%08lx", control);
-    eh_errln("FPU->FPCCR:%p", FPU->FPCCR);
-
 
     /* 关于发生异常时，上下文堆栈情况  DDI0553B_o_armv8m_arm.pdf 章节：  */
     eh_errln("dump sp:");
