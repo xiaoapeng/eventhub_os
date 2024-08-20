@@ -83,9 +83,10 @@ int task_app(void *arg){
     
     eh_epoll_del(epoll);
 
-    eh_timer_stop(&timer3);
-    eh_timer_stop(&timer2);
-    eh_timer_stop(&timer1);
+    eh_timer_clean(&timer3);
+    eh_timer_clean(&timer2);
+    eh_timer_clean(&timer1);
+
     eh_event_clean(&test_event);
 
     return 0;
