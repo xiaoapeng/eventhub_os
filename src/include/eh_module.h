@@ -49,7 +49,18 @@ struct module_group{
 
 #define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.0")
 #define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, "1.1.0")
-#define eh_module_export(_init__func_, _exit__func_)            _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.0")
+
+#define eh_module_level0_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.0")
+#define eh_module_level1_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.1")
+#define eh_module_level2_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.2")
+#define eh_module_level3_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.3")
+#define eh_module_level4_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.4")
+#define eh_module_level5_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.5")
+#define eh_module_level6_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.6")
+#define eh_module_level7_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.7")
+#define eh_module_level8_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.8")
+#define eh_module_level9_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.9")
+
 #define EH_MODEULE_GROUP_MAX_CNT    8
 
 #define __init EH_SECTION(".eh_init")

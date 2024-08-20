@@ -27,6 +27,7 @@
 
 #define EH_MUTEX_LOCK_CNT_MAX   0xFFFFFFFF
 struct eh_mutex {
+    /* 必须在第一位 */
     eh_event_t                  wakeup_event;
     uint32_t                    lock_cnt;
     enum eh_mutex_type          type;

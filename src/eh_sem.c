@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 struct eh_sem {
+    /* 必须在第一位 */
     eh_event_t                  wakeup_event;
     /**
      * @brief 从线程上考虑，读者（P操作）永远只有一个，就是协程上下文，
