@@ -74,7 +74,7 @@ extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t l
 #define eh_sysraw(fmt, ...)                 eh_dbg_printraw(EH_DBG_SYS, fmt, ##__VA_ARGS__)
 #define eh_warnraw(fmt, ...)                eh_dbg_printraw(EH_DBG_WARNING, fmt, ##__VA_ARGS__)
 #define eh_errraw(fmt, ...)                 eh_dbg_printraw(EH_DBG_ERR, fmt, ##__VA_ARGS__)
-/* 二进制buf打印 */
+/* 16进制数组打印 */
 #define eh_debughex(buf,len)                eh_dbg_hex(EH_DBG_DEBUG, EH_DBG_FLAGS, len, buf)
 #define eh_infohex(buf,len)                 eh_dbg_hex(EH_DBG_INFO, EH_DBG_FLAGS, len, buf)
 #define eh_syshex(buf,len)                  eh_dbg_hex(EH_DBG_SYS, EH_DBG_FLAGS, len, buf)
