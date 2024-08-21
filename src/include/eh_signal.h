@@ -41,7 +41,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 
 /**
  * @brief 定义并初步初始化一个局部（静态）自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册
- *         .c中使用
+ *         .c中使用，此方式定义的信号无需init
  */
 #define EH_DEFINE_STATIC_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)        \
         static EH_STRUCT_CUSTOM_SIGNAL(event_type)  signal_name = {                     \
@@ -51,7 +51,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 
 /**
  * @brief 定义并初步初始化一个全局自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册
- *         .c中使用
+ *         .c中使用，此方式定义的信号无需init
  */
 #define EH_DEFINE_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)               \
         signal_name##_##event_type##_signal_type_t signal_name = {                      \
@@ -74,14 +74,14 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 #define EH_STRUCT_SIGNAL    EH_STRUCT_CUSTOM_SIGNAL(eh_event_t)
 
 /**
- * @brief 声明一个私有的通用信号，在.c文件中定义后需注册使用
+ * @brief 声明一个私有的通用信号，在.c文件中定义后需注册使用，此方式定义的信号无需init
  *         .c中使用
  */
 #define EH_STATIC_SIGNAL(signal_name)                                                   \
     EH_DEFINE_STATIC_CUSTOM_SIGNAL(signal_name, eh_event_t, EH_EVENT_INIT(signal_name.event))
 
 /**
- * @brief 定义并初始化一个通用信号，在.c文件中定义后需注册使用
+ * @brief 定义并初始化一个通用信号，在.c文件中定义后需注册使用，此方式定义的信号无需init
  *         .c中使用
  */
 #define EH_DEFINE_SIGNAL(signal_name)                                                   \
@@ -94,7 +94,8 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
     EH_EXTERN_CUSTOM_SIGNAL(signal_name, eh_event_t)
 
 /**
- * @brief 信号初始化，若为自定义信号，调用该函数后需要再调用自定义的初始化
+ * @brief 信号初始化，使用EH_DEFINE_SIGNAL/EH_STATIC_SIGNAL定义的信号无需调用本函数，
+ *          若为自定义信号，调用该函数后需要再调用自定义的初始化
  */
 #define eh_signal_init(signal)   do{                                                    \
         eh_event_cb_trigger_init(&(signal)->trigger);                                   \
