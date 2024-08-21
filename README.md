@@ -165,7 +165,18 @@ static __init int systick_init(void)
 eh_core_module_export(systick_init, NULL);
 ```
 
-### 3. 修改链接脚本(linux平台忽略)
+### 3. 实现标准输出接口
+列如在linux平台下
+```
+void stdout_write(void *stream, const uint8_t *buf, size_t size){
+    (void)stream;
+    printf("%.*s", (int)size, (const char*)buf);
+}
+```
+例子: [test/test_epoll.c](test/test_epoll.c)
+
+
+### 4. 修改链接脚本(linux平台忽略)
 在链接脚本.rodata附近添加以下内容
 ```
 . = ALIGN(8);
@@ -195,7 +206,7 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
     } > m_text
 ```
 
-### 4. 配置eh_user_config.h
+### 5. 配置eh_user_config.h
 
 | 配置项 | 解释 |
 | --- | --- |
@@ -213,6 +224,19 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 
 ## API文档
 
+API需要包含如下头文件引入，可以按需引入，需要注意include顺序
+```
+#include "eh.h"                 /* 任务和全局函数 */
+#include "eh_event.h"           /* 事件相关API */
+#include "eh_timer.h"           /* 定时器相关API */
+#include "eh_sleep.h"           /* 阻塞睡眠相关API */
+#include "eh_mem.h"             /* 动态内存分配相关API */
+#include "eh_sem.h"             /* 信号量相关API */
+#include "eh_mutex.h"           /* 互斥锁相关API */
+#include "eh_signal.h"          /* 信号相关API */
+#include "eh_formatio.h"        /* 格式化输出相关API */
+#include "eh_debug.h"           /* debug输出相关API */
+```
 ### 全局初始化和销毁
 #### 1.全局初始化
 调用此函数后内部自动初始化eh module,调用该函数后才可使用协程相关API,调用成功返回0，调用失败返回负数, 返回值来自模块返回的错误值，应该要遵守eh_error.h中定义的错误值。
@@ -392,6 +416,7 @@ extern int __async eh_event_wait_condition_timeout(
 | arg | 用户自定义参数 |
 | condition | 条件函数，返回true则表示条件满足，返回false则表示条件不满足 |
 | timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 6.事件等待
@@ -405,6 +430,7 @@ static inline int __async eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeo
 | --- | --- |
 | e | 事件句柄 |
 | timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 7.创建一个epoll句柄
@@ -430,6 +456,7 @@ extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
 | epoll | epoll句柄 |
 | e | 事件句柄 |
 | userdata | 用户自定义参数 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 10.从epoll中删除一个事件
@@ -441,6 +468,7 @@ extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
 | --- | --- |
 | epoll | epoll句柄 |
 | e | 事件句柄 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 11.epoll等待事件
@@ -516,6 +544,7 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 | --- | --- |
 | timer | 定时器句柄 |
 | clock_interval | 定时器间隔，单位为时钟数,若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 
@@ -528,6 +557,7 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 | --- | --- |
 | timer | 定时器句柄 |
 | attr | 定时器属性，默认为0，属性之间使用'\|'组合<br>`EH_TIMER_ATTR_AUTO_CIRCULATION`: 表示定时器为重复定时器<br>`EH_TIMER_ATTR_NOW_TIME_BASE`: 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 |
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 9.计算定时器剩余时间
@@ -540,11 +570,22 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 | now_time | 当前时间,典型值:eh_get_clock_monotonic_time() |
 | timer_ptr | 定时器句柄 |
 
+#### 10.衍生睡眠函数
+来源: #include <eh_sleep.h>
+睡眠函数
+```
+extern void __async eh_usleep(eh_usec_t usec);
+```
+| 参数 | 解释 |
+| --- | --- |
+| usec | 睡眠时间，单位为微秒 |
+
 #### 10.获取定时器运行状态
 获取定时器运行状态，运行返回true,否则返回false<br>安全函数，可在其他并行或并发任务中安全调用
 ```
 extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
 ```
+
 ### 互斥锁相关API
 虽然协程大部分情况下是不需要锁的
 但是，在宏观资源面前，还是存在加锁的，比如,
@@ -624,15 +665,82 @@ extern int __async eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
 | timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
 
 #### 5.获取信号量的事件句柄
-获取信号量的事件句柄，获取event句柄后，可以使用event相关API进行操作，比如epoll进行事件监听
+获取信号量的事件句柄，获取event句柄后，可以使用event相关API进行操作，比如通过epoll进行事件监听
 ```
 #define eh_sem_get_event(sem)   ((eh_event_t*)sem)
 ```
 
+### 格式化输出API
+支持浮点、字符串、十六进制、二进制、八进制、字符、指针输出
+支持+-符号输出、宽度输出、精度输出、左对齐输出、右对齐输出、填充输出
+```
+extern int eh_vprintf(const char *fmt, va_list args);
+extern int eh_printf(const char *fmt, ...);
+extern int eh_snprintf(char *buf, size_t size, const char *fmt, ...);
+extern int eh_sprintf(char *buf, const char *fmt, ...);
+```
 
+### DEBUG输出API
+```
+/* 带自动回车的版本 */
+eh_debugln(fmt, ...) 
+eh_infoln(fmt, ...)  
+eh_sysln(fmt, ...)   
+eh_warnln(fmt, ...)  
+eh_errln(fmt, ...)   
 
+/* 带自动回车，带函数定位 */
+eh_debugfl(fmt, ...) 
+eh_infofl(fmt, ...)  
+eh_sysfl(fmt, ...)   
+eh_warnfl(fmt, ...)  
+eh_errfl(fmt, ...)
 
+/* 原始数据版本 */
+eh_debugraw(fmt, ...)
+eh_inforaw(fmt, ...) 
+eh_sysraw(fmt, ...)  
+eh_warnraw(fmt, ...) 
+eh_errraw(fmt, ...)
 
+/* 16进制数组打印 */
+eh_debughex(buf,len) 
+eh_infohex(buf,len)  
+eh_syshex(buf,len)   
+eh_warnhex(buf,len)  
+eh_errhex(buf,len)   
 
+```
+#### 内存管理API
+#### 1.堆空间注册
+将某一段内存注册为堆空间,同一段堆空间全局只需注册一次，在eh_global_init之前调用
+```
+extern int eh_mem_heap_register(const struct eh_mem_heap *heap);
+```
+例子:[src/eh_mem.c](src/eh_mem.c)
 
+#### 2.堆空间申请
+```
+void* eh_malloc(size_t _size)
+```
 
+#### 3.堆空间释放
+```
+void eh_free(void *ptr)
+```
+
+#### 4.获取堆空间信息
+```
+extern void eh_mem_get_heap_info(struct eh_mem_heap_info *heap_info);
+```
+| 参数 | 解释 |
+| --- | --- |
+| heap_info | 堆空间信息结构体 |
+
+```
+struct eh_mem_heap_info{
+    size_t total_size;                          /* 总大小 */
+    size_t free_size;                           /* 空闲大小 */
+    size_t min_ever_free_size_level;            /* 曾经最小空闲大小 */
+};
+```
