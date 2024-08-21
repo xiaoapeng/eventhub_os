@@ -571,7 +571,6 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 | timer_ptr | 定时器句柄 |
 
 #### 10.衍生睡眠函数
-来源: #include <eh_sleep.h>
 睡眠函数
 ```
 extern void __async eh_usleep(eh_usec_t usec);
@@ -584,6 +583,298 @@ extern void __async eh_usleep(eh_usec_t usec);
 获取定时器运行状态，运行返回true,否则返回false<br>安全函数，可在其他并行或并发任务中安全调用
 ```
 extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
+```
+
+### 信号和槽相关API
+此部分api必须举例说明，请查看以下例子
+#### 1.通用信号使用例子（私有信号）
+```
+/* test_signal_private.c */
+...  
+/*  包含相关头文件  */
+
+/* 定义测试的信号 */
+EH_STATIC_SIGNAL(test_signal);
+
+/* 定义槽函数 */
+static void slot_test_function(eh_event_t *e, void *slot_param){
+    eh_infoln("slot_test_function %s\n", (char *)slot_param);
+}
+
+/* 定义第一个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot1, 
+    slot_test_function,
+    "test1" /* 用户参数 */
+);
+
+
+/* 定义第二个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot2, 
+    slot_test_function,
+    "test2"
+);
+
+void run(void){
+    /* 注册信号 */
+    eh_signal_register(&test_signal);
+
+    /* 连接信号和槽 */
+    eh_signal_slot_connect(&test_signal, &test_signal_slot1);
+    eh_signal_slot_connect(&test_signal, &test_signal_slot2);
+
+    while(1){
+        /* 每秒触发一次信号 */
+        eh_usleep(1000*1000);
+
+        /* 下面两种都可以，使用一样的原理，触发信号后槽函数可以正常执行 */
+        //eh_event_notify(eh_signal_to_custom_event(&test_signal));
+        eh_signal_notify(&test_signal);
+    }
+
+    /* 反初始化是一个好习惯 */
+    eh_signal_slot_disconnect(&test_signal_slot2);
+    eh_signal_slot_disconnect(&test_signal_slot1);
+    eh_signal_unregister(&test_signal);
+
+}
+
+```
+#### 2.通用信号使用例子（公共信号）
+```
+/* test_signal_public.h */
+/* 头文件中声明信号，让其他模块可以引用 */
+EH_EXTERN_SIGNAL(test_signal);
+
+```
+
+```
+/* test_signal_public.c */
+#include "eh.h"
+#include "eh_signal.h"
+#include "test_signal_public.h"
+
+EH_DEFINE_SIGNAL(test_signal);
+
+/* 假设这里会产生一个硬件中断 */
+void test_signal_public_trigger(void){
+    eh_signal_notify(&test_signal);
+}
+
+
+static int __init test_signal_public_init(void){
+    /* 注册信号 */
+    eh_signal_register(&test_signal);
+}
+
+static void __exit test_signal_public_exit(void){
+    /* 注销信号 */
+    eh_signal_unregister(&test_signal);
+}
+
+
+eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
+
+```
+```
+/* main.c */
+#include "eh.h"
+#include "eh_signal.h"
+#include "test_signal_public.h"
+
+
+/* 定义槽函数 */
+static void slot_test_function(eh_event_t *e, void *slot_param){
+    eh_infoln("slot_test_function %s\n", (char *)slot_param);
+}
+
+/* 定义第一个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot1, 
+    slot_test_function,
+    "test1" /* 用户参数 */
+);
+
+
+/* 定义第二个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot2, 
+    slot_test_function,
+    "test2"
+);
+
+void run(void){
+
+    /* 连接信号和槽 */
+    eh_signal_slot_connect(&test_signal, &test_signal_slot1);
+    eh_signal_slot_connect(&test_signal, &test_signal_slot2);
+    while(1){
+        eh_usleep(1000*1000);
+    }
+    /* 反初始化是一个好习惯 */
+    eh_signal_slot_disconnect(&test_signal_slot2);
+    eh_signal_slot_disconnect(&test_signal_slot1);
+
+}
+
+```
+
+#### 3.自定义信号使用例子（私有信号）
+自定义信号必须使用自定义事件进行填充，自定义事件结构体的第一个成员必须是eh_event_t结构体,这里使用定时器事件作为测试对象
+```
+/* test_custom_event.c */
+
+/* 定义一个自定义信号（定时器信号），第二个参数是事件的类型，这里使用定时器事件，第三个参数是定时器事件的初始化 */
+EH_DEFINE_STATIC_CUSTOM_SIGNAL(
+    timer_1000ms_signal, 
+    eh_timer_event_t, 
+    {}
+);
+
+/* 定义槽函数 */
+static void slot_test_function(eh_event_t *e, void *slot_param){
+    eh_infoln("slot_test_function %s\n", (char *)slot_param);
+}
+
+/* 定义第一个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot1, 
+    slot_test_function,
+    "test1" /* 用户参数 */
+);
+
+
+/* 定义第二个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot2, 
+    slot_test_function,
+    "test2"
+);
+
+void run(void){
+
+    /* 必须先初始化定时器事件的那一部分 */
+    eh_timer_advanced_init(
+        eh_signal_to_custom_event(&timer_1000ms_signal), 
+        (eh_sclock_t)eh_msec_to_clock(1000), 
+        EH_TIMER_ATTR_AUTO_CIRCULATION
+    );
+
+    /* 然后在注册信号 */
+    eh_signal_register(&timer_1000ms_signal);
+
+    /* 连接信号和槽 */
+    eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot1);
+    eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot2);
+
+    /* 启动定时器 */
+    eh_timer_start(eh_signal_to_custom_event(&timer_1000ms_signal));
+
+    while(1){
+        eh_usleep(1000*1000);
+    }
+
+    /* 反初始化是一个好习惯 */
+
+    /* 停止定时器 */
+    eh_timer_stop(eh_signal_to_custom_event(&timer_1000ms_signal));
+
+    eh_signal_slot_disconnect(&timer_1000ms_signal);
+    eh_signal_slot_disconnect(&timer_1000ms_signal);
+
+    eh_signal_unregister(&timer_1000ms_signal);
+
+    eh_signal_clean(&timer_1000ms_signal);
+}
+
+```
+
+#### 3.自定义信号使用例子（公有信号）
+```
+/* test_custom_event.h */
+/* 头文件中声明信号，让其他模块可以引用 */
+EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t);
+```
+
+```
+/* test_custom_event.c */
+#include "eh.h"
+#include "eh_signal.h"
+#include "test_custom_event.h"
+
+EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t, {});
+
+
+static int __init test_signal_public_init(void){
+    /* 必须先初始化定时器事件的那一部分 */
+    eh_timer_advanced_init(
+        eh_signal_to_custom_event(&timer_1000ms_signal), 
+        (eh_sclock_t)eh_msec_to_clock(1000), 
+        EH_TIMER_ATTR_AUTO_CIRCULATION
+    );
+
+    /* 然后在注册信号 */
+    eh_signal_register(&timer_1000ms_signal);
+
+    /* 启动定时器 */
+    eh_timer_start(eh_signal_to_custom_event(&timer_1000ms_signal));
+
+    return 0;
+}
+
+static void __exit test_signal_public_exit(void){
+    /* 停止定时器 */
+    eh_timer_stop(eh_signal_to_custom_event(&timer_1000ms_signal));
+    eh_signal_unregister(&timer_1000ms_signal);
+    eh_signal_clean(&timer_1000ms_signal);
+}
+
+
+eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
+
+```
+
+```
+/* main.c */
+#include "eh.h"
+#include "eh_signal.h"
+#include "test_custom_event.h"
+
+
+/* 定义槽函数 */
+static void slot_test_function(eh_event_t *e, void *slot_param){
+    eh_infoln("slot_test_function %s\n", (char *)slot_param);
+}
+
+/* 定义第一个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot1, 
+    slot_test_function,
+    "test1" /* 用户参数 */
+);
+
+
+/* 定义第二个槽，一个槽同时只能被一个信号所连接 */
+EH_DEFINE_SLOT(
+    test_signal_slot2, 
+    slot_test_function,
+    "test2"
+);
+
+void run(void){
+
+    /* 连接信号和槽 */
+    eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot1);
+    eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot2);
+    while(1){
+        eh_usleep(1000*1000);
+    }
+    /* 反初始化是一个好习惯 */
+    eh_signal_slot_disconnect(&test_signal_slot2);
+    eh_signal_slot_disconnect(&test_signal_slot1);
+
+}
 ```
 
 ### 互斥锁相关API
