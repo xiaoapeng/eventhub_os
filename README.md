@@ -20,10 +20,11 @@
 
 | 测试芯片                    | 平台/架构          | 工具链                         | 备注                             |
 |----------------------------|-------------------|--------------------------------|---------------------------------|
-| i7-10700                   | linux             | gcc 11.4.0                     |                                 |
+| i7-10700                   | linux/x86_64     | gcc 11.4.0                     |                                 |
 | stm32f030c8t6              | Cortex-M0        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M0核               |
 | stm32f103c6t6              | Cortex-M3        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M3核               |
 | stm32f401vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M4核              |
+| stm32h750vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M7核              |
 | mcxn947                    | Cortex-M33        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M33核             |
 
 
