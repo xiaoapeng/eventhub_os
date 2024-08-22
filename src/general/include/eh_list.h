@@ -4,7 +4,7 @@
 #include "eh_types.h"
 
 struct eh_list_head {
-	struct eh_list_head *next, *prev;
+    struct eh_list_head *next, *prev;
 };
 
 
@@ -24,7 +24,7 @@ struct eh_list_head {
  *        Double linked list head variable name
  */
 #define EH_LIST_HEAD(name) \
-	struct eh_list_head name = EH_LIST_HEAD_INIT(name)
+    struct eh_list_head name = EH_LIST_HEAD_INIT(name)
 
 /**
  * @brief 初始化给定的双向链表头
@@ -33,7 +33,7 @@ struct eh_list_head {
  *        Pointer to the double linked list head
  */
 #define eh_list_head_init(ptr) do { \
-	(ptr)->next = (ptr); (ptr)->prev = (ptr); \
+    (ptr)->next = (ptr); (ptr)->prev = (ptr); \
 } while (0)
 
 /**
@@ -48,13 +48,13 @@ struct eh_list_head {
  * Internal use only.
  */
 static inline void __eh_list_add(struct eh_list_head *new,
-				struct eh_list_head *prev,
-				struct eh_list_head *next)
+                struct eh_list_head *prev,
+                struct eh_list_head *next)
 {
-	next->prev = new;
-	new->next = next;
-	new->prev = prev;
-	prev->next = new;
+    next->prev = new;
+    new->next = next;
+    new->prev = prev;
+    prev->next = new;
 }
 
 /**
@@ -67,7 +67,7 @@ static inline void __eh_list_add(struct eh_list_head *new,
  */
 static inline void eh_list_add(struct eh_list_head *new, struct eh_list_head *head)
 {
-	__eh_list_add(new, head, head->next);
+    __eh_list_add(new, head, head->next);
 }
 
 /**
@@ -80,7 +80,7 @@ static inline void eh_list_add(struct eh_list_head *new, struct eh_list_head *he
  */
 static inline void eh_list_add_tail(struct eh_list_head *new, struct eh_list_head *head)
 {
-	__eh_list_add(new, head->prev, head);
+    __eh_list_add(new, head->prev, head);
 }
 
 /**
@@ -93,8 +93,8 @@ static inline void eh_list_add_tail(struct eh_list_head *new, struct eh_list_hea
  */
 static inline void __eh_list_del(struct eh_list_head *prev, struct eh_list_head *next)
 {
-	next->prev = prev;
-	prev->next = next;
+    next->prev = prev;
+    prev->next = next;
 }
 
 /**
@@ -105,9 +105,9 @@ static inline void __eh_list_del(struct eh_list_head *prev, struct eh_list_head 
  */
 static inline void eh_list_del(struct eh_list_head *entry)
 {
-	__eh_list_del(entry->prev, entry->next);
-	entry->next = (void *) 0;
-	entry->prev = (void *) 0;
+    __eh_list_del(entry->prev, entry->next);
+    entry->next = (void *) 0;
+    entry->prev = (void *) 0;
 }
 
 /**
@@ -118,8 +118,8 @@ static inline void eh_list_del(struct eh_list_head *entry)
  */
 static inline void eh_list_del_init(struct eh_list_head *entry)
 {
-	__eh_list_del(entry->prev, entry->next);
-	eh_list_head_init(entry);
+    __eh_list_del(entry->prev, entry->next);
+    eh_list_head_init(entry);
 }
 
 /**
@@ -131,10 +131,10 @@ static inline void eh_list_del_init(struct eh_list_head *entry)
  *        Head of the target list
  */
 static inline void eh_list_move(struct eh_list_head *eh_list,
-				struct eh_list_head *head)
+                struct eh_list_head *head)
 {
-	__eh_list_del(eh_list->prev, eh_list->next);
-	eh_list_add(eh_list, head);
+    __eh_list_del(eh_list->prev, eh_list->next);
+    eh_list_add(eh_list, head);
 }
 
 /**
@@ -146,10 +146,10 @@ static inline void eh_list_move(struct eh_list_head *eh_list,
  *        Head of the target list
  */
 static inline void eh_list_move_tail(struct eh_list_head *eh_list,
-					struct eh_list_head *head)
+                    struct eh_list_head *head)
 {
-	__eh_list_del(eh_list->prev, eh_list->next);
-	eh_list_add_tail(eh_list, head);
+    __eh_list_del(eh_list->prev, eh_list->next);
+    eh_list_add_tail(eh_list, head);
 }
 
 /**
@@ -164,21 +164,21 @@ static inline void eh_list_move_tail(struct eh_list_head *eh_list,
  */
 static inline int eh_list_empty(struct eh_list_head *head)
 {
-	return head->next == head;
+    return head->next == head;
 }
 
 static inline void __eh_list_splice(struct eh_list_head *eh_list,
-					struct eh_list_head *head)
+                    struct eh_list_head *head)
 {
-	struct eh_list_head *first = eh_list->next;
-	struct eh_list_head *last = eh_list->prev;
-	struct eh_list_head *at = head->next;
+    struct eh_list_head *first = eh_list->next;
+    struct eh_list_head *last = eh_list->prev;
+    struct eh_list_head *at = head->next;
 
-	first->prev = head;
-	head->next = first;
+    first->prev = head;
+    head->next = first;
 
-	last->next = at;
-	at->prev = last;
+    last->next = at;
+    at->prev = last;
 }
 
 /**
@@ -191,8 +191,8 @@ static inline void __eh_list_splice(struct eh_list_head *eh_list,
  */
 static inline void eh_list_splice(struct eh_list_head *eh_list, struct eh_list_head *head)
 {
-	if (!eh_list_empty(eh_list))
-	__eh_list_splice(eh_list, head);
+    if (!eh_list_empty(eh_list))
+    __eh_list_splice(eh_list, head);
 }
 
 /**
@@ -206,10 +206,10 @@ static inline void eh_list_splice(struct eh_list_head *eh_list, struct eh_list_h
 static inline void eh_list_splice_init(struct eh_list_head *eh_list,
 struct eh_list_head *head)
 {
-	if (!eh_list_empty(eh_list)) {
-		__eh_list_splice(eh_list, head);
-		eh_list_head_init(eh_list);
-	}
+    if (!eh_list_empty(eh_list)) {
+        __eh_list_splice(eh_list, head);
+        eh_list_head_init(eh_list);
+    }
 }
 
 /**
@@ -223,7 +223,7 @@ struct eh_list_head *head)
  *        Member name of list_head in the container
  */
 #define eh_list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+    ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 
 /**
  * @brief 遍历双向链表
@@ -234,7 +234,7 @@ struct eh_list_head *head)
  *        Double linked list head
  */
 #define eh_list_for_each(pos, head) \
-	for (pos = (head)->next; pos != (head); pos = pos->next)
+    for (pos = (head)->next; pos != (head); pos = pos->next)
 
 
 
@@ -247,7 +247,7 @@ struct eh_list_head *head)
  *        Double linked list head
  */
 #define eh_list_for_each_prev(pos, head) \
-	for (pos = (head)->prev; pos != (head); pos = pos->prev)
+    for (pos = (head)->prev; pos != (head); pos = pos->prev)
 
 /**
  * @brief 安全地遍历双向链表，防止遍历过程中删除元素导致的问题
@@ -260,7 +260,7 @@ struct eh_list_head *head)
  *        Double linked list head
  */
 #define eh_list_for_each_safe(pos, n, head) \
-	for (pos = (head)->next, n = pos->next; pos != (head); pos = n, n = pos->next)
+    for (pos = (head)->next, n = pos->next; pos != (head); pos = n, n = pos->next)
 
 /**
  * @brief 安全地反向遍历双向链表，防止遍历过程中删除元素导致的问题
@@ -273,7 +273,7 @@ struct eh_list_head *head)
  *        Double linked list head
  */
 #define eh_list_for_each_prev_safe(pos, n, head) \
-	for (pos = (head)->prev, n = pos->prev; pos != (head); pos = n, n = pos->prev)
+    for (pos = (head)->prev, n = pos->prev; pos != (head); pos = n, n = pos->prev)
 
 /**
  * @brief 遍历特定类型元素构成的双向链表
@@ -286,9 +286,9 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_entry(pos, head, member) \
-	for (pos = eh_list_entry((head)->next, typeof(*pos), member); \
-		&pos->member != (head); \
-		pos = eh_list_entry(pos->member.next, typeof(*pos), member))
+    for (pos = eh_list_entry((head)->next, typeof(*pos), member); \
+        &pos->member != (head); \
+        pos = eh_list_entry(pos->member.next, typeof(*pos), member))
 
 /**
  * @brief 反向遍历特定类型元素构成的双向链表
@@ -301,9 +301,9 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_prev_entry(pos, head, member) \
-	for (pos = eh_list_entry((head)->prev, typeof(*pos), member); \
-		&pos->member != (head); \
-		pos = eh_list_entry(pos->member.prev, typeof(*pos), member))
+    for (pos = eh_list_entry((head)->prev, typeof(*pos), member); \
+        &pos->member != (head); \
+        pos = eh_list_entry(pos->member.prev, typeof(*pos), member))
 
 /**
  * @brief 继续遍历特定类型元素构成的双向链表，从当前位置开始
@@ -316,9 +316,9 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_entry_continue(pos, head, member) \
-	for (pos = eh_list_entry((pos)->member.next, typeof(*(pos)), member); \
-	     &pos->member != (head); \
-	     pos = eh_list_entry((pos)->member.next, typeof(*(pos)), member))
+    for (pos = eh_list_entry((pos)->member.next, typeof(*(pos)), member); \
+         &pos->member != (head); \
+         pos = eh_list_entry((pos)->member.next, typeof(*(pos)), member))
 
 /**
  * @brief 继续反向遍历特定类型元素构成的双向链表，从当前位置开始
@@ -331,9 +331,9 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_prev_entry_continue(pos, head, member) \
-	for (pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member); \
-	     &pos->member != (head); \
-	     pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member))
+    for (pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member); \
+         &pos->member != (head); \
+         pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member))
 
 /**
  * @brief 安全地遍历特定类型元素构成的双向链表，防止遍历中删除元素
@@ -348,10 +348,10 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_entry_safe(pos, n, head, member) \
-	for (pos = eh_list_entry((head)->next, typeof(*pos), member), \
-		n = eh_list_entry(pos->member.next, typeof(*pos), member); \
-		&pos->member != (head); \
-		pos = n, n = eh_list_entry(n->member.next, typeof(*n), member))
+    for (pos = eh_list_entry((head)->next, typeof(*pos), member), \
+        n = eh_list_entry(pos->member.next, typeof(*pos), member); \
+        &pos->member != (head); \
+        pos = n, n = eh_list_entry(n->member.next, typeof(*n), member))
 
 /**
  * @brief 安全地反向遍历特定类型元素构成的双向链表，防止遍历中删除元素
@@ -366,9 +366,9 @@ struct eh_list_head *head)
  *        Member name of list_head in the structure
  */
 #define eh_list_for_each_prev_entry_safe(pos, n, head, member) \
-	for (pos = eh_list_entry((head)->prev, typeof(*pos), member), \
-		n = eh_list_entry(pos->member.prev, typeof(*pos), member); \
-		&pos->member != (head); \
-		pos = n, n = eh_list_entry(n->member.prev, typeof(*n), member))
+    for (pos = eh_list_entry((head)->prev, typeof(*pos), member), \
+        n = eh_list_entry(pos->member.prev, typeof(*pos), member); \
+        &pos->member != (head); \
+        pos = n, n = eh_list_entry(n->member.prev, typeof(*n), member))
 
 #endif

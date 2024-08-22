@@ -72,16 +72,16 @@ __attribute__((naked)) void PendSV_Handler( void ){
      */
 
     __asm__ volatile(
-        "	.syntax unified									        \n"
+        "   .syntax unified                                         \n"
         "                                                           \n"
         "   mrs         r0, psp                                     \n"
         "   mov         r1, r0                                      \n" /* r1作为栈帧寄存器稍后访问 arg from to*/
     #if (__FPU_USED__ == 1)
-        "	tst         lr, #0x10									\n"
-        "	it          eq											\n"
-        "   vstmdbeq    r0!, {s16-s31}							    \n"/* 进行浮点寄存器的存储 */
+            tst         lr, #0x10                                   \n"
+            it          eq                                          \n"
+        "   vstmdbeq    r0!, {s16-s31}                              \n"/* 进行浮点寄存器的存储 */
     #endif
-        "	stmdb       r0!, {r4-r11,lr}  						    \n" /* 保存 {r4 - r11} */
+        "   stmdb       r0!, {r4-r11,lr}                            \n" /* 保存 {r4 - r11} */
  
         "   ldr         r2, [r1, #0x04]                             \n" /* 读取 from */
         "   str         r0, [r2]                                    \n" /* 保存现场到from */
@@ -89,18 +89,18 @@ __attribute__((naked)) void PendSV_Handler( void ){
         "   ldr         r1, [r1, #0x00]                             \n" /* 读取 arg */
     /* ------------------------------------------------------- restore  context ------------------------------------------------------- */
         "   ldr         r0, [r0, #0x00]                             \n" /* to中读取被恢复任务的psp */
-        "	ldmia       r0!, {r4-r11,lr}							\n" /* 恢复 {r4 - r11} */
+        "   ldmia       r0!, {r4-r11,lr}                            \n" /* 恢复 {r4 - r11} */
 
     #if (__FPU_USED__ == 1)
-        "	tst         lr, #0x10									\n"/* Test Bit[4] in LR. Bit[4] of EXC_RETURN is 0 if the Extended Stack Frame is in use. */
-        "	it          eq											\n"
-        "	vldmiaeq    r0!, {s16-s31}							    \n"/* Restore the additional FP context registers which are not restored automatically. */
+        "   tst         lr, #0x10                                   \n"/* Test Bit[4] in LR. Bit[4] of EXC_RETURN is 0 if the Extended Stack Frame is in use. */
+        "   it          eq                                          \n"
+        "   vldmiaeq    r0!, {s16-s31}                              \n"/* Restore the additional FP context registers which are not restored automatically. */
     #endif /* __FPU_USED__ */
 
         "   str         r1, [r0, #0x00]                             \n" /* 设置 arg */
 
-        "	msr         psp, r0										\n"
-        "	bx          lr											\n"
+        "   msr         psp, r0                                     \n"
+        "   bx          lr                                          \n"
     );
 }
 
@@ -116,7 +116,7 @@ __attribute__((naked)) void * co_context_swap(
      * r2: to
      */
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   push   {r4,r5}                                  \n"
         "   ldr    r4, =%[val]                              \n"
         "   ldr    r5, =%[addr]                             \n"
@@ -135,7 +135,7 @@ __attribute__((naked)) void * co_context_swap(
 
 static __attribute__((naked)) void __start_task(void){
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
         "1: b           1b                                  \n"/* 若返回，则进入死循环 */
         :::

@@ -47,8 +47,8 @@ __attribute__((naked)) void * co_context_swap(
      * r2: to
      */
     __asm__ volatile(
-        "	.syntax unified									\n"
-        "   push        {r4-r12,lr}					        \n" /* 保存现场 {r12, r8-r11, r4-r7,lr} */
+        "   .syntax unified                                 \n"
+        "   push        {r4-r12,lr}                         \n" /* 保存现场 {r12, r8-r11, r4-r7,lr} */
         
         "   mov         r3, sp                              \n"
         "   str         r3, [r1]                            \n"/* 保存当前栈指针到from */
@@ -56,14 +56,14 @@ __attribute__((naked)) void * co_context_swap(
         "   ldr         r3, [r2]                            \n"/* 恢复栈指针 */
         "   mov         sp, r3                              \n"
 
-        "   pop         {r4-r12, pc}			            \n"
+        "   pop         {r4-r12, pc}                        \n"
         ::: "memory"
     );
 }
 
 static __attribute__((naked)) void __start_task(void){
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
         "1: b           1b                                  \n"/* 若返回，则进入死循环 */
         :::

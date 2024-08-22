@@ -115,7 +115,7 @@ __attribute__((naked)) void * co_context_swap(
      * r2: to
      */
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   mrs         r3, msplim                          \n"/* 获取psplim寄存器值到r3 */
         "   push        {r3-r12,lr}                         \n"/* 保存r3-r12和lr寄存器的值 */
 
@@ -123,10 +123,10 @@ __attribute__((naked)) void * co_context_swap(
         "   msr         msplim, r3                          \n"/* 将msplim设置为0相当于禁用msplim */
 
 #if     CONTEXT_SWAP_DISABLEIRQ == 1
-        "	mrs r4, primask									\n"/* 保存中断状态在r4中 */
-        "	cpsid   i										\n"/* 失能中断 */
-        "	dsb												\n"
-        "	isb												\n"
+        "   mrs r4, primask                                 \n"/* 保存中断状态在r4中 */
+        "   cpsid   i                                       \n"/* 失能中断 */
+        "   dsb                                             \n"
+        "   isb                                             \n"
 #endif
 
 #if  (__FPU_USED__ == 1)
@@ -146,14 +146,14 @@ __attribute__((naked)) void * co_context_swap(
 #endif
 
 #if     CONTEXT_SWAP_DISABLEIRQ == 1
-        "	msr primask, r4									\n"/* 恢复中断状态 */
-        "	dsb												\n"
-        "	isb												\n"
+        "   msr primask, r4                                 \n"/* 恢复中断状态 */
+        "   dsb                                             \n"
+        "   isb                                             \n"
 #endif
 
         "   pop         {r3-r12,lr}                         \n"/* 恢复r3-r12和lr寄存器的值 */
         "   msr         msplim, r3                          \n"/* 从r3恢复psplim寄存器值 */
-        "	bx lr											\n"/* Return. */
+        "   bx lr                                           \n"/* Return. */
         ::: "memory"
     );
 }
@@ -165,7 +165,7 @@ static void __exit(void){
 
 static __attribute__((naked)) void __start_task(void){
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
         "1: b           1b                                  \n"/* 若返回，则进入死循环 */
         :::

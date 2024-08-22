@@ -65,7 +65,7 @@ int eh_dbg_raw(enum eh_dbg_level level,
 
 int eh_dbg_hex(enum eh_dbg_level level, 
     enum eh_dbg_flags flags, size_t len, const void *buf){
-	const uint8_t *pos = buf;
+    const uint8_t *pos = buf;
     int n = 0;
     size_t y_n, x_n;
     if(level > dbg_level)
@@ -73,8 +73,8 @@ int eh_dbg_hex(enum eh_dbg_level level,
     y_n = len / 16;
     x_n = len % 16;
     n += eh_dbg_raw(level, flags, "______________________________________________________________" EH_DEBUG_ENTER_SIGN);
-	n += eh_dbg_raw(level, flags, "            | 0| 1| 2| 3| 4| 5| 6| 7| 8| 9| A| B| C| D| E| F||" EH_DEBUG_ENTER_SIGN);
-	n += eh_dbg_raw(level, flags, "--------------------------------------------------------------" EH_DEBUG_ENTER_SIGN);
+    n += eh_dbg_raw(level, flags, "            | 0| 1| 2| 3| 4| 5| 6| 7| 8| 9| A| B| C| D| E| F||" EH_DEBUG_ENTER_SIGN);
+    n += eh_dbg_raw(level, flags, "--------------------------------------------------------------" EH_DEBUG_ENTER_SIGN);
     for(size_t i = 0; i < y_n; i++, pos += 16){
         n += eh_dbg_raw(level, flags, "|0x%08x| %-47.*hhq||" EH_DEBUG_ENTER_SIGN, 
             (unsigned int)(i*16), 16, pos);

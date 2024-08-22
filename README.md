@@ -52,7 +52,7 @@ target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 
 ```
 add_executable(you_target)
-	target_link_libraries(you_target xxxxx eventhub )
+    target_link_libraries(you_target xxxxx eventhub )
 ```
 
 #### 定义一些cmake变量，使eventhub自动选择架构和平台

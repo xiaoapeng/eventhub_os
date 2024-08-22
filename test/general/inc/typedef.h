@@ -40,7 +40,7 @@ static inline uint32_t get_milliseconds() {
 #define FREE(__ptr)
 #define DELAY(__ms)
 #define DELAY_US(__us)
-#define GET_TICK()	   get_milliseconds()
+#define GET_TICK()       get_milliseconds()
 
 
 

@@ -57,39 +57,39 @@ __attribute__((naked)) void * co_context_swap(
      * r2: to
      */
     __asm__ volatile(
-        "	.syntax unified									\n"
-        "   push        {r4-r7,lr}					        \n" /* 保存现场 {r12, r8-r11, r4-r7,lr} */
-        " 	mov         r4, r8							    \n"
-        " 	mov         r5, r9							    \n"
-        " 	mov         r6, r10							    \n"
-        " 	mov         r7, r11							    \n"
-        "   push        {r4-r7}					            \n"
-        "   mov         r4, r12							    \n"
-        "   push        {r4}					            \n"
+        "   .syntax unified                                     \n"
+        "   push        {r4-r7,lr}                              \n" /* 保存现场 {r12, r8-r11, r4-r7,lr} */
+        "   mov         r4, r8                                  \n"
+        "   mov         r5, r9                                  \n"
+        "   mov         r6, r10                                 \n"
+        "   mov         r7, r11                                 \n"
+        "   push        {r4-r7}                                 \n"
+        "   mov         r4, r12                                 \n"
+        "   push        {r4}                                    \n"
         
-        "   mov         r3, sp                              \n"
-        "   str         r3, [r1]                            \n"/* 保存当前栈指针到from */
+        "   mov         r3, sp                                  \n"
+        "   str         r3, [r1]                                \n"/* 保存当前栈指针到from */
 /* ---------------------------------------- restore context ---------------------------------------- */
-        "   ldr         r3, [r2]                            \n"/* 恢复栈指针 */
-        "   mov         sp, r3                              \n"
+        "   ldr         r3, [r2]                                \n"/* 恢复栈指针 */
+        "   mov         sp, r3                                  \n"
 
-        "   pop         {r4}					            \n" /* 恢复现场 {r12, r8-r11, r4-r7,lr} */
-        "   mov         r12, r4							    \n"
-        "   pop         {r4-r7}					            \n"
-        " 	mov         r8, r4						        \n"
-        " 	mov         r9, r5						        \n"
-        " 	mov         r10, r6							    \n"
-        " 	mov         r11, r7							    \n"
-        "   pop         {r4-r7, pc}			                \n"
+        "   pop         {r4}                                    \n" /* 恢复现场 {r12, r8-r11, r4-r7,lr} */
+        "   mov         r12, r4                                 \n"
+        "   pop         {r4-r7}                                 \n"
+        "   mov         r8, r4                                  \n"
+        "   mov         r9, r5                                  \n"
+        "   mov         r10, r6                                 \n"
+        "   mov         r11, r7                                 \n"
+        "   pop         {r4-r7, pc}                             \n"
         ::: "memory"
     );
 }
 
 static __attribute__((naked)) void __start_task(void){
     __asm__ volatile(
-        "	.syntax unified									\n"
-        "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
-        "1: b           1b                                  \n"/* 若返回，则进入死循环 */
+        "   .syntax unified                                     \n"
+        "   blx         r7                                      \n"/* r7存放着协程的入口函数 */
+        "1: b           1b                                      \n"/* 若返回，则进入死循环 */
         :::
     );
 }

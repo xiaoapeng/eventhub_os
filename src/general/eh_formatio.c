@@ -952,7 +952,7 @@ static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list
                 goto _print_number;
             case 'X':
                 flags |= FORMAT_LARGE;
-			    /*FALLTHROUGH*/
+                /*FALLTHROUGH*/
             case 'x':
                 base = BASE_TYPE_HEX;
                 goto _print_number;

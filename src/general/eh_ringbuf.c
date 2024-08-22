@@ -19,7 +19,7 @@
 #include "eh_ringbuf.h"
 
 
-#define eh_ringbuf_fix(ringbuf, pos)	        ((pos)%((uint32_t)(ringbuf->size << 1)))
+#define eh_ringbuf_fix(ringbuf, pos)            ((pos)%((uint32_t)(ringbuf->size << 1)))
 
 eh_ringbuf_t* eh_ringbuf_create(int32_t size, uint8_t *static_buf_or_null){
     eh_ringbuf_t* ringbuf;

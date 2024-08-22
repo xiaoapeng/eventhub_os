@@ -59,23 +59,23 @@ extern "C"{
 #define eh_memory_order_seq_cst_barrier()   atomic_thread_fence(memory_order_seq_cst)       /* 防止 loadload、loadstore、storestore重排 与相关load、store操作相关计算的重排 和缓存同步 */
 
 
-#define eh_offsetof(TYPE, MEMBER)	        __builtin_offsetof(TYPE, MEMBER)
+#define eh_offsetof(TYPE, MEMBER)            __builtin_offsetof(TYPE, MEMBER)
 #define eh_same_type(a, b)                  __builtin_types_compatible_p(typeof(a), typeof(b))
 #define eh_static_assert(expr, msg)         _Static_assert(expr, msg)
-#define eh_likely(x)	                    __builtin_expect(!!(x), 1)
-#define eh_unlikely(x)	                    __builtin_expect(!!(x), 0)
-#define eh_container_of(ptr, type, member) ({				\
-	void *__mptr = (void *)(ptr);					\
-	eh_static_assert(eh_same_type(*(ptr), ((type *)0)->member) ||	\
-		      eh_same_type(*(ptr), void),			\
-		      "pointer type mismatch in eh_container_of()");	\
-	((type *)(__mptr - eh_offsetof(type, member))); })
+#define eh_likely(x)                        __builtin_expect(!!(x), 1)
+#define eh_unlikely(x)                        __builtin_expect(!!(x), 0)
+#define eh_container_of(ptr, type, member) ({                                       \
+    void *__mptr = (void *)(ptr);                                                   \
+    eh_static_assert(eh_same_type(*(ptr), ((type *)0)->member) ||                   \
+              eh_same_type(*(ptr), void),                                           \
+              "pointer type mismatch in eh_container_of()");                        \
+    ((type *)(__mptr - eh_offsetof(type, member))); })
 
-#define eh_container_of_const(ptr, type, member)				\
-	_Generic(ptr,							\
-		const typeof(*(ptr)) *: ((const type *)eh_container_of(ptr, type, member)),\
-		default: ((type *)eh_container_of(ptr, type, member))	\
-	)
+#define eh_container_of_const(ptr, type, member)                                    \
+    _Generic(ptr,                                                                   \
+        const typeof(*(ptr)) *: ((const type *)eh_container_of(ptr, type, member)), \
+        default: ((type *)eh_container_of(ptr, type, member))                       \
+    )
 
 
 

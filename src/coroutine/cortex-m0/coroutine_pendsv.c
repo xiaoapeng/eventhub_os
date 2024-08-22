@@ -68,43 +68,43 @@ __attribute__((naked)) void PendSV_Handler( void ){
      */
 
     __asm__ volatile(
-        "	.syntax unified									        \n"
+        "   .syntax unified                                         \n"
         "                                                           \n"
         "   mrs         r0, psp                                     \n"
         "   mov         r1, r0                                      \n" /* r1作为栈帧寄存器稍后访问 arg from to*/
 
         "   ldr         r2, [r1, #0x04]                             \n"/* 读取 from */
 
-        "   subs        r0, r0, #32					                \n" /* Make space for the remaining low registers. */
+        "   subs        r0, r0, #32                                 \n" /* Make space for the remaining low registers. */
         "   str         r0, [r2]                                    \n"/* 保存现场到from */
 
 
-        "	stmia       r0!, {r4-r7}								\n" /* 保存 {r4 - r11} */
-        " 	mov         r4, r8							            \n" 
-        " 	mov         r5, r9							            \n"
-        " 	mov         r6, r10							            \n"
-        " 	mov         r7, r11							            \n"
-        "	stmia       r0!, {r4-r7}								\n"
+        "   stmia       r0!, {r4-r7}                                \n" /* 保存 {r4 - r11} */
+        "   mov         r4, r8                                      \n" 
+        "   mov         r5, r9                                      \n"
+        "   mov         r6, r10                                     \n"
+        "   mov         r7, r11                                     \n"
+        "   stmia       r0!, {r4-r7}                                \n"
 
         "   ldr         r0, [r1, #0x08]                             \n"/* 读取 to */
         "   ldr         r1, [r1, #0x00]                             \n"/* 读取 arg */
     /* ------------------------------------------------------- restore context ------------------------------------------------------- */
         "   ldr         r0, [r0, #0x00]                             \n"/* to中读取被恢复任务的psp */
 
-        "   adds        r0, r0, #16					                \n"
-        "	ldmia       r0!, {r4-r7}								\n"/* 恢复 {r4 - r11} */
-        " 	mov         r8, r4							            \n"
-        " 	mov         r9, r5							            \n"
-        " 	mov         r10, r6							            \n"
-        " 	mov         r11, r7							            \n"
+        "   adds        r0, r0, #16                                 \n"
+        "   ldmia       r0!, {r4-r7}                                \n"/* 恢复 {r4 - r11} */
+        "   mov         r8, r4                                      \n"
+        "   mov         r9, r5                                      \n"
+        "   mov         r10, r6                                     \n"
+        "   mov         r11, r7                                     \n"
         
         "   str         r1, [r0, #0x00]                             \n"/* 设置 arg */
-        "	msr         psp, r0										\n"/* Remember the new top of stack for the task. */
+        "   msr         psp, r0                                     \n"/* Remember the new top of stack for the task. */
 
-        "   subs        r0, r0, #32					                \n"
-        "	ldmia       r0!, {r4-r7}								\n"
+        "   subs        r0, r0, #32                                 \n"
+        "   ldmia       r0!, {r4-r7}                                \n"
     
-        "	bx          lr											\n"
+        "   bx          lr                                          \n"
     );
 }
 
@@ -120,7 +120,7 @@ __attribute__((naked)) void * co_context_swap(
      * r2: to
      */
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   push   {r4,r5}                                  \n"
         "   ldr    r4, =%[val]                              \n"
         "   ldr    r5, =%[addr]                             \n"
@@ -139,7 +139,7 @@ __attribute__((naked)) void * co_context_swap(
 
 static __attribute__((naked)) void __start_task(void){
     __asm__ volatile(
-        "	.syntax unified									\n"
+        "   .syntax unified                                 \n"
         "   blx         r7                                  \n"/* r7存放着协程的入口函数 */
         "1: b           1b                                  \n"/* 若返回，则进入死循环 */
         :::
