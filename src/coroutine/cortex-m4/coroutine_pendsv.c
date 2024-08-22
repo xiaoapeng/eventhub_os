@@ -77,8 +77,8 @@ __attribute__((naked)) void PendSV_Handler( void ){
         "   mrs         r0, psp                                     \n"
         "   mov         r1, r0                                      \n" /* r1作为栈帧寄存器稍后访问 arg from to*/
     #if (__FPU_USED__ == 1)
-            tst         lr, #0x10                                   \n"
-            it          eq                                          \n"
+        "   tst         lr, #0x10                                   \n"
+        "   it          eq                                          \n"
         "   vstmdbeq    r0!, {s16-s31}                              \n"/* 进行浮点寄存器的存储 */
     #endif
         "   stmdb       r0!, {r4-r11,lr}                            \n" /* 保存 {r4 - r11} */
