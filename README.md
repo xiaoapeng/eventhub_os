@@ -24,7 +24,7 @@
 | stm32f030c8t6              | Cortex-M0        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M0核               |
 | stm32f103c6t6              | Cortex-M3        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M3核               |
 | stm32f401vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M4核              |
-| stm32h750vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M7核              |
+| stm32h750vbt6              | Cortex-M7         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M7核              |
 | mcxn947                    | Cortex-M33        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M33核             |
 
 
@@ -66,6 +66,7 @@ add_executable(you_target)
 | Cortex-M0 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m0  | 一般要手动指定 |
 | Cortex-M3 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m3  | 一般要手动指定 |
 | Cortex-M4 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m4  | 一般要手动指定 |
+| Cortex-M7 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m7  | 一般要手动指定 |
 | Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33  | 一般要手动指定 |
 
 
