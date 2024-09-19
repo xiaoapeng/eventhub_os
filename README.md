@@ -782,8 +782,8 @@ void run(void){
     /* 停止定时器 */
     eh_timer_stop(eh_signal_to_custom_event(&timer_1000ms_signal));
 
-    eh_signal_slot_disconnect(&timer_1000ms_signal);
-    eh_signal_slot_disconnect(&timer_1000ms_signal);
+    eh_signal_slot_disconnect(&test_signal_slot2);
+    eh_signal_slot_disconnect(&test_signal_slot1);
 
     eh_signal_unregister(&timer_1000ms_signal);
 
