@@ -16,16 +16,17 @@
 
 ## 平台支持
 
-支持 linux x86_64 平台和 Cortex-M0/M3/M4/M33 架构
+支持 linux x86_64 平台和 Cortex-M0/M3/M4/M33/RISCV32 架构
 
 | 测试芯片                    | 平台/架构          | 工具链                         | 备注                             |
 |----------------------------|-------------------|--------------------------------|---------------------------------|
-| i7-10700                   | linux/x86_64     | gcc 11.4.0                     |                                 |
+| i7-10700                   | linux/x86_64     | gcc 11.4.0                     |                                  |
 | stm32f030c8t6              | Cortex-M0        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M0核               |
 | stm32f103c6t6              | Cortex-M3        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M3核               |
 | stm32f401vbt6              | Cortex-M4         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M4核              |
 | stm32h750vbt6              | Cortex-M7         | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M7核              |
 | mcxn947                    | Cortex-M33        | arm-none-eabi-gcc  10.3.1      | 理论可支持所有的M33核             |
+| gd32vf103cbt6              | riscv32 (bumblebee n200) | riscv-none-embed-gcc 10.1.0 | 理论可支持所有的(bumblebee n200)  |
 
 
 ## 如何移植到项目中使用
