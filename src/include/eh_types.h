@@ -77,11 +77,12 @@ extern "C"{
         default: ((type *)eh_container_of(ptr, type, member))                       \
     )
 
-
-
 #define __weak                              __attribute__((weak))
 #define __safety                            /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                          __attribute__((noreturn))
+
+#define eh_align_up(x, align) (((x) + ((align) - 1)) & (~((align) - 1)))
+#define eh_align_down(x, align) ((x) & (~((align) - 1)))
 
 
 #ifdef __cplusplus
