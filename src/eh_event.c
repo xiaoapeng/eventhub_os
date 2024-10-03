@@ -84,7 +84,7 @@ static int __async _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condi
     eh_timer_start(&timeout_timer);
 
     /* 事件预激活过，必须有锁add */
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     eh_event_add_receptor_no_lock(e, &receptor);
     eh_exit_critical(state);
 

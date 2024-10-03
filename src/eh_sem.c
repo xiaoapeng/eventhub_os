@@ -71,7 +71,7 @@ int eh_sem_post(eh_sem_t _sem){
     struct eh_sem *sem = (struct eh_sem *)_sem;
     int ret = EH_RET_OK;
     eh_save_state_t state;
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     if(sem->sem_num_v + 1 == sem->sem_num_p){
         ret = EH_RET_BUSY;
         goto out;
