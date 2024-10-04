@@ -49,6 +49,7 @@ struct module_group{
 
 #define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.0")
 #define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, "1.1.0")
+#define eh_ehipcore_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, "1.2.0")
 
 #define eh_module_level0_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.0")
 #define eh_module_level1_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "7.0.1")
