@@ -8,7 +8,7 @@
 
 支持动态内存分配，支持碎片合并算法(使用freeRTOS heap5一样的算法，对于小芯片也算最优解了)，可通过配置文件选择使用C库和自带的内存管理。
 
-实现了printf家族函数（**感谢[ eyalroz/printf ](https://github.com/eyalroz/printf)项目使本项目实现浮点打印**），支持数组打印的扩展特性%q，暂时不支持功能裁剪，后续会支持。
+实现了printf家族函数（**感谢[eyalroz/printf](https://github.com/eyalroz/printf)项目使本项目实现浮点打印**），支持数组打印的扩展特性%q，暂时不支持功能裁剪，后续会支持。
 
 支持系统时钟级别（微秒级别）定时器及延时，这一点是其他RTOS也能实现，但是要付出更大的代价，RTOS需要如果将TICK中断设置到微秒级别，那CPU将只为TICK中断来服务了。这将可以用eh_usleep轻松控制GPIO模拟各种时序。
 
@@ -40,19 +40,19 @@
 
 #### 将eventhub_os添加到你的项目中后，在CMakeLists.txt中合适的位置添加
 
-```
+```c
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/eventhub_os/")
 ```
 
 #### 复制eventhub_os/test/inc/eh_user_config.h 到你的项目include（假设是./include）中,然后在添加cmake中添加
 
-```
+```c
 target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 ```
 
 #### 最后给你的目标引用eventhub
 
-```
+```c
 add_executable(you_target)
     target_link_libraries(you_target xxxxx eventhub )
 ```
@@ -70,11 +70,11 @@ add_executable(you_target)
 | Cortex-M7 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m7  | 一般要手动指定 |
 | Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33  | 一般要手动指定 |
 
-
 * *其他方式集成*
 
 添加以下文件在你的项目中
-```
+
+```c
 ├── eh_core.c
 ├── eh_event.c
 ├── eh_event_cb.c
@@ -109,11 +109,12 @@ add_executable(you_target)
     ├── eh_timer.h
     └── eh_types.h
 ```
+
 #### 根据你选择的平台添加 src/<span style="color: red;">coroutine</span>/<XX平台>/ 的代码到你的项目中
 
 假如选择m33平台，那么添加src/coroutine/cortex-m33/的代码到你的项目中，如果该目录下有多个文件，一般代表有多种任务切换实现,选择其中一种即可，若选择多种，会产生重定义,一般选择CMakeLists.txt文件中使用的默认实现即可
 
-```
+```txt
 # 以cm33实现为例，CMakeLists.txt中 默认使用 coroutine_pendsv.c
 .
 ├── CMakeLists.txt
@@ -125,7 +126,8 @@ add_executable(you_target)
 #### 根据你选择的平台添加src/<span style="color: red;">platform</span>/<XX平台>/ 的代码到你的项目中
 
 假如选择m33平台，那么添加src/platform/cortex-m33/的代码到你的项目中
-```
+
+```txt
 .
 ├── CMSIS
 │   ├── include
@@ -139,7 +141,7 @@ add_executable(you_target)
 
 例如 m33平台下
 
-```
+```c
 #define TICK_PER_SEC                                  (100U)
 volatile eh_clock_t sys_clock_cnt = 0;
 uint32_t tick_cycle;
@@ -169,26 +171,32 @@ eh_core_module_export(systick_init, NULL);
 ```
 
 ### 3. 实现标准输出接口
+
 列如在linux平台下
-```
+
+```c
 void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)stream;
     printf("%.*s", (int)size, (const char*)buf);
 }
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
-
 ### 4. 修改链接脚本(linux平台忽略)
+
 在链接脚本.rodata附近添加以下内容
-```
+
+```c
 . = ALIGN(8);
 PROVIDE_HIDDEN (__start_eh_init_fini_array = .);
 KEEP (*(SORT(.eh_init_fini_array.*)));
 PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 ```
+
 例如下面的写法
-```
+
+```c
     .text :
     {
         . = ALIGN(4);
@@ -228,7 +236,8 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 ## API文档
 
 API需要包含如下头文件引入，可以按需引入，需要注意include顺序
-```
+
+```c
 #include "eh.h"                 /* 任务和全局函数 */
 #include "eh_event.h"           /* 事件相关API */
 #include "eh_timer.h"           /* 定时器相关API */
@@ -240,24 +249,33 @@ API需要包含如下头文件引入，可以按需引入，需要注意include�
 #include "eh_formatio.h"        /* 格式化输出相关API */
 #include "eh_debug.h"           /* debug输出相关API */
 ```
+
 ### 全局初始化和销毁
+
 #### 1.全局初始化
+
 调用此函数后内部自动初始化eh module,调用该函数后才可使用协程相关API,调用成功返回0，调用失败返回负数, 返回值来自模块返回的错误值，应该要遵守eh_error.h中定义的错误值。
-```
+
+```c
 extern int eh_global_init(void);
 ```
 
 #### 2.全局销毁
+
 调用此函数后内部自动销毁eh module,调用该函数后才不能使用协程相关API
-```
+
+```c
 extern void eh_global_exit(void)
 ```
 
 ### 模块相关API
+
 #### 1.模块自动构造与销毁
+
 初始化时，会调用模块的初始化函数，模块销毁时，会调用模块的销毁函数。 level值越小的模块越在前面被构造，销毁时反之。
 <br>在自定义模块时使用这里的宏可以降低初始化工作中模块间的耦合性
-```
+
+```c
 eh_module_level0_export(_init__func_, _exit__func_)
 eh_module_level1_export(_init__func_, _exit__func_)
 eh_module_level2_export(_init__func_, _exit__func_)
@@ -269,16 +287,19 @@ eh_module_level7_export(_init__func_, _exit__func_)
 eh_module_level8_export(_init__func_, _exit__func_)
 eh_module_level9_export(_init__func_, _exit__func_)
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | \_init__func_ | 模块初始化函数，原型 int eh_timer_interior_init(void) |
 | \_exit__func_ | 模块销毁函数，原型 void eh_timer_interior_exit(void) |
 
-
 ### 协程任务相关API
+
 #### 1.创建任务
+
 创建一个协程任务，返回一个任务句柄，可用于回收任务，获取任务状态。
-```
+
+```c
 extern eh_task_t* eh_task_create(
     const char *name, 
     uint32_t flags,  
@@ -286,6 +307,7 @@ extern eh_task_t* eh_task_create(
     void *task_arg, 
     int (*task_function)(void*) );
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | name | 任务名称，用于打印 |
@@ -295,8 +317,10 @@ extern eh_task_t* eh_task_create(
 | task_function | 任务函数 |
 
 #### 2.使用用户提供静态栈创建任务
+
 使用用户提供的静态堆栈创建一个任务
-```
+
+```c
 extern eh_task_t* eh_task_static_stack_create(
     const char *name, uint32_t flags, 
     void *stack, 
@@ -304,6 +328,7 @@ extern eh_task_t* eh_task_static_stack_create(
     void *task_arg, 
     int (*task_function)(void*) );
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | name | 任务名称，用于打印 |
@@ -314,16 +339,21 @@ extern eh_task_t* eh_task_static_stack_create(
 | task_function | 任务函数 |
 
 #### 3.退出任务
+
 退出任务，在任务上下文中调用，退出任务后，若设置了`EH_TASK_FLAGS_DETACH`，将会自动销毁，若没有设置，则需要手动销毁，在其他任务中调用eh_task_join。
-```
+
+```c
 extern void  eh_task_exit(int ret);
 ```
 
 #### 4.任务合并/任务回收
+
 进行任务合并（等待任务退出并销毁），该调用为一个阻塞调用，会触发异步等待机制。成功返回0，失败返回负数。
-```
+
+```c
 extern int __async eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | task | 任务句柄，创建任务时获得|
@@ -331,21 +361,27 @@ extern int __async eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
 | timeout | 超时时间，若为0则不超时，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
 
 #### 5.强制任务回收
+
 强制回收任务，不建议直接使用,唯一应用场景只有在模块销毁时使用，非该场景时视为未定义行为。
-```
+
+```c
 extern void eh_task_destroy(eh_task_t *task);
 ```
 
 #### 6.获取任务状态
+
 获取任务状态，成功返回0，失败返回负数。
-```
+
+```c
 extern int eh_task_get_state(eh_task_t *task, eh_task_state_t *state);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | task | 任务句柄，创建任务时获得|
 | state | 接收任务状态的实例化指针 |
-```
+
+```c
     typedef struct eh_task_sta{
         enum EH_TASK_STATE           state;
         void*                        stack;
@@ -354,6 +390,7 @@ extern int eh_task_get_state(eh_task_t *task, eh_task_state_t *state);
         const char*                  task_name;
     }eh_task_state_t;
 ```
+
 | 状态成员 | 解释 |
 | --- | --- |
 | state | 任务状态:<br> `EH_TASK_STATE_READY`:就绪<br>`EH_TASK_STATE_RUNNING`:运行<br>`EH_TASK_STATE_WAIT`:等待<br>`EH_TASK_STATE_FINISH`:结束<br>|
@@ -363,56 +400,77 @@ extern int eh_task_get_state(eh_task_t *task, eh_task_state_t *state);
 | task_name | 任务名称 |
 
 #### 7.获取当前任务句柄
+
 获取当前任务句柄，成功返回任务句柄
-```
+
+```c
 extern eh_task_t* eh_task_self(void);
 ```
+
 #### 8.让出当前CPU时间片
+
 让出当前CPU时间片,在CPU密集型任务处调用，提高系统实时性
-```
+
+```c
 extern void __async eh_task_yield(void);
 ```
 
 ### 事件相关API
+
 #### 1.创建初始化函数
+
 初始事件，填充结构体各成员，成功返回0，若e为NULL则返回断言结果EH_RET_INVALID_PARAM。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety int eh_event_init(eh_event_t *e);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 2.事件清理
+
 清理事件内的等待队列，等待该事件的任务将收到 EH_RET_EVENT_ERROR
-```
+
+```c
 extern void eh_event_clean(eh_event_t *e);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 3.事件通知
+
 通知事件，成功返回0，若e为NULL则返回断言结果EH_RET_INVALID_PARAM。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety int eh_event_notify(eh_event_t *e);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 4.事件通知，唤醒指定个数的任务
+
 事件通知,唤醒指定个数监听事件的任务,并重新排序，此函数作为信号量的优化，唤醒指定数量的任务，并重新排序，可优化任务唤醒的效率，避免无效唤醒，更加公平。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety int eh_event_notify_and_reorder(eh_event_t *e, int num);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 5.事件等待,且同时满足某条件
+
 事件等待，当被唤醒时，会判断条件是否满足，若满足则返回，若不满足则重新等待。成功返回0，失败返回eh_error.h中定义的错误码。<br>
 在调用此函数之前发生的事件，无法被本函数捕获到，但可以通过条件函数查询用户定义变量。<br>
 本函数为异步等待函数。
-```
+
+```c
 extern int __async eh_event_wait_condition_timeout(
     eh_event_t *e, 
     void* arg, 
     bool (*condition)(void* arg), 
     eh_sclock_t timeout );
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | e | 事件句柄 |
@@ -423,12 +481,15 @@ extern int __async eh_event_wait_condition_timeout(
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 6.事件等待
+
 事件等待，成功返回0，失败返回eh_error.h中定义的错误码。<br>
 在调用此函数之前发生的事件，无法被本函数捕获到，但可以通过条件函数查询用户定义变量。<br>
 本函数为异步等待函数。
-```
+
+```c
 static inline int __async eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeout)
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | e | 事件句柄 |
@@ -437,23 +498,32 @@ static inline int __async eh_event_wait_timeout(eh_event_t *e, eh_sclock_t timeo
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 7.创建一个epoll句柄
+
 创建一个epoll句柄，返回值需要使用eh_ptr_to_error转换为错误码，若错误码为0则成功，为负数则失败。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety eh_epoll_t eh_epoll_new(void);
 ```
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 8.销毁一个epoll句柄
+
 关闭一个epoll句柄。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety void eh_epoll_del(eh_epoll_t epoll);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
+
 #### 9.添加一个事件到epoll中
+
 添加一个事件到epoll中，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | epoll | epoll句柄 |
@@ -463,10 +533,13 @@ extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 10.从epoll中删除一个事件
+
 从epoll中删除一个事件，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | epoll | epoll句柄 |
@@ -475,14 +548,17 @@ extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 11.epoll等待事件
+
 epoll等待事件，成功返回等待到事件的数量,失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int __async eh_epoll_wait(
     eh_epoll_t epoll,
     eh_epoll_slot_t *epool_slot, 
     int slot_size, 
     eh_sclock_t timeout );
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | epoll | epoll句柄 |
@@ -493,11 +569,15 @@ extern int __async eh_epoll_wait(
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 ### 系统事件，定时器事件相关API
+
 #### 1.定时器初始化（全参数版）
+
 填充结构体内容<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | timer | 定时器句柄 |
@@ -505,44 +585,58 @@ extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t 
 | attr | 定时器属性，默认为0，属性之间使用'\|'组合<br>`EH_TIMER_ATTR_AUTO_CIRCULATION`: 表示定时器为重复定时器<br>`EH_TIMER_ATTR_NOW_TIME_BASE`: 当EH_TIMER_ATTR_AUTO_CIRCULATION有效时,装载时以当前时间为基准 |
 
 #### 2.定时器初始化（简化版）
+
 填充结构体内容<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 static __safety inline int eh_timer_init(eh_timer_event_t *timer);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 3.启动定时器
+
 将定时器加入系统定时器树中，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int eh_timer_start(eh_timer_event_t *timer);
 ```
+
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 4.停止定时器
+
 将定时器从系统定时器树中移除，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int eh_timer_stop(eh_timer_event_t *timer);
 ```
 
 #### 5.定时器重新启动
+
 将定时器重新加入系统定时器树中，若已经start则重新设置到期时间，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int eh_timer_restart(eh_timer_event_t *timer);
 ```
 
 #### 6.定时器清理
+
 清理定时器，把本定时器从系统定时器树中移除(eh_timer_stop)，内部调用eh_event_clean函数<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 ```
 例子: [test/test_epoll.c](test/test_epoll.c)
 
-
 #### 7.设置定时器超时时间
+
 设置定时器超时时间
-```
+
+```c
 #define  eh_timer_config_interval(timer, clock_interval)
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | timer | 定时器句柄 |
@@ -550,12 +644,14 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 
 例子: [test/test_epoll.c](test/test_epoll.c)
 
-
 #### 8.设置定时器属性
+
 设置定时器属性
-```
+
+```c
 #define eh_timer_set_attr(timer, attr)
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | timer | 定时器句柄 |
@@ -564,34 +660,45 @@ extern __safety void eh_timer_clean(eh_timer_event_t *timer);
 例子: [test/test_epoll.c](test/test_epoll.c)
 
 #### 9.计算定时器剩余时间
+
 计算定时器剩余时钟数,为正数时表示还有时间，为负数时表示已经到期
-```
+
+```c
 #define eh_remaining_time(now_time, timer_ptr)
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | now_time | 当前时间,典型值:eh_get_clock_monotonic_time() |
 | timer_ptr | 定时器句柄 |
 
 #### 10.衍生睡眠函数
+
 睡眠函数
-```
+
+```c
 extern void __async eh_usleep(eh_usec_t usec);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | usec | 睡眠时间，单位为微秒 |
 
 #### 10.获取定时器运行状态
+
 获取定时器运行状态，运行返回true,否则返回false<br>安全函数，可在其他并行或并发任务中安全调用
-```
+
+```c
 extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
 ```
 
 ### 信号和槽相关API
+
 此部分api必须举例说明，请查看以下例子
+
 #### 1.通用信号使用例子（私有信号）
-```
+
+```c
 /* test_signal_private.c */
 ...  
 /*  包含相关头文件  */
@@ -644,15 +751,17 @@ void run(void){
 }
 
 ```
+
 #### 2.通用信号使用例子（公共信号）
-```
+
+```c
 /* test_signal_public.h */
 /* 头文件中声明信号，让其他模块可以引用 */
 EH_EXTERN_SIGNAL(test_signal);
 
 ```
 
-```
+```c
 /* test_signal_public.c */
 #include "eh.h"
 #include "eh_signal.h"
@@ -680,7 +789,8 @@ static void __exit test_signal_public_exit(void){
 eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```
-```
+
+```c
 /* main.c */
 #include "eh.h"
 #include "eh_signal.h"
@@ -724,8 +834,10 @@ void run(void){
 ```
 
 #### 3.自定义信号使用例子（私有信号）
+
 自定义信号必须使用自定义事件进行填充，自定义事件结构体的第一个成员必须是eh_event_t结构体,这里使用定时器事件作为测试对象
-```
+
+```c
 /* test_custom_event.c */
 
 /* 定义一个自定义信号（定时器信号），第二个参数是事件的类型，这里使用定时器事件，第三个参数是定时器事件的初始化 */
@@ -794,13 +906,14 @@ void run(void){
 ```
 
 #### 3.自定义信号使用例子（公有信号）
-```
+
+```c
 /* test_custom_event.h */
 /* 头文件中声明信号，让其他模块可以引用 */
 EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t);
 ```
 
-```
+```c
 /* test_custom_event.c */
 #include "eh.h"
 #include "eh_signal.h"
@@ -838,7 +951,7 @@ eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```
 
-```
+```c
 /* main.c */
 #include "eh.h"
 #include "eh_signal.h"
@@ -881,6 +994,7 @@ void run(void){
 ```
 
 ### 互斥锁相关API
+
 虽然协程大部分情况下是不需要锁的
 但是，在宏观资源面前，还是存在加锁的，比如,
 在遍历链表时调用__async类型函数，在其他任务上就
@@ -890,84 +1004,106 @@ void run(void){
 也就是说，不要在中断上下文，或者其他线程（posix线程，系统线程）上下文中调用本函数
 
 #### 1.创建互斥锁
+
 创建互斥锁，成功返回互斥锁句柄，返回值需要使用eh_ptr_to_error转换为错误码，若错误码为0则成功，为负数则失败。
-```
+
+```c
 extern eh_mutex_t eh_mutex_create(enum eh_mutex_type type);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | type | 互斥锁类型<br>`EH_MUTEX_TYPE_NORMAL`:正常互斥锁<br>`EH_MUTEX_TYPE_RECURSIVE`:递归互斥锁(获得锁的任务可重复获得) |
 
 #### 2.销毁互斥锁
+
 销毁互斥锁
-```
+
+```c
 extern void eh_mutex_destroy(eh_mutex_t mutex);
 ```
 
 #### 3.互斥锁加锁
+
 加锁，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int __async eh_mutex_lock(eh_mutex_t mutex, eh_sclock_t timeout);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | mutex | 互斥锁句柄 |
 | timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
 
-
 #### 4.互斥锁解锁
+
 解锁，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int __async eh_mutex_unlock(eh_mutex_t mutex);
 ```
 
 ### 信号量相关API
+
 任务信号量的实现，虽然事件也提供了类似与休眠唤醒的功能，
 但是事件只能保证多次set必有一次触发，无法保证多次触发，
 而信号量的实现能增加可靠性, 信号量的实现继承了event的相关特性，
 也能使用event相关特性，比如epoll
 
 #### 1.创建信号量
+
 创建信号量，成功返回信号量句柄，返回值需要使用eh_ptr_to_error转换为错误码，若错误码为0则成功，为负数则失败。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety eh_sem_t eh_sem_create(uint32_t value);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | value | 初始信号量值 |
 
 #### 2.销毁信号量
+
 销毁信号量<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety void eh_sem_destroy(eh_sem_t sem);
 ```
 
 #### 3.信号量释放
+
 释放信号量，成功返回0，失败返回eh_error.h中定义的错误码。<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
-```
+
+```c
 extern __safety int eh_sem_post(eh_sem_t sem);
 ```
 
 #### 4.信号量获取
+
 获取信号量，成功返回0，失败返回eh_error.h中定义的错误码。
-```
+
+```c
 extern int __async eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | sem | 信号量句柄 |
 | timeout | 超时时间，若为0则不进行异步等待，若为`EH_TIME_FOREVER`则一直等待，若为正数则等待指定时钟数<br>若指定ms或者us，则需要使用eh_msec_to_clock和eh_usec_to_clock包裹 |
 
 #### 5.获取信号量的事件句柄
-获取信号量的事件句柄，获取event句柄后，可以使用event相关API进行操作，比如通过epoll进行事件监听
-```
+
+```c
 #define eh_sem_get_event(sem)   ((eh_event_t*)sem)
 ```
 
 ### 格式化输出API
+
 支持浮点、字符串、十六进制、二进制、八进制、字符、指针输出
 支持+-符号输出、宽度输出、精度输出、左对齐输出、右对齐输出、填充输出
-```
+
+```c
 extern int eh_vprintf(const char *fmt, va_list args);
 extern int eh_printf(const char *fmt, ...);
 extern int eh_snprintf(char *buf, size_t size, const char *fmt, ...);
@@ -975,7 +1111,8 @@ extern int eh_sprintf(char *buf, const char *fmt, ...);
 ```
 
 ### DEBUG输出API
-```
+
+```c
 /* 带自动回车的版本 */
 eh_debugln(fmt, ...) 
 eh_infoln(fmt, ...)  
@@ -1005,33 +1142,42 @@ eh_warnhex(buf,len)
 eh_errhex(buf,len)   
 
 ```
+
 #### 内存管理API
+
 #### 1.堆空间注册
+
 将某一段内存注册为堆空间,同一段堆空间全局只需注册一次，在eh_global_init之前调用
-```
+
+```c
 extern int eh_mem_heap_register(const struct eh_mem_heap *heap);
 ```
+
 例子:[src/eh_mem.c](src/eh_mem.c)
 
 #### 2.堆空间申请
-```
+
+```c
 void* eh_malloc(size_t _size)
 ```
 
 #### 3.堆空间释放
-```
+
+```c
 void eh_free(void *ptr)
 ```
 
 #### 4.获取堆空间信息
-```
+
+```c
 extern void eh_mem_get_heap_info(struct eh_mem_heap_info *heap_info);
 ```
+
 | 参数 | 解释 |
 | --- | --- |
 | heap_info | 堆空间信息结构体 |
 
-```
+```c
 struct eh_mem_heap_info{
     size_t total_size;                          /* 总大小 */
     size_t free_size;                           /* 空闲大小 */
