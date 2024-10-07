@@ -14,6 +14,7 @@ target_sources(eventhub PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_mutex.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_sem.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_mem.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/eh_mem_pool.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/eh_event_flags.c"
 )
 
