@@ -53,11 +53,13 @@ eh_mutex_t eh_mutex_create(enum eh_mutex_type type){
     eh_event_init(&new_mutex->wakeup_event);
     return (eh_mutex_t)new_mutex;
 }
+
 void eh_mutex_destroy(eh_mutex_t _mutex){
     struct eh_mutex *mutex = (struct eh_mutex *)_mutex;
     eh_event_clean(&mutex->wakeup_event);
     eh_free(mutex);
 }
+
 int __async eh_mutex_lock(eh_mutex_t _mutex, eh_sclock_t timeout){
     struct eh_mutex *mutex = (struct eh_mutex *)_mutex;
     int ret;
@@ -70,6 +72,7 @@ int __async eh_mutex_lock(eh_mutex_t _mutex, eh_sclock_t timeout){
     mutex->lock_cnt++;
     return EH_RET_OK;
 }
+
 int eh_mutex_unlock(eh_mutex_t _mutex){
     struct eh_mutex *mutex = (struct eh_mutex *)_mutex;
     if(mutex->lock_cnt == 0)

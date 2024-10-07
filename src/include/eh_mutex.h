@@ -34,10 +34,31 @@ enum eh_mutex_type {
     EH_MUTEX_TYPE_MAX
 };
 
-
+/**
+ * @brief                   创建一个互斥锁
+ * @param  type             锁的类型
+ * @return eh_mutex_t       应该使用eh_ptr_to_error来判断错误码，若成功应该为0，失败为负数
+ */
 extern eh_mutex_t eh_mutex_create(enum eh_mutex_type type);
+
+/**
+ * @brief                   释放互斥锁
+ * @param  mutex            锁句柄
+ */
 extern void eh_mutex_destroy(eh_mutex_t mutex);
+
+/**
+ * @brief                   加锁
+ * @param  mutex            锁句柄
+ * @param  timeout          最多等待时间，EH_TIME_FOREVER永不超时
+ * @return int          
+ */
 extern int __async eh_mutex_lock(eh_mutex_t mutex, eh_sclock_t timeout);
+/**
+ * @brief                   解锁
+ * @param  mutex            锁句柄
+ * @return int 
+ */
 extern int eh_mutex_unlock(eh_mutex_t mutex);
 
 
