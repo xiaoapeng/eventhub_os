@@ -26,10 +26,40 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+/**
+ * @brief 获取信号量的事件句柄 
+ * @param sem 
+ * @return  eh_event_t*
+ */
 #define eh_sem_get_event(sem)   ((eh_event_t*)sem)
+
+/**
+ * @brief                   创建一个信号量
+ * @param  value            信号量原生信号数
+ * @return eh_sem_t         返回信号量句柄
+ */
 extern __safety eh_sem_t eh_sem_create(uint32_t value);
+
+/**
+ * @brief                   销毁信号量
+ * @param  sem              信号量句柄
+ * @return 
+ */
 extern __safety void eh_sem_destroy(eh_sem_t sem);
-extern int __async eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
+
+/**
+ * @brief                   等待信号量
+ * @param  sem              信号量句柄
+ * @param  timeout          最多等待时间，EH_TIME_FOREVER永不超时
+ * @return int              等待结果，0表示成功，其他表示失败
+ */
+extern  __async int eh_sem_wait(eh_sem_t sem, eh_sclock_t timeout);
+
+/**
+ * @brief                   唤醒信号量
+ * @param  sem              信号量句柄
+ * @return int              唤醒结果，0表示成功，其他表示失败
+ */
 extern __safety int eh_sem_post(eh_sem_t sem);
 
 #ifdef __cplusplus
