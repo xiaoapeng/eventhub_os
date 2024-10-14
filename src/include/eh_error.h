@@ -30,6 +30,7 @@ extern "C"{
 #define EH_RET_TIMEOUT                      -7
 #define EH_RET_MALLOC_ERROR                 -8
 #define EH_RET_PTR_NULL                     -9
+#define EH_RET_MEM_POOL_EMPTY               -10
 #define EH_RET_MIN_ERROR_NUM                -255
 
 #define eh_param_assert(condition)                                      \
