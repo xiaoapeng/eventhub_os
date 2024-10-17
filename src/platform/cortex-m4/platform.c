@@ -85,12 +85,12 @@ void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long cont
     eh_errln("");
     eh_errln("######### hardfault_handler #########");
     eh_errln("SP:0x%08lx", sp);
-    /* LR寄存器意义 DDI0553B_o_armv8m_arm.pdf 章节：D1.2.95*/
+    /* LR寄存器意义 Cortex-M4 Generic UG (r0p1, Issue B, 2011.08).pdf 章节：Table 2-17 Exception return behavior*/
     eh_errln("LR:0x%08lx", lr);
     eh_errln("hardfault_handler  CONTROL:0x%08lx", control);
 
 
-    /* 关于发生异常时，上下文堆栈情况  DDI0553B_o_armv8m_arm.pdf 章节：  */
+    /* 关于发生异常时，上下文堆栈情况 Cortex-M4 Generic UG (r0p1, Issue B, 2011.08).pdf 章节：2.3.7 Exception entry and return  */
     eh_errln("dump sp:");
     eh_errln("r0:0x%08lx", stack_state->auto_push_context.r0);
     eh_errln("r1:0x%08lx", stack_state->auto_push_context.r1);

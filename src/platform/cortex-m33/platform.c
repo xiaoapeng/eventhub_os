@@ -108,7 +108,7 @@ void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long cont
     eh_errln("LR:0x%08lx", lr);
     eh_errln("hardfault_handler  CONTROL:0x%08lx", control);
 
-    /* 关于发生异常时，上下文堆栈情况  DDI0553B_o_armv8m_arm.pdf 章节：  */
+    /* 关于发生异常时，上下文堆栈情况 Cortex-M33 Generic UG (r0p4, Issue 0004-00, 2018.04).pdf 章节：2.3.7 Exception entry and return  */
     eh_errln("dump sp:");
     eh_errln("r0:0x%08lx", stack_state->auto_push_context.r0);
     eh_errln("r1:0x%08lx", stack_state->auto_push_context.r1);
