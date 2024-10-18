@@ -32,8 +32,8 @@
  *  platform_get_clock_monotonic_time 函数获取到的时钟使用的时钟频率
  */
 #ifndef EH_CONFIG_CLOCKS_PER_SEC
-extern unsigned long eh_get_clock_freq(void);
-#define EH_CONFIG_CLOCKS_PER_SEC                                (eh_get_clock_freq())
+extern unsigned long platform_get_clock_freq(void);
+#define EH_CONFIG_CLOCKS_PER_SEC                                (platform_get_clock_freq())
 #endif /* EH_CONFIG_CLOCKS_PER_SEC */
 
 #ifdef CONFIG_EH_CONFIG_CLOCKS_PER_SEC
