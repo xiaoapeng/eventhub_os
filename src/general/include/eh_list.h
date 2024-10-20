@@ -335,6 +335,38 @@ struct eh_list_head *head)
          &pos->member != (head); \
          pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member))
 
+
+/**
+ * @brief 继续遍历特定类型元素构成的双向链表，从当前位置开始,安全版本
+ *        Continue iterating over the double linked list composed of specific type elements from the current position
+ * @param pos 当前迭代位置的类型指针
+ *        Type pointer of the current iteration position
+ * @param head 双向链表头
+ *        Double linked list head
+ * @param member 结构体中list_head成员的名称
+ *        Member name of list_head in the structure
+ */
+#define eh_list_for_each_entry_continue_safe(pos, n, head, member) \
+    for (pos = eh_list_entry((pos)->member.next, typeof(*(pos)), member), n = eh_list_entry((pos)->member.next, typeof(*(pos)), member); \
+         &pos->member != (head); \
+         pos = n, n = eh_list_entry((pos)->member.next, typeof(*(pos)), member))
+
+/**
+ * @brief 继续反向遍历特定类型元素构成的双向链表，从当前位置开始,安全版本
+ *        Continue iterating over the double linked list composed of specific type elements in reverse from the current position
+ * @param pos 当前迭代位置的类型指针
+ *        Type pointer of the current iteration position
+ * @param head 双向链表头
+ *        Double linked list head
+ * @param member 结构体中list_head成员的名称
+ *        Member name of list_head in the structure
+ */
+#define eh_list_for_each_prev_entry_continue_safe(pos, n, head, member) \
+    for (pos = eh_list_entry((pos)->member.prev, typeof(*(pos)), member), n = eh_list_entry((pos)->member.prev, typeof(*(pos)), member); \
+         &pos->member != (head); \
+         pos = n, n = eh_list_entry((pos)->member.prev, typeof(*(pos)), member))
+
+
 /**
  * @brief 安全地遍历特定类型元素构成的双向链表，防止遍历中删除元素
  *        Safely iterate over the double linked list composed of specific type elements to prevent issues caused by deleting elements during iteration
