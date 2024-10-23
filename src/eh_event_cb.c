@@ -18,6 +18,18 @@
 static eh_task_t *signal_dispose_task = NULL;
 static eh_epoll_t signal_dispose_epoll = NULL;
 static eh_epoll_slot_t epool_slot[EH_EVENT_CB_EPOLL_SLOT_SIZE];
+
+/* 辅助自己退出 */
+static eh_event_t event_task_quit;
+static eh_event_cb_trigger_t trigger_task_quit;
+static eh_event_cb_slot_t slot_task_quit;
+
+static void task_quit_event_cb(eh_event_t *e, void *param){
+    (void)e;
+    (void)param;
+    eh_task_exit(0);
+}
+
 static int task_signal_dispose(void *arg)
 {
     int ret,i;
@@ -74,24 +86,39 @@ void eh_event_cb_trigger_clean(eh_event_cb_trigger_t *trigger){
 static int __init eh_event_cb_init(void)
 {
     int ret = EH_RET_OK;
-    signal_dispose_task = eh_task_create("event_cb", EH_TASK_FLAGS_SYSTEM_TASK, EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE, NULL, task_signal_dispose);
-    if(eh_ptr_to_error(signal_dispose_task) < 0)
-        return eh_ptr_to_error(signal_dispose_task);
     signal_dispose_epoll = eh_epoll_new();
-    if(eh_ptr_to_error(signal_dispose_epoll) < 0){
-        ret = eh_ptr_to_error(signal_dispose_epoll);
-        goto eh_epoll_new_error;
-    }
+    ret = eh_ptr_to_error(signal_dispose_epoll);
+    if(ret < 0)
+        return ret;
+    eh_event_init(&event_task_quit);
+    eh_event_cb_slot_init(&slot_task_quit, task_quit_event_cb, NULL);
+    eh_event_cb_trigger_init(&trigger_task_quit);
+    
+    eh_event_cb_connect(&trigger_task_quit, &slot_task_quit);
+    eh_event_cb_register(&event_task_quit, &trigger_task_quit);
+    
+    signal_dispose_task = eh_task_create("event_cb", EH_TASK_FLAGS_SYSTEM_TASK, EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE, NULL, task_signal_dispose);
+    ret = eh_ptr_to_error(signal_dispose_task);
+    if(ret < 0)
+        goto eh_task_create_error;
+
     return ret;
-eh_epoll_new_error:
+eh_task_create_error:
+    eh_event_cb_unregister(&event_task_quit);
+    eh_event_cb_disconnect(&slot_task_quit);
     eh_task_destroy(signal_dispose_task);
     return ret;
 }
 
 static void __exit eh_event_cb_exit(void)
 {
+    eh_event_notify(&event_task_quit);
+    
+    eh_task_join(signal_dispose_task, NULL, EH_TIME_FOREVER);
+    
+    eh_event_cb_unregister(&event_task_quit);
+    eh_event_cb_disconnect(&slot_task_quit);
     eh_epoll_del(signal_dispose_epoll);
-    eh_task_destroy(signal_dispose_task);
 }
 
 

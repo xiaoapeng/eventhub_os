@@ -79,14 +79,8 @@ static void _clear(void){
     eh_t *eh = eh_get_global_handle();
     eh_task_t *pos,*n;
 
-    /* 清理已经完成的任务，未完成的任务该泄漏就泄漏，这应该是程序员的职责 */
-
     eh_list_for_each_entry_safe(pos, n, &eh->task_finish_auto_destruct_list_head, task_list_node)
         _task_destroy(pos);
-
-    eh_list_for_each_entry_safe(pos, n, &eh->task_finish_list_head, task_list_node)
-        _task_destroy(pos);
-    
 }
 
 static inline void _eh_poll_run(void){
@@ -272,8 +266,10 @@ void eh_task_exit(int ret){
     eh_task_t *task = eh_task_get_current();
     state = eh_enter_critical();
     task->task_ret = ret;
-    if(task != eh_get_global_handle()->main_task)
+    if(task != eh_get_global_handle()->main_task){
         task->state = EH_TASK_STATE_FINISH;
+        eh_event_notify(&task->event);
+    }
     eh_exit_critical(state);
     eh_task_next();
 }
