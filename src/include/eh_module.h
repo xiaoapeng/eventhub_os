@@ -46,8 +46,8 @@ struct module_group{
     __eh_define_modeule_export(_init__func_, _exit__func_, ".eh_init_fini_array." _section_id )
 
 
-
-#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.0")
+#define eh_memory_module_export(_init__func_, _exit__func_)     _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.0")
+#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_modeule_export(_init__func_, _exit__func_, "1.0.1")
 #define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_modeule_export(_init__func_, _exit__func_, "1.1.0")
 
 /* 2.0.0 -> 2.9.9 Reserved for ehip */
