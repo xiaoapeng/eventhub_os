@@ -53,16 +53,28 @@ static inline __safety void eh_event_flags_clean(eh_event_flags_t *ef){
 }
 
 /**
- * @brief   等待事件，并清除事件
+ * @brief   等待事件位图置位，并按照条件清除事件置位
  * @param  ef               
- * @param  wait_flags       要等待 flag
+ * @param  wait_flags       要等待位图的掩码 （如果想等待bit0和bit2置位那么应该设置成 0x00000001 | 0x00000004）
  * @param  claen_flags      如果等到了wait_flags,那么就按照claen_flags清除内部flags值
  * @param  reality_flags    返回实际等到的flag
  * @param  timeout          超时时间,EH_TIME_FOREVER为永不超时 
  * @return int 
  */
-extern __async int eh_event_flags_wait(eh_event_flags_t *ef, eh_flags_t wait_flags, 
+extern __async int eh_event_flags_wait_bits_set(eh_event_flags_t *ef, eh_flags_t wait_flags, 
     eh_flags_t claen_flags, eh_flags_t *reality_flags, eh_sclock_t timeout);
+
+/**
+ * @brief   等待事件位图清除，并按照条件置位事件
+ * @param  ef               
+ * @param  wait_flags       要等待位图的掩码 （如果想等待bit0和bit2置位那么应该设置成 0x00000001 | 0x00000004）
+ * @param  set_flags        如果等到了wait_flags,那么就按照claen_flags置位内部flags值
+ * @param  reality_flags    返回实际等到的flag
+ * @param  timeout          超时时间,EH_TIME_FOREVER为永不超时
+ * @return int 
+ */
+extern __async int eh_event_flags_wait_bits_clean(eh_event_flags_t *ef, eh_flags_t wait_flags, 
+    eh_flags_t set_flags, eh_flags_t *reality_flags, eh_sclock_t timeout);
 
 /**
  * @brief   设置事件bit，
@@ -73,12 +85,20 @@ extern __async int eh_event_flags_wait(eh_event_flags_t *ef, eh_flags_t wait_fla
 extern __safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t flags);
 
 /**
+ * @brief   清除事件bit，
+ * @param  ef               
+ * @param  flags            flags会与内部flags进行&操作
+ * @return __safety 
+ */
+extern __safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t flags);
+
+/**
  * @brief   设置flags
  * @param  ef
  * @param  flags            直接赋值给内部flags
  * @return __safety 
  */
-extern __safety int eh_event_flags_set(eh_event_flags_t *ef, eh_flags_t flags);
+extern __safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags);
 
 
 

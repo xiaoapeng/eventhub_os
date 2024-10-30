@@ -15,10 +15,19 @@
 #include "eh_event_flags.h"
 #include "eh_platform.h"
 
+enum event_flags_condition_type{
+    EVENT_FLAGS_WAIT_CLEAN,
+    EVENT_FLAGS_WAIT_SET
+};
 struct event_flags_condition_arg{
     eh_event_flags_t *ef;
+    enum event_flags_condition_type type;
     eh_flags_t wait_flags;
-    eh_flags_t claen_flags;
+    
+    union{
+        eh_flags_t claen_flags;
+        eh_flags_t set_flags;
+    };
     eh_flags_t *reality_flags;
 };
 
@@ -28,11 +37,20 @@ static bool condition_event_flags(void *arg){
     struct event_flags_condition_arg *ef_condition_arg = (struct event_flags_condition_arg *)arg;
     bool ret = false;    
     state = eh_enter_critical();
-    if(ef_condition_arg->ef->flags & ef_condition_arg->wait_flags){
-        if(ef_condition_arg->reality_flags) 
-            *ef_condition_arg->reality_flags = ef_condition_arg->ef->flags & ef_condition_arg->wait_flags;
-        ef_condition_arg->ef->flags &= ~ef_condition_arg->claen_flags;
-        ret = true;
+    if(ef_condition_arg->type == EVENT_FLAGS_WAIT_SET){
+        if(ef_condition_arg->ef->flags & ef_condition_arg->wait_flags){
+            if(ef_condition_arg->reality_flags) 
+                *ef_condition_arg->reality_flags = ef_condition_arg->ef->flags & ef_condition_arg->wait_flags;
+            ef_condition_arg->ef->flags &= ~ef_condition_arg->claen_flags;
+            ret = true;
+        }
+    } else {
+        if((ef_condition_arg->ef->flags & ef_condition_arg->wait_flags) == 0){
+            if(ef_condition_arg->reality_flags) 
+                *ef_condition_arg->reality_flags = ef_condition_arg->ef->flags & ef_condition_arg->wait_flags;
+            ef_condition_arg->ef->flags |= ef_condition_arg->set_flags;
+            ret = true;
+        }
     }
     eh_exit_critical(state);
     return ret;
@@ -47,11 +65,12 @@ __safety int eh_event_flags_init(eh_event_flags_t *ef){
     return 0;
 }
 
-__async int eh_event_flags_wait(eh_event_flags_t *ef, eh_flags_t wait_flags, 
+__async int eh_event_flags_wait_bits_set(eh_event_flags_t *ef, eh_flags_t wait_flags, 
     eh_flags_t claen_flags, eh_flags_t *reality_flags, eh_sclock_t timeout){
     int ret;
     struct event_flags_condition_arg arg = {
         .ef = ef,
+        .type = EVENT_FLAGS_WAIT_SET,
         .wait_flags = wait_flags,
         .claen_flags = claen_flags,
         .reality_flags = reality_flags
@@ -60,6 +79,20 @@ __async int eh_event_flags_wait(eh_event_flags_t *ef, eh_flags_t wait_flags,
     return ret;
 }
 
+
+extern __async int eh_event_flags_wait_bits_clean(eh_event_flags_t *ef, eh_flags_t wait_flags, 
+    eh_flags_t set_flags, eh_flags_t *reality_flags, eh_sclock_t timeout){
+    int ret;
+    struct event_flags_condition_arg arg = {
+        .ef = ef,
+        .type = EVENT_FLAGS_WAIT_CLEAN,
+        .wait_flags = wait_flags,
+        .set_flags = set_flags,
+        .reality_flags = reality_flags
+    };
+    ret = __await eh_event_wait_condition_timeout(&ef->event, &arg, condition_event_flags, timeout);
+    return ret;
+}
 
 __safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t flags){
     eh_save_state_t state;
@@ -72,7 +105,18 @@ __safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t flags){
     return ret;
 }
 
-__safety int eh_event_flags_set(eh_event_flags_t *ef, eh_flags_t flags){
+__safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t flags){
+    eh_save_state_t state;
+    int ret;
+    state = eh_enter_critical();
+    ret = eh_event_notify(&ef->event);
+    if(ret == 0)
+        ef->flags &= flags;
+    eh_exit_critical(state);
+    return ret;
+}
+
+__safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags){
     eh_save_state_t state;
     int ret;
     state = eh_enter_critical();
