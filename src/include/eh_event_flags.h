@@ -100,7 +100,12 @@ extern __safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t f
  */
 extern __safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags);
 
-
+/**
+ * @brief   获取flags
+ * @param  ef
+ * @return eh_flags_t
+ */
+extern __safety eh_flags_t eh_event_flags_get(eh_event_flags_t *ef);
 
 #ifdef __cplusplus
 #if __cplusplus

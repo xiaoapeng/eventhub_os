@@ -126,3 +126,12 @@ __safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags){
     eh_exit_critical(state);
     return ret;
 }
+
+__safety eh_flags_t eh_event_flags_get(eh_event_flags_t *ef){
+    eh_flags_t flags;
+    eh_save_state_t state;
+    state = eh_enter_critical();
+    flags = ef->flags;
+    eh_exit_critical(state);
+    return flags;
+}
