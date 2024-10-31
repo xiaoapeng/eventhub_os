@@ -58,7 +58,7 @@ struct eh_mem_block {
 #if defined(EH_CONFIG_MEM_HEAP_SIZE) && (EH_CONFIG_MEM_HEAP_SIZE > 0)
 eh_static_assert(EH_CONFIG_MEM_HEAP_SIZE > EH_MEM_BLOCK_HEAD_SIZE, "Please set EH_CONFIG_MEM_HEAP_SIZE to 0 or greater");
 
-static uint8_t __attribute__((aligned(EH_MEM_ALIGN_SIZE))) mem_heap[EH_MEM_ALIGN_DOWN(EH_CONFIG_MEM_HEAP_SIZE)];
+static uint8_t eh_aligned(EH_MEM_ALIGN_SIZE) mem_heap[EH_MEM_ALIGN_DOWN(EH_CONFIG_MEM_HEAP_SIZE)];
 static struct eh_mem_heap mem_heap_array[EH_MEM_HEAP_ARRAY_NUM] = {
     {
         .heap_start = mem_heap,

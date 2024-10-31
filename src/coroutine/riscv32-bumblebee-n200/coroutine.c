@@ -20,7 +20,7 @@
 
 void coroutine_asm_setup(void *interrupt_stack);
 
-static __attribute__((aligned(16))) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_STACK_SIZE];
+static eh_aligned(16) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_STACK_SIZE];
 
 struct stack_init_context{
     unsigned long   s0;

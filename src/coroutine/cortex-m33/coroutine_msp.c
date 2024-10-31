@@ -99,7 +99,7 @@ struct context_m33{
     unsigned long       r11;
     unsigned long       r12;
     unsigned long       lr;
-}__attribute__((aligned(sizeof(long))));
+}eh_aligned(sizeof(long));
 
 
 

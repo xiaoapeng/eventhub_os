@@ -12,7 +12,7 @@ struct eh_rbtree_node {
     parent_node_t  parent_and_color;
     struct eh_rbtree_node *rb_right;
     struct eh_rbtree_node *rb_left;
-} __attribute__((aligned(sizeof(long))));
+} eh_aligned(sizeof(long));
 /* The alignment might seem pointless, but allegedly CRIS needs it */
 
 struct eh_rbtree_root {

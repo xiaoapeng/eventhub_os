@@ -17,7 +17,7 @@
 #define SVC_CALL_CONTEXT_CONVERT_TO_MSP 1
 
 
-static __attribute__((aligned(8))) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_STACK_SIZE];
+static eh_aligned(8) uint8_t interrupt_stack[EH_CONFIG_INTERRUPT_STACK_SIZE];
 
 /**
  *  将当前上下文转换为 PSP任务上下文

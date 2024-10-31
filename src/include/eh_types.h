@@ -51,19 +51,19 @@ extern "C"{
 #define EH_STRINGIFY(x) #x
 
 /* 内存屏障 */
-#define eh_compiler_barrier()               __asm__ volatile("" : : : "memory")             /* 防止 编译器重新排 */
-#define eh_memory_order_consume_barrier()   atomic_thread_fence(memory_order_consume)       /* 防止 loadstore重排和loadstore重排 */
-#define eh_memory_order_acquire_barrier()   atomic_thread_fence(memory_order_acquire)       /* 防止 loadstore重排和loadstore重排和 与相关load操作相关计算的重排 */
-#define eh_memory_order_release_barrier()   atomic_thread_fence(memory_order_release)       /* 防止 loadstore重排和storestore重排 */
-#define eh_memory_order_acq_rel_barrier()   atomic_thread_fence(memory_order_acq_rel)       /* 防止 loadload、loadstore、storestore重排 */
-#define eh_memory_order_seq_cst_barrier()   atomic_thread_fence(memory_order_seq_cst)       /* 防止 loadload、loadstore、storestore重排 与相关load、store操作相关计算的重排 和缓存同步 */
+#define eh_compiler_barrier()                   __asm__ volatile("" : : : "memory")             /* 防止 编译器重新排 */
+#define eh_memory_order_consume_barrier()       atomic_thread_fence(memory_order_consume)       /* 防止 loadstore重排和loadstore重排 */
+#define eh_memory_order_acquire_barrier()       atomic_thread_fence(memory_order_acquire)       /* 防止 loadstore重排和loadstore重排和 与相关load操作相关计算的重排 */
+#define eh_memory_order_release_barrier()       atomic_thread_fence(memory_order_release)       /* 防止 loadstore重排和storestore重排 */
+#define eh_memory_order_acq_rel_barrier()       atomic_thread_fence(memory_order_acq_rel)       /* 防止 loadload、loadstore、storestore重排 */
+#define eh_memory_order_seq_cst_barrier()       atomic_thread_fence(memory_order_seq_cst)       /* 防止 loadload、loadstore、storestore重排 与相关load、store操作相关计算的重排 和缓存同步 */
 
 
-#define eh_offsetof(TYPE, MEMBER)            __builtin_offsetof(TYPE, MEMBER)
-#define eh_same_type(a, b)                  __builtin_types_compatible_p(typeof(a), typeof(b))
-#define eh_static_assert(expr, msg)         _Static_assert(expr, msg)
-#define eh_likely(x)                        __builtin_expect(!!(x), 1)
-#define eh_unlikely(x)                        __builtin_expect(!!(x), 0)
+#define eh_offsetof(TYPE, MEMBER)               __builtin_offsetof(TYPE, MEMBER)
+#define eh_same_type(a, b)                      __builtin_types_compatible_p(typeof(a), typeof(b))
+#define eh_static_assert(expr, msg)             _Static_assert(expr, msg)
+#define eh_likely(x)                            __builtin_expect(!!(x), 1)
+#define eh_unlikely(x)                          __builtin_expect(!!(x), 0)
 #define eh_container_of(ptr, type, member) ({                                       \
     void *__mptr = (void *)(ptr);                                                   \
     eh_static_assert(eh_same_type(*(ptr), ((type *)0)->member) ||                   \
@@ -81,6 +81,7 @@ extern "C"{
 #define __safety                            /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                          __attribute__((noreturn))
 
+#define eh_aligned(x)                        __attribute__((aligned(x)))
 #define eh_align_up(x, align) (((x) + ((align) - 1)) & (~((align) - 1)))
 #define eh_align_down(x, align) ((x) & (~((align) - 1)))
 
