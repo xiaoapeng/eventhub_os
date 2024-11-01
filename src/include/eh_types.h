@@ -13,15 +13,7 @@
 #ifndef _EH_TYPES_H_
 #define _EH_TYPES_H_
 
-
 #include <stdatomic.h>
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C"{
-#endif
-#endif /* __cplusplus */
-
 
 #ifndef EH_SECTION
     #if defined(__CC_ARM) || defined(__CLANG_ARM)
@@ -80,17 +72,12 @@ extern "C"{
 #define __weak                              __attribute__((weak))
 #define __safety                            /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                          __attribute__((noreturn))
+#define __attribute_const__                 __attribute__((__const__))
 
 #define eh_aligned(x)                        __attribute__((aligned(x)))
 #define eh_align_up(x, align) (((x) + ((align) - 1)) & (~((align) - 1)))
 #define eh_align_down(x, align) ((x) & (~((align) - 1)))
 
-
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* __cplusplus */
 
 
 #endif // _EH_TYPES_H_
