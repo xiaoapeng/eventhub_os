@@ -55,6 +55,14 @@ extern  void* eh_mem_pool_alloc(eh_mem_pool_t pool);
  */
 extern  void  eh_mem_pool_free(eh_mem_pool_t pool, void* ptr);
 
+/**
+ * @brief                   判断这个buf是否来自这个内存池
+ * @param  pool             内存池句柄
+ * @param  ptr              内存块指针
+ */
+extern  int eh_mem_pool_is_from_this(eh_mem_pool_t pool, void* ptr);
+
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -95,3 +95,11 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
     pool->free_list[index].next = pool->free_list_head.next;
     pool->free_list_head.next = pool->free_list + index;
 }
+
+
+int eh_mem_pool_is_from_this(eh_mem_pool_t _pool, void* ptr){
+    struct eh_mem_pool *pool = (struct eh_mem_pool *)_pool;
+    return  ((char*)ptr >= (char*)pool->base && 
+            (char*)ptr < (char*)pool->base + pool->num*pool->align_size) && 
+            ((size_t)((char*)ptr - (char*)pool->base) % pool->align_size == 0);
+}
