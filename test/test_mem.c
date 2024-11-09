@@ -2,12 +2,10 @@
  * @file test_mem.c
  * @brief  malloc测试
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-05-12
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #include <stddef.h>

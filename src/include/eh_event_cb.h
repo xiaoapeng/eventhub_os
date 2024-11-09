@@ -2,12 +2,10 @@
  * @file    eh_event_cb.h
  * @brief   此模块是event的扩展，在event的基础上实现自动回调
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-06-19
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 

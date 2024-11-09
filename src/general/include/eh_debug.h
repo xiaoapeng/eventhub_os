@@ -2,12 +2,10 @@
  * @file eh_debug.h
  * @brief debug相关接口实现
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-07-09
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 #ifndef _EH_DEBUG_H_
 #define _EH_DEBUG_H_

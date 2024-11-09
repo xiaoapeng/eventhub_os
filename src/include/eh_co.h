@@ -2,12 +2,10 @@
  * @file eh_co.h
  * @brief 协程相关头文件
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-05-01
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_CO_H_

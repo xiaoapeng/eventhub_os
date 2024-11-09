@@ -2,12 +2,10 @@
  * @file coroutine.c
  * @brief x64架构协程相关代码
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-05-01
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 /****************************************************************************************

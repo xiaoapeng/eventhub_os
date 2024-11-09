@@ -2,12 +2,10 @@
  * @file eh_ringbuf.h
  * @brief 环形缓冲区实现，单读单写无锁环形缓冲区
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-07-23
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 #ifndef _EH_RINGBUF_H_
 #define _EH_RINGBUF_H_

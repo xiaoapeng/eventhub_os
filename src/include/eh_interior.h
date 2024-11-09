@@ -2,12 +2,10 @@
  * @file eh_interior.h
  * @brief  内部进行使用的定义
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-05-10
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_INTERIOR_H_

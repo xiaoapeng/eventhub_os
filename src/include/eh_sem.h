@@ -5,12 +5,10 @@
  *  而信号量的实现能增加可靠性, 信号量的实现继承了event的相关特性，
  *  也能使用event相关特性，比如epoll
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-06-23
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_SEM_H_

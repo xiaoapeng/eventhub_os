@@ -2,12 +2,10 @@
  * @file eh_mem_pool.h
  * @brief 内存池功能实现
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-10-06
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_MEM_POOL_H_

@@ -2,12 +2,10 @@
  * @file    eh_error.h
  * @brief   错误处理相关
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-04-21
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_ERROR_H_

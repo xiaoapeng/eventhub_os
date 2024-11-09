@@ -2,12 +2,10 @@
  * @file test_event_cb.c
  * @brief 事件的回调函数测试
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-06-22
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 

@@ -8,12 +8,10 @@
  *  此模块所有的函数都只能在协程上下文中使用，
  *  也就是说，不要在中断上下文，或者其他线程（posix线程，系统线程）上下文中调用本函数
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-06-22
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 

@@ -2,12 +2,10 @@
  * @file eh_swab.h
  * @brief 字节交换实现
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-10-31
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 #ifndef _EH_SWAB_H_
 #define _EH_SWAB_H_

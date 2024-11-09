@@ -9,12 +9,10 @@
  *  1. 协程切换时间相对来说不太确定，没有msp版本稳定。
  *
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-07-15
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 

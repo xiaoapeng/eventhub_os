@@ -2,12 +2,10 @@
  * @file eh_event_flags.c
  * @brief 事件bit map 通知，可支持 unsigned long 位数大小的flag数
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-10-03
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #include "eh.h"

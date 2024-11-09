@@ -2,12 +2,10 @@
  * @file eh_signal.h
  * @brief 在eh_event 和 eh_event_cb 基础之上封装的信号和槽机制
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-07-28
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 
 #ifndef _EH_SIGNAL_H_

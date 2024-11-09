@@ -2,12 +2,10 @@
  * @file eh_event.h
  * @brief 事件和事件epoll的实现
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
- * @version 1.0
  * @date 2024-06-22
  * 
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
- * @par 修改日志:
  */
 #ifndef _EH_EVENT_H_
 #define _EH_EVENT_H_
