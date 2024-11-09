@@ -351,8 +351,10 @@ static int  module_group_init(void){
     for(i=0;i<len;i++){
         if(eh_init_fini_array[i].init){
             ret = eh_init_fini_array[i].init();
-            if(ret < 0)
+            if(ret < 0){
+                eh_errfl("%0#p init failed ret = %d", eh_init_fini_array[i].init, ret);
                 goto init_error;
+            }
         }
     }
 
