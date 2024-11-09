@@ -11,15 +11,15 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
-#include "eh.h"
-#include "eh_debug.h"
+#include <eh.h>
+#include <eh_debug.h>
 #include "eh_co.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_timer.h"
-#include "eh_sleep.h" 
-#include "eh_interior.h"
-#include "eh_sem.h"
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_timer.h>
+#include <eh_sleep.h> 
+#include <eh_interior.h>
+#include <eh_sem.h>
 
 eh_sem_t sem;
 

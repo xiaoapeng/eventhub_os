@@ -10,10 +10,10 @@
 
 
 #include <stdarg.h>
-#include "eh.h"
-#include "eh_platform.h"
-#include "eh_formatio.h"
-#include "eh_debug.h"
+#include <eh.h>
+#include <eh_platform.h>
+#include <eh_formatio.h>
+#include <eh_debug.h>
 #include "eh_config.h"
 
 #if (defined(EH_CONFIG_DEFAULT_DEBUG_LEVEL))

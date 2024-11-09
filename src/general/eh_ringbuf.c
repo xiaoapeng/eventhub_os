@@ -11,9 +11,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "eh_types.h"
-#include "eh_error.h"
-#include "eh_mem.h"
+#include <eh_types.h>
+#include <eh_error.h>
+#include <eh_mem.h>
 #include "eh_ringbuf.h"
 
 

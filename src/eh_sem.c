@@ -12,12 +12,12 @@
  */
 
 
-#include "eh.h"
-#include "eh_event.h"
-#include "eh_mem.h"
-#include "eh_platform.h"
-#include "eh_interior.h"
-#include "eh_sem.h"
+#include <eh.h>
+#include <eh_event.h>
+#include <eh_mem.h>
+#include <eh_platform.h>
+#include <eh_interior.h>
+#include <eh_sem.h>
 #include <stdbool.h>
 
 struct eh_sem {

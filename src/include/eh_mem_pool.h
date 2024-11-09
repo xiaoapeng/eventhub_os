@@ -13,7 +13,7 @@
 
 #include <stddef.h>
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 
 typedef int* eh_mem_pool_t;

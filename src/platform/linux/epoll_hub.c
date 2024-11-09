@@ -13,9 +13,9 @@
 #include <sys/timerfd.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
-#include "eh.h"
-#include "eh_module.h"
-#include "epoll_hub.h"
+#include <eh.h>
+#include <eh_module.h>
+#include <epoll_hub.h>
 
 #define EPOLL_WAIT_MAX_EVENTS 1024
 

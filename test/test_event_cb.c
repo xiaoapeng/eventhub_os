@@ -10,14 +10,14 @@
 
 
 #include <stdio.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_timer.h" 
-#include "eh_sleep.h"
-#include "eh_event_cb.h"
-#include "eh_types.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_timer.h> 
+#include <eh_sleep.h>
+#include <eh_event_cb.h>
+#include <eh_types.h>
 
 static eh_timer_event_t timer1;
 static eh_event_cb_trigger_t trigger;

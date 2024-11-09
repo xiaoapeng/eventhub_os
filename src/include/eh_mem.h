@@ -11,7 +11,7 @@
 #define _EH_MEM_H_
 
 #include <stddef.h>
-#include "eh_types.h"
+#include <eh_types.h>
 
 #ifdef __cplusplus
 #if __cplusplus

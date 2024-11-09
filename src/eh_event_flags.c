@@ -8,10 +8,10 @@
  * 
  */
 
-#include "eh.h"
-#include "eh_event.h"
-#include "eh_event_flags.h"
-#include "eh_platform.h"
+#include <eh.h>
+#include <eh_event.h>
+#include <eh_event_flags.h>
+#include <eh_platform.h>
 
 enum event_flags_condition_type{
     EVENT_FLAGS_WAIT_CLEAN,

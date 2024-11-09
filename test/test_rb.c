@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
-#include "eh_debug.h"
-#include "eh_rbtree.h"
+#include <eh_debug.h>
+#include <eh_rbtree.h>
 
 #define TEST_DATA_SIZE 1000
 

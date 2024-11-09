@@ -10,13 +10,13 @@
 
 
 #include <stdio.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_sleep.h"
-#include "eh_platform.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_sleep.h>
+#include <eh_platform.h>
+#include <eh_timer.h> 
+#include <eh_types.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
 
@@ -45,7 +45,7 @@ int task_app(void *arg){
 
     eh_event_init(&test_event);
 
-    eh_task_create("task_event_notify", EH_TASK_FLAGS_DETACH, 1024, &test_event, task_event_notify);
+    eh_task_create("task_event_notify", EH_TASK_FLAGS_DETACH, 4096, &test_event, task_event_notify);
 
 
     eh_timer_init(&timer1);

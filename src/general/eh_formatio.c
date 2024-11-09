@@ -18,9 +18,9 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include "eh_mem.h"
-#include "eh_types.h"
-#include "eh_formatio.h"
+#include <eh_mem.h>
+#include <eh_types.h>
+#include <eh_formatio.h>
 #include "eh_config.h"
 
 #ifndef BYTE_ORDER

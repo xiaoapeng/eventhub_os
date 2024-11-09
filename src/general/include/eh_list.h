@@ -1,7 +1,7 @@
 #ifndef __EH_LIST_H__
 #define __EH_LIST_H__
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 struct eh_list_head {
     struct eh_list_head *next, *prev;

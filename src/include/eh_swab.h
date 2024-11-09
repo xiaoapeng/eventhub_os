@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 
 #ifndef __ORDER_LITTLE_ENDIAN__

@@ -13,15 +13,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "eh.h"
+#include <eh.h>
 #include "eh_config.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_interior.h"
-#include "eh_mem.h"
-#include "eh_platform.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_interior.h>
+#include <eh_mem.h>
+#include <eh_platform.h>
+#include <eh_timer.h> 
+#include <eh_types.h>
 
 #if  defined(EH_CONFIG_USE_LIBC_MEM_MANAGE) && EH_CONFIG_USE_LIBC_MEM_MANAGE == 0
 

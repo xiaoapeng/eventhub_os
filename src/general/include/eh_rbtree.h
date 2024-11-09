@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "eh_types.h"
+#include <eh_types.h>
 
 
 typedef unsigned long parent_node_t;

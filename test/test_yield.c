@@ -9,12 +9,12 @@
  */
 
 #include <stdio.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_timer.h> 
+#include <eh_types.h>
 
 
 void stdout_write(void *stream, const uint8_t *buf, size_t size){

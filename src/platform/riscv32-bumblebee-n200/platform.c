@@ -1,11 +1,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_timer.h"
-#include "eh_platform.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_timer.h>
+#include <eh_platform.h>
 
 
 __attribute__((naked))  eh_save_state_t  platform_enter_critical(void){

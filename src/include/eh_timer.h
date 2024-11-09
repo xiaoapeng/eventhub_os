@@ -12,8 +12,8 @@
 #ifndef _EH_TIMER_H_
 #define _EH_TIMER_H_
 
-#include "eh_types.h"
-#include "eh_rbtree.h"
+#include <eh_types.h>
+#include <eh_rbtree.h>
 
 typedef struct eh_timer_event eh_timer_event_t;
 

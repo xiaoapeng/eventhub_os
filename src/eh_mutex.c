@@ -15,13 +15,13 @@
  */
 
 #include <stdint.h>
-#include "eh.h"
-#include "eh_error.h"
-#include "eh_event.h"
-#include "eh_mem.h"
-#include "eh_platform.h"
-#include "eh_interior.h"
-#include "eh_mutex.h"
+#include <eh.h>
+#include <eh_error.h>
+#include <eh_event.h>
+#include <eh_mem.h>
+#include <eh_platform.h>
+#include <eh_interior.h>
+#include <eh_mutex.h>
 
 #define EH_MUTEX_LOCK_CNT_MAX   0xFFFFFFFF
 struct eh_mutex {

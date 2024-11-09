@@ -10,8 +10,8 @@
 #ifndef _EH_EVENT_H_
 #define _EH_EVENT_H_
 
-#include "eh_types.h"
-#include "eh_list.h"
+#include <eh_types.h>
+#include <eh_list.h>
 
 #ifdef __cplusplus
 #if __cplusplus

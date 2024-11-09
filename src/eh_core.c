@@ -12,13 +12,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_mem.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_interior.h"
-#include "eh_timer.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_mem.h>
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_interior.h>
+#include <eh_timer.h>
 
 #define EH_STACK_PAD_BYTE               0xFF
 

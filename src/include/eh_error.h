@@ -11,7 +11,7 @@
 #ifndef _EH_ERROR_H_
 #define _EH_ERROR_H_
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 #ifdef __cplusplus
 #if __cplusplus

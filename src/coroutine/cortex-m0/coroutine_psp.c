@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 #include <strings.h>
-#include "eh.h"
+#include <eh.h>
 #include "eh_co.h"
 #include "eh_config.h"
 

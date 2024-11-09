@@ -238,16 +238,16 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 API需要包含如下头文件引入，可以按需引入，需要注意include顺序
 
 ```c
-#include "eh.h"                 /* 任务和全局函数 */
-#include "eh_event.h"           /* 事件相关API */
-#include "eh_timer.h"           /* 定时器相关API */
-#include "eh_sleep.h"           /* 阻塞睡眠相关API */
-#include "eh_mem.h"             /* 动态内存分配相关API */
-#include "eh_sem.h"             /* 信号量相关API */
-#include "eh_mutex.h"           /* 互斥锁相关API */
-#include "eh_signal.h"          /* 信号相关API */
-#include "eh_formatio.h"        /* 格式化输出相关API */
-#include "eh_debug.h"           /* debug输出相关API */
+#include <eh.h>                 /* 任务和全局函数 */
+#include <eh_event.h>           /* 事件相关API */
+#include <eh_timer.h>           /* 定时器相关API */
+#include <eh_sleep.h>           /* 阻塞睡眠相关API */
+#include <eh_mem.h>             /* 动态内存分配相关API */
+#include <eh_sem.h>             /* 信号量相关API */
+#include <eh_mutex.h>           /* 互斥锁相关API */
+#include <eh_signal.h>          /* 信号相关API */
+#include <eh_formatio.h>        /* 格式化输出相关API */
+#include <eh_debug.h>           /* debug输出相关API */
 ```
 
 ### 全局初始化和销毁
@@ -763,8 +763,8 @@ EH_EXTERN_SIGNAL(test_signal);
 
 ```c
 /* test_signal_public.c */
-#include "eh.h"
-#include "eh_signal.h"
+#include <eh.h>
+#include <eh_signal.h>
 #include "test_signal_public.h"
 
 EH_DEFINE_SIGNAL(test_signal);
@@ -792,8 +792,8 @@ eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```c
 /* main.c */
-#include "eh.h"
-#include "eh_signal.h"
+#include <eh.h>
+#include <eh_signal.h>
 #include "test_signal_public.h"
 
 
@@ -915,8 +915,8 @@ EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t);
 
 ```c
 /* test_custom_event.c */
-#include "eh.h"
-#include "eh_signal.h"
+#include <eh.h>
+#include <eh_signal.h>
 #include "test_custom_event.h"
 
 EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t, {});
@@ -953,8 +953,8 @@ eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```c
 /* main.c */
-#include "eh.h"
-#include "eh_signal.h"
+#include <eh.h>
+#include <eh_signal.h>
 #include "test_custom_event.h"
 
 

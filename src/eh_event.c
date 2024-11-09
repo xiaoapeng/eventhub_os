@@ -10,15 +10,15 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "eh.h"
-#include "eh_event.h"
-#include "eh_mem.h"
-#include "eh_platform.h"
-#include "eh_interior.h"
-#include "eh_list.h"
-#include "eh_rbtree.h"
-#include "eh_timer.h"
-#include "eh_types.h"
+#include <eh.h>
+#include <eh_event.h>
+#include <eh_mem.h>
+#include <eh_platform.h>
+#include <eh_interior.h>
+#include <eh_list.h>
+#include <eh_rbtree.h>
+#include <eh_timer.h>
+#include <eh_types.h>
 
 
 static int __async _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(void* arg)){

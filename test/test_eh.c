@@ -10,12 +10,12 @@
 
 
 #include <stdio.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_timer.h> 
+#include <eh_types.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
 

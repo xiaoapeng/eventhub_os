@@ -15,11 +15,11 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_platform.h"
-#include "eh_timer.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_platform.h>
+#include <eh_timer.h>
 
 static bool gpio_status = false;
 

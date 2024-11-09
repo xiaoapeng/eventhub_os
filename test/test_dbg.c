@@ -14,15 +14,15 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_event.h"
-#include "eh_sleep.h"
-#include "eh_platform.h"
-#include "eh_formatio.h"
-#include "eh_timer.h" 
-#include "eh_types.h"
-#include "eh_debug.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_event.h>
+#include <eh_sleep.h>
+#include <eh_platform.h>
+#include <eh_formatio.h>
+#include <eh_timer.h> 
+#include <eh_types.h>
+#include <eh_debug.h>
 
 void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)stream;

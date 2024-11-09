@@ -12,7 +12,7 @@
 
 #ifndef _EH_MODULE_H_
 #define _EH_MODULE_H_
-#include "eh_types.h"
+#include <eh_types.h>
 
 struct eh_module{
     int (*init)(void);

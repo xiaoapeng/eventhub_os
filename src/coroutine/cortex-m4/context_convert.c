@@ -8,7 +8,7 @@
  * 
  */
 
-#include "eh.h"
+#include <eh.h>
 
 #define SVC_CALL_CONTEXT_CONVERT_TO_PSP 0
 #define SVC_CALL_CONTEXT_CONVERT_TO_MSP 1

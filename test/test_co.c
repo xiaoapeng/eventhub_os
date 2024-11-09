@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-#include "eh.h"
-#include "eh_debug.h"
+#include <eh.h>
+#include <eh_debug.h>
 #include "eh_co.h"
 
 context_t co_context_task1;

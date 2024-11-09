@@ -11,9 +11,9 @@
 #ifndef _EH_SIGNAL_H_
 #define _EH_SIGNAL_H_
 
-#include "eh_event.h"
-#include "eh_event_cb.h"
-#include "eh_list.h"
+#include <eh_event.h>
+#include <eh_event_cb.h>
+#include <eh_list.h>
 
 #ifdef __cplusplus
 #if __cplusplus

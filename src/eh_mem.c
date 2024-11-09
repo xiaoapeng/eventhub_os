@@ -9,13 +9,13 @@
  */
 
 #include <stdbool.h>
-#include "eh.h"
-#include "eh_debug.h"
-#include "eh_error.h"
-#include "eh_mem.h"
-#include "eh_types.h"
-#include "eh_user_config.h"
-#include "eh_platform.h"
+#include <eh.h>
+#include <eh_debug.h>
+#include <eh_error.h>
+#include <eh_mem.h>
+#include <eh_types.h>
+#include <eh_config.h>
+#include <eh_platform.h>
 
 typedef unsigned long eh_size_t;
 
@@ -233,14 +233,14 @@ static int __init eh_mem_init(void){
     mem_min_ever_free_size_level = mem_free_size;
     eh_infoln("Initializes the heap information:");
     eh_infoln("%11s\t%11s\t%11s\t%11s","total", "used" ,"free" ,"mefsl");
-    eh_infoln("%11d\t%11d\t%11d\t%11d", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
+    eh_infoln("%11lu\t%11lu\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
     return 0;
 }
 
 static void __exit eh_mem_exit(void){
     eh_infoln("Exits the heap information:");
     eh_infoln("%11s\t%11s\t%11s\t%11s","total", "used" ,"free" ,"mefsl");
-    eh_infoln("%11d\t%11d\t%11d\t%11d", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
+    eh_infoln("%11lu\t%11lu\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
     
 }
 

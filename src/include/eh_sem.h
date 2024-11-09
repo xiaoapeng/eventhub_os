@@ -14,7 +14,7 @@
 #ifndef _EH_SEM_H_
 #define _EH_SEM_H_
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 typedef int* eh_sem_t;
 

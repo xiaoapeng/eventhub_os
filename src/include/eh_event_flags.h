@@ -12,7 +12,7 @@
 #define _EH_EVENT_FLAGS_H_
 
 
-#include "eh_types.h"
+#include <eh_types.h>
 
 typedef struct eh_event_flags eh_event_flags_t;
 typedef unsigned long eh_flags_t;

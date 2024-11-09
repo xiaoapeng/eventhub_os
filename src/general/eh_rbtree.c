@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdbool.h>
-#include "eh_rbtree.h"
+#include <eh_rbtree.h>
 
 static inline void rb_set_parent(struct eh_rbtree_node *rb, struct eh_rbtree_node *p)
 {
