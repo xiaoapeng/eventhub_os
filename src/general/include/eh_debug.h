@@ -11,6 +11,7 @@
 #define _EH_DEBUG_H_
 
 #include <eh_config.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 #if __cplusplus
