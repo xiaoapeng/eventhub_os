@@ -67,6 +67,14 @@
         default: ((type *)eh_container_of(ptr, type, member))                       \
     )
 
+#define eh_container_of_safe(ptr, type, member)                                     \
+    ({ typeof(ptr) ____ptr = (ptr);                                                 \
+       ____ptr ? eh_container_of(____ptr, type, member) : NULL;                     \
+    })
+
+#define eh_member_address_is_nonnull(ptr, member)	                                \
+	((uintptr_t)(ptr) + offsetof(typeof(*(ptr)), member) != 0)
+
 #define __weak                              __attribute__((weak))
 #define __safety                            /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                          __attribute__((noreturn))
