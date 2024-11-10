@@ -21,11 +21,8 @@
 #include <eh_mem.h>
 #include <eh_types.h>
 #include <eh_formatio.h>
-#include "eh_config.h"
-
-#ifndef BYTE_ORDER
-#error "BYTE_ORDER not defined"
-#endif
+#include <eh_config.h>
+#include <eh_swab.h>
 
 #define FORMAT_FLOAT_F_RANGE_MAX        (1.e+18)
 #define FORMAT_FLOAT_F_RANGE_MIN        (-(1.e+18))
@@ -701,7 +698,7 @@ static int vprintf_array(struct stream_out *stream, const uint8_t *array, int fi
             streamout_in_byte(stream, ' ');
             n++;
         }
-#if BYTE_ORDER == LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         for(int j=item_size - 1; j>=0; j--, n+=2){
 #else
         for(int j=0; j<item_size; j++, n+=2){
@@ -713,7 +710,7 @@ static int vprintf_array(struct stream_out *stream, const uint8_t *array, int fi
     if(remainder){
         streamout_in_byte(stream, ' ');
         n++;
-#if BYTE_ORDER == LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
         for(int i=0;i<(item_size-remainder);i++,n+=2){
             streamout_in_byte(stream, '?');
             streamout_in_byte(stream, '?');

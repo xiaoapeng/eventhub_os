@@ -10,7 +10,7 @@
 #ifndef _EH_DEBUG_H_
 #define _EH_DEBUG_H_
 
-#include "eh_config.h"
+#include <eh_config.h>
 
 #ifdef __cplusplus
 #if __cplusplus
