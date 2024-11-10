@@ -28,7 +28,7 @@ struct eh_llist_head{
  * @brief                   初始化单链表头
  * @param  list             
  */
-static inline void eh_init_llist_head(struct eh_llist_head *list)
+static inline void eh_llist_head_init(struct eh_llist_head *list)
 {
 	list->first = NULL;
     list->last = NULL;
@@ -39,7 +39,7 @@ static inline void eh_init_llist_head(struct eh_llist_head *list)
  * @brief                   初始化链表节点
  * @param  node             
  */
-static inline void eh_init_llist_node(struct eh_llist_node *node)
+static inline void eh_llist_node_init(struct eh_llist_node *node)
 {
 	node->next = node;
 }
@@ -170,7 +170,7 @@ static inline void eh_llist_del(struct eh_llist_node *prev_node, struct eh_llist
  */
 static inline void eh_llist_del_init(struct eh_llist_node *prev_node, struct eh_llist_node *del_node){
     eh_llist_del(prev_node, del_node);
-    eh_init_llist_node(del_node);
+    eh_llist_node_init(del_node);
 }
 
 /**
