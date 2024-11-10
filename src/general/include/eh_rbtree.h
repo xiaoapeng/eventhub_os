@@ -51,12 +51,9 @@ struct eh_rbtree_root {
 
 #define rb_parent(r)   ((struct eh_rbtree_node *)((r)->parent_and_color & ~((parent_node_t)3)))
 
-#define    eh_rb_entry(ptr, type, member) eh_container_of(ptr, type, member)
+#define eh_rb_entry(ptr, type, member)         eh_container_of(ptr, type, member)
 
-#define eh_rb_entry_safe(ptr, type, member)                     \
-    ({ typeof(ptr) ____ptr = (ptr);                             \
-       ____ptr ? eh_rb_entry(____ptr, type, member) : NULL;     \
-    })
+#define eh_rb_entry_safe(ptr, type, member)    eh_container_of_safe(ptr, type, member)
 
 #define eh_rb_root_is_empty(root)  ((root)->rb_node == NULL)
 
