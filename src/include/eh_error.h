@@ -47,7 +47,7 @@ static inline __attribute_const__ int eh_ptr_to_error(void *ptr){
     return (int)(long)(ptr);
 }
 
-#define eh_error_to_ptr(err_on)             ((void*)(err_on))
+#define eh_error_to_ptr(err_on)             ((void*)(long)(err_on))
 
 #ifdef __cplusplus
 #if __cplusplus
