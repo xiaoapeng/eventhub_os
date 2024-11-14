@@ -40,6 +40,8 @@
 
 #define EH_STRINGIFY(x) #x
 
+#define EH_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
 /* 内存屏障 */
 #define eh_compiler_barrier()                   __asm__ volatile("" : : : "memory")             /* 防止 编译器重新排 */
 #define eh_memory_order_consume_barrier()       atomic_thread_fence(memory_order_consume)       /* 防止 loadstore重排和loadstore重排 */
