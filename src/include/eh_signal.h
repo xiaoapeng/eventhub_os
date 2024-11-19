@@ -124,7 +124,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
  * @brief 获取自定义信号中的自定义事件
  */
 #define eh_signal_to_custom_event(signal)                                               \
-    &(signal)->custom_event
+    (&(signal)->custom_event)
 
 
 /**
