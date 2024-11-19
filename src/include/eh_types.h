@@ -78,10 +78,10 @@
 	((uintptr_t)(ptr) + offsetof(typeof(*(ptr)), member) != 0)
 
 
-#define eh_aligned(x)                        __attribute__((aligned(x)))
-#define eh_align_up(x, align) (((x) + ((align) - 1)) & (~((align) - 1)))
-#define eh_align_down(x, align) ((x) & (~((align) - 1)))
-#define eh_read_once(x)                   (*(const volatile typeof(x) *)&(x))
+#define eh_aligned(x)                           __attribute__((aligned(x)))
+#define eh_align_up(x, align)                   (((x) + ((align) - 1)) & (~((align) - 1)))
+#define eh_align_down(x, align)                 ((x) & (~((align) - 1)))
+#define eh_read_once(x)                         (*(const volatile typeof(x) *)&(x))
 
 #define __weak                              __attribute__((weak))
 #define __safety                            /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
