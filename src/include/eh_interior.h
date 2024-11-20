@@ -43,15 +43,22 @@ struct eh{
 /* 事件接收器  */
 struct eh_event_receptor{
     struct eh_list_head                 list_node;
-    struct eh_task                      *wakeup_task;           /* 被唤醒的任务            */
     union{
+        struct eh_task                      *wakeup_task;           /* 被唤醒的任务            */
+        struct eh_epoll                     *epoll;                 /* epoll对象 */
+    };
+    union{
+#define EH_EVENT_RECEPTOR_FLAGS_TRIGGER     0x00000001U
+#define EH_EVENT_RECEPTOR_FLAGS_ERROR       0x00000002U
+#define EH_EVENT_RECEPTOR_FLAGS_EPOLL       0x00000004U
+#define EH_EVENT_RECEPTOR_TRIGGER_MASK      (EH_EVENT_RECEPTOR_FLAGS_TRIGGER | EH_EVENT_RECEPTOR_FLAGS_ERROR)
         uint32_t                            flags;
         struct{
             uint32_t                     trigger:1;
             uint32_t                     error:1;
+            uint32_t                     uepoll:1;                /* 代表本个接收器是epoll接收器 */
         };
     };
-    struct eh_epoll                     *epoll;
 };
 
 struct eh_task{
@@ -112,24 +119,24 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
  */
 #define eh_get_global_handle() (&_global_eh)
 
-#define __eh_event_receptor_init(receptor, _wakeup_task, _epoll)        \
-    do{                                                                 \
-        eh_list_head_init(&(receptor)->list_node);                      \
-        (receptor)->wakeup_task = (_wakeup_task);                       \
-        (receptor)->flags = 0;                                          \
-        (receptor)->epoll = (_epoll);                                   \
-    }while(0)
-
 /**
  * @brief               初始化事件接收器
  * @param   receptor    事件接收器
  * @param   wakeup_task 事件接收时被唤醒的任务
  */
 #define eh_event_receptor_init(receptor, _wakeup_task)                  \
-    __eh_event_receptor_init((receptor), (_wakeup_task), NULL)
+    do{                                                                 \
+        eh_list_head_init(&(receptor)->list_node);                      \
+        (receptor)->wakeup_task = (_wakeup_task);                       \
+        (receptor)->flags = 0;                                          \
+    }while(0)
 
-#define eh_event_receptor_epoll_init(receptor, _wakeup_task, epool)      \
-    __eh_event_receptor_init((receptor), (_wakeup_task), epool)
+#define eh_event_receptor_epoll_init(receptor, _epool)                  \
+    do{                                                                 \
+        eh_list_head_init(&(receptor)->list_node);                      \
+        (receptor)->epoll = (_epool);                                   \
+        (receptor)->flags = 0x0U | EH_EVENT_RECEPTOR_FLAGS_EPOLL;       \
+    }while(0)
 
 /**
  * @brief               给事件添加接收器
