@@ -224,11 +224,16 @@ static inline void eh_llist_enqueue(struct eh_llist_node *new, struct eh_llist_h
  * @param  head             链表头
  * @return struct eh_llist_node*   返回被出队的节点，队列空时返回NULL
  */
-static inline struct eh_llist_node *eh_llist_dequeue(struct eh_llist_head *head){
-    return eh_llist_pop(head);
+#define eh_llist_dequeue(head) eh_llist_pop(head)
+
+/**
+ * @brief                   队列/栈：查看偷看数据
+ * @param  head             链表头
+ * @return struct eh_llist_node*   返回队列头节点，队列为空时返回NULL
+ */
+static inline struct eh_llist_node *eh_llist_peek(struct eh_llist_head *head){
+    return head->first;
 }
-
-
 
 
 #ifdef __cplusplus
