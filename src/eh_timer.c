@@ -15,7 +15,7 @@
 #include <eh_timer.h>
 
 #define timer_is_empty()            (eh_rb_root_is_empty(&timer_tree_root))
-#define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)->expire)
+#define timer_get_first_expire()    (eh_rb_entry(eh_rb_first(&timer_tree_root), eh_event_timer_t, rb_node)->expire)
 
 #define FIRST_TIMER_UPDATE      1
 #define FIRST_TIMER_MAX_TIME    ((eh_sclock_t)(eh_msec_to_clock(1000*60)))
@@ -23,12 +23,12 @@
 static struct eh_rbtree_root     timer_tree_root;                                       /* 系统时钟树 */
 static        eh_clock_t         timer_now;
 static int _eh_timer_rbtree_cmp(struct eh_rbtree_node *a, struct eh_rbtree_node *b){
-    eh_sclock_t a_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(a,eh_timer_event_t, rb_node));
-    eh_sclock_t b_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(b,eh_timer_event_t, rb_node));
+    eh_sclock_t a_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(a,eh_event_timer_t, rb_node));
+    eh_sclock_t b_remaining_time = eh_remaining_time(timer_now, eh_rb_entry(b,eh_event_timer_t, rb_node));
     return a_remaining_time < b_remaining_time ? -1 : a_remaining_time > b_remaining_time ? 1 : 0;
 }
 
-static int _eh_timer_start_no_lock(eh_clock_t base, eh_timer_event_t *timer){
+static int _eh_timer_start_no_lock(eh_clock_t base, eh_event_timer_t *timer){
     int ret = EH_RET_OK;    
     if(!eh_rb_node_is_empty(&timer->rb_node)){
         ret = EH_RET_BUSY;
@@ -56,7 +56,7 @@ eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void){
 
 void eh_timer_check(void){
     eh_save_state_t state;
-    eh_timer_event_t *first_timer;
+    eh_event_timer_t *first_timer;
     eh_clock_t base;
     
     state = eh_enter_critical();;
@@ -65,9 +65,9 @@ void eh_timer_check(void){
 
     if(timer_is_empty())  goto out;
 
-    for(first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node); 
+    for(first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_event_timer_t, rb_node); 
         first_timer && eh_remaining_time(timer_now, first_timer) <= 0 ; 
-        first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_timer_event_t, rb_node)
+        first_timer = eh_rb_entry_safe(eh_rb_first(&timer_tree_root), eh_event_timer_t, rb_node)
     ){
         /* 定时器到期 */
         eh_event_notify(&first_timer->event);
@@ -89,7 +89,7 @@ out:
 
 
 
-int eh_timer_start(eh_timer_event_t *timer){
+int eh_timer_start(eh_event_timer_t *timer){
     eh_t *eh = eh_get_global_handle();
     int ret;
     eh_save_state_t state;
@@ -107,7 +107,7 @@ int eh_timer_start(eh_timer_event_t *timer){
     return ret;
 }
 
-int eh_timer_stop(eh_timer_event_t *timer){
+int eh_timer_stop(eh_event_timer_t *timer){
     eh_save_state_t state;
     int ret = EH_RET_OK;
     eh_param_assert(timer);
@@ -124,7 +124,7 @@ out:
     return ret;
 }
 
-int eh_timer_restart(eh_timer_event_t *timer){
+int eh_timer_restart(eh_event_timer_t *timer){
     eh_save_state_t state;
     int ret = EH_RET_OK;
 
@@ -152,7 +152,7 @@ out:
     return ret;
 }
 
-int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr){
+int eh_timer_advanced_init(eh_event_timer_t *timer, eh_sclock_t clock_interval, uint32_t attr){
     int ret;
     eh_param_assert(timer);
     ret = eh_event_init(&timer->event);
@@ -164,7 +164,7 @@ int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, 
     return 0;
 }
 
-extern bool eh_timer_is_running(eh_timer_event_t *timer){
+extern bool eh_timer_is_running(eh_event_timer_t *timer){
     eh_save_state_t state;
     bool is_running;
     state = eh_enter_critical();
@@ -173,7 +173,7 @@ extern bool eh_timer_is_running(eh_timer_event_t *timer){
     return is_running;
 }
 
-void eh_timer_clean(eh_timer_event_t *timer){
+void eh_timer_clean(eh_event_timer_t *timer){
     eh_timer_stop(timer);
     eh_event_clean(&timer->event);
 }

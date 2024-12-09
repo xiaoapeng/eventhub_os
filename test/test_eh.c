@@ -28,7 +28,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
 
 
 int task_test_2(void *arg){
-    eh_timer_event_t timer;
+    eh_event_timer_t timer;
     eh_debugfl("%s", arg);
     eh_timer_init(&timer);
     eh_timer_set_attr(&timer, EH_TIMER_ATTR_AUTO_CIRCULATION);
@@ -44,7 +44,7 @@ int task_test_2(void *arg){
 }
 
 int task_test_1(void *arg){
-    eh_timer_event_t timer;
+    eh_event_timer_t timer;
     eh_debugfl("%s", arg);
     eh_timer_init(&timer);
     eh_timer_set_attr(&timer, EH_TIMER_ATTR_AUTO_CIRCULATION);

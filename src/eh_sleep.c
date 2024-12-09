@@ -12,7 +12,7 @@
 #include <eh_event.h>
 #include <eh_timer.h>
 void __async eh_usleep(eh_usec_t usec){
-    eh_timer_event_t sleep_timer;
+    eh_event_timer_t sleep_timer;
     if(usec == 0) return ;
     eh_timer_advanced_init(&sleep_timer, (eh_sclock_t)eh_usec_to_clock(usec), 0);
     eh_timer_start(&sleep_timer);

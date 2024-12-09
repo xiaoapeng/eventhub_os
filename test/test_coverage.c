@@ -26,7 +26,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
 }
 
 int task_app(void *arg){
-    eh_timer_event_t timer1, timer2, timer3, timer4;
+    eh_event_timer_t timer1, timer2, timer3, timer4;
     eh_epoll_t epoll;
     eh_epoll_slot_t epoll_slot[3];
     (void) arg;

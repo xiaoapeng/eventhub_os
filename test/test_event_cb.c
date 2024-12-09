@@ -19,7 +19,7 @@
 #include <eh_event_cb.h>
 #include <eh_types.h>
 
-static eh_timer_event_t timer1;
+static eh_event_timer_t timer1;
 static eh_event_cb_trigger_t trigger;
 static eh_event_cb_slot_t slot1;
 static eh_event_cb_slot_t slot2;

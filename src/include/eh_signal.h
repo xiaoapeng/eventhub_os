@@ -102,6 +102,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 
 /**
  * @brief 信号注册，只有注册的信号才能正常回调槽函数
+ * retern 0:成功，负数:失败
  */
 #define eh_signal_register(signal)                                                      \
     eh_event_cb_register((&(signal)->event), &(signal)->trigger)

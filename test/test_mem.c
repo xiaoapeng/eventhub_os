@@ -35,7 +35,7 @@
 void *p[TEST_PTR_NUM];
 
 typedef struct {
-    eh_timer_event_t timer_event;
+    eh_event_timer_t timer_event;
     int inode;
 }test_data_t;
 static test_data_t *test_data[TEST_PTR_NUM] = {NULL};
@@ -181,7 +181,7 @@ int task_app(void *arg){
     {
         eh_epoll_slot_t epoll_slot[12];
         eh_epoll_t epoll = eh_epoll_new();
-        eh_timer_event_t timer_test; /* 测试过程中打印和结束定时器 */
+        eh_event_timer_t timer_test; /* 测试过程中打印和结束定时器 */
         int timer_timeout_cnt = 0;
         memset(test_data, 0, sizeof(test_data));
         /* 随机碎片化测试 */

@@ -575,7 +575,7 @@ extern int __async eh_epoll_wait(
 填充结构体内容<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
 
 ```c
-extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t clock_interval, uint32_t attr);
+extern __safety int eh_timer_advanced_init(eh_event_timer_t *timer, eh_sclock_t clock_interval, uint32_t attr);
 ```
 
 | 参数 | 解释 |
@@ -589,7 +589,7 @@ extern __safety int eh_timer_advanced_init(eh_timer_event_t *timer, eh_sclock_t 
 填充结构体内容<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
 
 ```c
-static __safety inline int eh_timer_init(eh_timer_event_t *timer);
+static __safety inline int eh_timer_init(eh_event_timer_t *timer);
 ```
 
 例子: [test/test_epoll.c](test/test_epoll.c)
@@ -599,7 +599,7 @@ static __safety inline int eh_timer_init(eh_timer_event_t *timer);
 将定时器加入系统定时器树中，成功返回0，失败返回eh_error.h中定义的错误码。
 
 ```c
-extern int eh_timer_start(eh_timer_event_t *timer);
+extern int eh_timer_start(eh_event_timer_t *timer);
 ```
 
 例子: [test/test_epoll.c](test/test_epoll.c)
@@ -609,7 +609,7 @@ extern int eh_timer_start(eh_timer_event_t *timer);
 将定时器从系统定时器树中移除，成功返回0，失败返回eh_error.h中定义的错误码。
 
 ```c
-extern int eh_timer_stop(eh_timer_event_t *timer);
+extern int eh_timer_stop(eh_event_timer_t *timer);
 ```
 
 #### 5.定时器重新启动
@@ -617,7 +617,7 @@ extern int eh_timer_stop(eh_timer_event_t *timer);
 将定时器重新加入系统定时器树中，若已经start则重新设置到期时间，成功返回0，失败返回eh_error.h中定义的错误码。
 
 ```c
-extern int eh_timer_restart(eh_timer_event_t *timer);
+extern int eh_timer_restart(eh_event_timer_t *timer);
 ```
 
 #### 6.定时器清理
@@ -625,7 +625,7 @@ extern int eh_timer_restart(eh_timer_event_t *timer);
 清理定时器，把本定时器从系统定时器树中移除(eh_timer_stop)，内部调用eh_event_clean函数<br>可在非协程上下文(中断上下文，其他系统线程上下文)中安全调用
 
 ```c
-extern __safety void eh_timer_clean(eh_timer_event_t *timer);
+extern __safety void eh_timer_clean(eh_event_timer_t *timer);
 ```
 例子: [test/test_epoll.c](test/test_epoll.c)
 
@@ -689,7 +689,7 @@ extern void __async eh_usleep(eh_usec_t usec);
 获取定时器运行状态，运行返回true,否则返回false<br>安全函数，可在其他并行或并发任务中安全调用
 
 ```c
-extern __safety bool eh_timer_is_running(eh_timer_event_t *timer);
+extern __safety bool eh_timer_is_running(eh_event_timer_t *timer);
 ```
 
 ### 信号和槽相关API
@@ -843,7 +843,7 @@ void run(void){
 /* 定义一个自定义信号（定时器信号），第二个参数是事件的类型，这里使用定时器事件，第三个参数是定时器事件的初始化 */
 EH_DEFINE_STATIC_CUSTOM_SIGNAL(
     timer_1000ms_signal, 
-    eh_timer_event_t, 
+    eh_event_timer_t, 
     {}
 );
 
@@ -910,7 +910,7 @@ void run(void){
 ```c
 /* test_custom_event.h */
 /* 头文件中声明信号，让其他模块可以引用 */
-EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t);
+EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_event_timer_t);
 ```
 
 ```c
@@ -919,7 +919,7 @@ EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t);
 #include <eh_signal.h>
 #include "test_custom_event.h"
 
-EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_timer_event_t, {});
+EH_EXTERN_CUSTOM_SIGNAL(timer_1000ms_signal, eh_event_timer_t, {});
 
 
 static int __init test_signal_public_init(void){

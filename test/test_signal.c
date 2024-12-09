@@ -37,7 +37,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
 
 EH_DEFINE_STATIC_CUSTOM_SIGNAL(
     timer_1000ms_signal, 
-    eh_timer_event_t, 
+    eh_event_timer_t, 
     EH_TIMER_INIT(timer_1000ms_signal.custom_event)
 );
 

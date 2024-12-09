@@ -65,7 +65,7 @@ unlock_out:
 static int __async _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condition)(void* arg), eh_sclock_t timeout){
     eh_save_state_t state;
     int ret;
-    eh_timer_event_t timeout_timer;
+    eh_event_timer_t timeout_timer;
     struct eh_event_receptor receptor,receptor_timer;
     
     if(condition && condition(arg))
@@ -352,7 +352,7 @@ unlock_exit:
 
 static int __async _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size, eh_sclock_t timeout){
     eh_save_state_t state;
-    eh_timer_event_t timeout_timer;
+    eh_event_timer_t timeout_timer;
     struct eh_event_receptor receptor_timer;
     int ret;
     

@@ -30,7 +30,7 @@ void stdout_write(void *stream, const uint8_t *buf, size_t size){
 }
 
 void* thread_function(void* arg) {
-    eh_timer_event_t *gpio_debounce_timer = (eh_timer_event_t *)arg;
+    eh_event_timer_t *gpio_debounce_timer = (eh_event_timer_t *)arg;
     /* 模拟gpio 中断 线程 */
     while(1){
         /* 模拟抖动变高电平 */
@@ -79,7 +79,7 @@ void* thread_function(void* arg) {
 }
 
 int task_app(void *arg){
-    eh_timer_event_t gpio_debounce_timer;
+    eh_event_timer_t gpio_debounce_timer;
     pthread_t thread_id;
     (void) arg;
     int ret;

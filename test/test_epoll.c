@@ -36,7 +36,7 @@ int task_event_notify(void *arg){
 }
 
 int task_app(void *arg){
-    eh_timer_event_t timer1, timer2, timer3;
+    eh_event_timer_t timer1, timer2, timer3;
     eh_epoll_t epoll;
     eh_epoll_slot_t epoll_slot;
     eh_event_t test_event;
