@@ -109,7 +109,7 @@ __safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t flags){
     state = eh_enter_critical();
     ret = eh_event_notify(&ef->event);
     if(ret == 0)
-        ef->flags &= flags;
+        ef->flags &= ~flags;
     eh_exit_critical(state);
     return ret;
 }
@@ -124,6 +124,48 @@ __safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags){
     eh_exit_critical(state);
     return ret;
 }
+
+
+__safety int eh_event_flags_set_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
+    eh_save_state_t state;
+    int ret;
+    state = eh_enter_critical();
+    if(ef->flags & flags)
+        return 0;
+    ret = eh_event_notify(&ef->event);
+    if(ret == 0)
+        ef->flags |= flags;
+    eh_exit_critical(state);
+    return ret;
+}
+
+__safety int eh_event_flags_clear_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
+    eh_save_state_t state;
+    int ret;
+    state = eh_enter_critical();
+    if((ef->flags & flags) == 0)
+        return 0;
+    ret = eh_event_notify(&ef->event);
+    if(ret == 0)
+        ef->flags &= ~flags;
+    eh_exit_critical(state);
+    return ret;
+}
+
+
+__safety int eh_event_flags_update_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
+    eh_save_state_t state;
+    int ret;
+    state = eh_enter_critical();
+    if(ef->flags == flags)
+        return 0;
+    ret = eh_event_notify(&ef->event);
+    if(ret == 0)
+        ef->flags = flags;
+    eh_exit_critical(state);
+    return ret;
+}
+
 
 __safety eh_flags_t eh_event_flags_get(eh_event_flags_t *ef){
     eh_flags_t flags;

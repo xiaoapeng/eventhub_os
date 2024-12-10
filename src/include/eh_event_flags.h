@@ -75,7 +75,7 @@ extern __async int eh_event_flags_wait_bits_clean(eh_event_flags_t *ef, eh_flags
     eh_flags_t set_flags, eh_flags_t *reality_flags, eh_sclock_t timeout);
 
 /**
- * @brief   设置事件bit，
+ * @brief   设置事件bit，无论bits是否被改变，都会进行通知
  * @param  ef
  * @param  flags            flags会与内部flags进行|操作
  * @return int
@@ -83,7 +83,7 @@ extern __async int eh_event_flags_wait_bits_clean(eh_event_flags_t *ef, eh_flags
 extern __safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t flags);
 
 /**
- * @brief   清除事件bit，
+ * @brief   清除事件bit，无论bits是否被改变，都会进行通知
  * @param  ef               
  * @param  flags            flags会与内部flags进行&操作
  * @return __safety 
@@ -91,12 +91,37 @@ extern __safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t fla
 extern __safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t flags);
 
 /**
- * @brief   设置flags
+ * @brief   赋值flags，无论bits是否被改变，都会进行通知
  * @param  ef
  * @param  flags            直接赋值给内部flags
  * @return __safety 
  */
 extern __safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags);
+
+/**
+ * @brief   设置flags，只有flags被改变时，才会进行通知
+ * @param  ef               
+ * @param  flags            flags会与内部flags进行操作
+ * @return __safety 
+ */
+extern __safety int eh_event_flags_set_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags);
+
+
+/**
+ * @brief   清除flags，只有flags被改变时，才会进行通知
+ * @param  ef
+ * @param  flags            flags会与内部flags进行&操作
+ * @return __safety 
+ */
+extern __safety int eh_event_flags_clear_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags);
+
+/**
+ * @brief   赋值flags，只有flags被改变时，才会进行通知
+ * @param  ef
+ * @param  flags            直接赋值给内部flags
+ * @return __safety 
+ */
+extern __safety int eh_event_flags_update_change_notify(eh_event_flags_t *ef, eh_flags_t flags);
 
 /**
  * @brief   获取flags
