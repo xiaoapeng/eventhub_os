@@ -34,8 +34,13 @@ struct module_group{
             (void *)__end_eh_init_fini_array;                       \
         })
 
+#define EH_MODEULE_VARIABLE_LINE_HELPER(x, y) x##y
+#define EH_MODEULE_VARIABLE_LINE_NAME(x, y) EH_MODEULE_VARIABLE_LINE_HELPER(x, y)
+
 #define __eh_define_modeule_export(_init__func_, _exit__func_,  _section)                                    \
-    static EH_USED const  struct eh_module  EH_SECTION( _section ) _eh_module_  = {                          \
+    static EH_USED const  struct eh_module  EH_SECTION( _section )                                           \
+        EH_MODEULE_VARIABLE_LINE_NAME(_eh_module_, __LINE__) =                                               \
+    {                                                                                                        \
         .init = _init__func_,                                                                                \
         .exit = _exit__func_,                                                                                \
     }
