@@ -14,6 +14,14 @@
 
 #include <eh_types.h>
 
+typedef uint16_t uint16_be_t;
+typedef uint32_t uint32_be_t;
+typedef uint64_t uint64_be_t;
+
+typedef uint16_t uint16_le_t;
+typedef uint32_t uint32_le_t;
+typedef uint64_t uint64_le_t;
+
 
 #ifndef __ORDER_LITTLE_ENDIAN__
 #define __ORDER_LITTLE_ENDIAN__ 1234
@@ -25,6 +33,12 @@
 
 #ifndef __BYTE_ORDER__
 #define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
+#endif
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define __BYTE_ORDER_LITTLE_ENDIAN__
+#else
+#define __BYTE_ORDER_BIG_ENDIAN__
 #endif
 
 
