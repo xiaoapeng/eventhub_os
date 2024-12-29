@@ -44,14 +44,14 @@ extern  void  eh_mem_pool_destroy(eh_mem_pool_t pool);
  * @param  pool             内存池句柄
  * @return void* 
  */
-extern  void* eh_mem_pool_alloc(eh_mem_pool_t pool);
+extern __safety void* eh_mem_pool_alloc(eh_mem_pool_t pool);
 
 /**
  * @brief                   回收一块内存块
  * @param  pool             内存池句柄
  * @param  ptr              内存块指针
  */
-extern  void  eh_mem_pool_free(eh_mem_pool_t pool, void* ptr);
+extern __safety void  eh_mem_pool_free(eh_mem_pool_t pool, void* ptr);
 
 /**
  * @brief                   判断这个buf是否来自这个内存池

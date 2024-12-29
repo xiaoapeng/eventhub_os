@@ -10,7 +10,10 @@
 
 #include <stddef.h>
 
+
+#include <eh.h>
 #include <eh_types.h>
+#include <eh_platform.h>
 #include <eh_mem.h>
 #include <eh_error.h>
 #include <eh_mem_pool.h>
@@ -56,31 +59,40 @@ void  eh_mem_pool_destroy(eh_mem_pool_t pool){
 }
 
 void* eh_mem_pool_alloc(eh_mem_pool_t _pool){
-    void *new_mem;
+    void *new_mem = NULL;
+    eh_save_state_t state;
     struct eh_mem_pool_list     *new_mem_node;
     
     struct eh_mem_pool *pool = (struct eh_mem_pool *)_pool;
     size_t index;
     
+    state = eh_enter_critical();
+
     if(pool->free_list_head.next == NULL)
-        return NULL;
+        goto quit;
 
     index = (size_t)(pool->free_list_head.next - pool->free_list);
     if(index >= pool->num){
         eh_warnfl("pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
-        return NULL;
+        goto quit;
     }
     new_mem_node = pool->free_list_head.next;
     new_mem = (char*)pool->base + index*pool->align_size;
     pool->free_list_head.next = new_mem_node->next;
     /* 如果节点的下一个节点指向自己，那么意味着该节点已经被分配出去 */
     new_mem_node->next = new_mem_node;
+
+quit:
+    eh_exit_critical(state);
+
     return new_mem;
 }
 
 void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
     struct eh_mem_pool *pool = (struct eh_mem_pool *)_pool;
     size_t index;
+    eh_save_state_t state;
+
     index = (size_t)((char*)ptr - (char*)pool->base)/pool->align_size;
     if(index >= pool->num){
         eh_warnfl("pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
@@ -91,8 +103,12 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
         eh_warnfl("Release an unallocated pool mem.");
         return ;
     }
+
+    state = eh_enter_critical();
     pool->free_list[index].next = pool->free_list_head.next;
     pool->free_list_head.next = pool->free_list + index;
+    eh_exit_critical(state);
+
 }
 
 
