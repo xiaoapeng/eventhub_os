@@ -60,6 +60,11 @@ extern __safety void  eh_mem_pool_free(eh_mem_pool_t pool, void* ptr);
  */
 extern  int eh_mem_pool_is_from_this(eh_mem_pool_t pool, void* ptr);
 
+/**
+ * @brief                   内存池信息打印
+ * @param  pool             内存池句柄
+ */
+extern void eh_mem_pool_dump(eh_mem_pool_t _pool);
 
 #ifdef __cplusplus
 #if __cplusplus
