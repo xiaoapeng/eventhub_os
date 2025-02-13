@@ -24,6 +24,20 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+
+struct eh_mem_pool_list{
+    struct eh_mem_pool_list     *next;
+};
+
+struct eh_mem_pool{
+    void                        *base;
+    size_t                      align_size;
+    size_t                      num;
+    struct eh_mem_pool_list     free_list_head;
+    struct eh_mem_pool_list     free_list[0];
+};
+
+
 /**
  * @brief                   内存池创建
  * @param  align            内存对齐字节数
@@ -65,6 +79,28 @@ extern  int eh_mem_pool_is_from_this(eh_mem_pool_t pool, void* ptr);
  * @param  pool             内存池句柄
  */
 extern void eh_mem_pool_dump(eh_mem_pool_t _pool);
+
+/**
+ * @brief                   内存池遍历
+ * @param  i                遍历索引
+ * @param  pool             内存池句柄
+ * @param  ptr              内存块指针
+ */
+#define eh_mem_pool_for_each(i, pool, ptr) \
+    for(i = 0, ptr = (void*)((struct eh_mem_pool*)(pool))->base; \
+        i < (int)((struct eh_mem_pool*)(pool))->num; \
+        i++, ptr = (void*)((char*)ptr + ((struct eh_mem_pool*)(pool))->align_size))
+
+/**
+ * @brief                   判断这个索引对应的内存是否被使用
+ * @param  pool             内存池句柄
+ * @param  idx              索引
+ */
+#define eh_mem_pool_idx_is_used(pool, idx) \
+    ((((struct eh_mem_pool*)(pool))->free_list[idx].next == ((struct eh_mem_pool*)(pool))->free_list + (idx)))
+
+
+
 
 #ifdef __cplusplus
 #if __cplusplus

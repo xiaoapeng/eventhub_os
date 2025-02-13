@@ -25,17 +25,6 @@
 #endif
 
 
-struct eh_mem_pool_list{
-    struct eh_mem_pool_list     *next;
-};
-
-struct eh_mem_pool{
-    void                        *base;
-    size_t                      align_size;
-    size_t                      num;
-    struct eh_mem_pool_list     free_list_head;
-    struct eh_mem_pool_list     free_list[0];
-};
 
 eh_mem_pool_t eh_mem_pool_create(size_t align, size_t size, size_t num){
     size_t allocation_size = sizeof(struct eh_mem_pool) + 
@@ -101,7 +90,7 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
         eh_warnfl("pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
         return ;
     }
-    if(pool->free_list[index].next != &pool->free_list[index]){
+    if(!eh_mem_pool_idx_is_used(_pool, index)){
         /* 释放一个没有被分配的pool mem */
         eh_warnfl("Release an unallocated pool mem.");
         return ;
