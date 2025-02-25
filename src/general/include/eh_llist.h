@@ -157,19 +157,19 @@ static inline bool eh_llist_add_tail(struct eh_llist_node *new, struct eh_llist_
 }
 
 /**
- * @brief                   删除一个链表节点
+ * @brief                   删除一个链表节点 (如果你不清楚你再干什么，请勿调用)
  * @param  prev_node        要填入想要删除节点的上一个节点
  */
-static inline void eh_llist_del(struct eh_llist_node *prev_node, struct eh_llist_node *del_node){
+static inline void _eh_llist_del(struct eh_llist_node *prev_node, struct eh_llist_node *del_node){
     prev_node->next = del_node->next;
 }
 
 /**
- * @brief                   删除一个链表节点，并初始化该节点
+ * @brief                   删除一个链表节点，并初始化该节点 (如果你不清楚你再干什么，请勿调用)
  * @param  prev_node        要填入想要删除节点的上一个节点
  */
-static inline void eh_llist_del_init(struct eh_llist_node *prev_node, struct eh_llist_node *del_node){
-    eh_llist_del(prev_node, del_node);
+static inline void _eh_llist_del_init(struct eh_llist_node *prev_node, struct eh_llist_node *del_node){
+    _eh_llist_del(prev_node, del_node);
     eh_llist_node_init(del_node);
 }
 
@@ -178,7 +178,7 @@ static inline void eh_llist_del_init(struct eh_llist_node *prev_node, struct eh_
  * @param  head             链表头
  */
 static inline void eh_llist_del_first(struct eh_llist_head *head){
-    eh_llist_del((struct eh_llist_node *)&head->first, head->first);
+    _eh_llist_del((struct eh_llist_node *)&head->first, head->first);
 }
 
 /**
@@ -186,7 +186,7 @@ static inline void eh_llist_del_first(struct eh_llist_head *head){
  * @param  head             链表头
  */
 static inline void eh_llist_del_first_init(struct eh_llist_head *head){
-    eh_llist_del_init((struct eh_llist_node *)&head->first, head->first);
+    _eh_llist_del_init((struct eh_llist_node *)&head->first, head->first);
 }
 
 /**
@@ -206,7 +206,7 @@ static inline void eh_llist_push(struct eh_llist_node *new, struct eh_llist_head
 static inline struct eh_llist_node *eh_llist_pop(struct eh_llist_head *head){
     struct eh_llist_node *node = head->first;
     if(node)
-        eh_llist_del_init((struct eh_llist_node *)&head->first, node);
+        _eh_llist_del_init((struct eh_llist_node *)&head->first, node);
     return node;
 }
 
