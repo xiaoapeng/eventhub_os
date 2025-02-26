@@ -71,15 +71,15 @@ typedef uint64_t uint64_le_t;
 	(((uint64_t)(x) & (uint64_t)0x00ff000000000000ULL) >> 40) |	\
 	(((uint64_t)(x) & (uint64_t)0xff00000000000000ULL) >> 56)))
 
-static inline __attribute_const__ uint16_t _eh_fswab16(uint16_t val){
+static inline __function_const uint16_t _eh_fswab16(uint16_t val){
     return _eh_constant_swab16(val);
 }
 
-static inline __attribute_const__ uint32_t _eh_fswab32(uint32_t val){
+static inline __function_const uint32_t _eh_fswab32(uint32_t val){
     return _eh_constant_swab32(val);
 }
 
-static inline __attribute_const__ uint64_t _eh_fswab64(uint64_t val){
+static inline __function_const uint64_t _eh_fswab64(uint64_t val){
     return _eh_constant_swab64(val);
 }
 

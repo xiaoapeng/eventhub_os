@@ -42,7 +42,7 @@ extern "C"{
             return EH_RET_INVALID_PARAM;                                \
     }while(0)
 
-static inline __attribute_const__ int eh_ptr_to_error(void *ptr){
+static inline __function_const int eh_ptr_to_error(void *ptr){
     if( eh_likely(((long)(ptr)) > 0) || eh_likely((long)(ptr) <= EH_RET_MIN_ERROR_NUM) )
         return EH_RET_OK;
     if(!ptr)
