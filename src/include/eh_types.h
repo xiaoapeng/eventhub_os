@@ -86,10 +86,11 @@
 #define __weak                                  __attribute__((weak))
 #define __safety                                /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                              __attribute__((noreturn))
-#define __packed                                __attribute__((packed))
 
-#ifndef __function_const
-#define __function_const                        __attribute__((__const__))
+#ifndef __packed
+#define __packed                                __attribute__((packed))
 #endif
+
+#define __function_const                        __attribute__((__const__))
 
 #endif // _EH_TYPES_H_
