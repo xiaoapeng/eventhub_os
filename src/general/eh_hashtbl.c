@@ -35,7 +35,7 @@ static eh_hash_val_t fnv1a(const char *data, eh_hashtbl_kv_len_t len) {
     const char *be = bp + len;
     eh_hash_val_t hash = FNV_OFFSET_BASIS_32;
     while(bp < be) {
-        hash ^= (eh_hash_val_t)*bp++;
+        hash ^= (eh_hash_val_t)*(unsigned char*)bp++;
         hash *= FNV_PRIME_32; 
     }
     return hash;
@@ -45,7 +45,7 @@ static eh_hash_val_t fnv1a_str(const char *str, eh_hashtbl_kv_len_t *out_len) {
     const char *bp = str;
     eh_hash_val_t hash = FNV_OFFSET_BASIS_32;
     while(*bp) {
-        hash ^= (eh_hash_val_t)*bp++;
+        hash ^= (eh_hash_val_t)*(unsigned char*)bp++;
         hash *= FNV_PRIME_32; 
     }
     if(out_len)
