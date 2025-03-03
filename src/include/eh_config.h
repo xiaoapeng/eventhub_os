@@ -146,9 +146,11 @@ extern unsigned long platform_get_clock_freq(void);
 #define EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL                    4
 #endif /* EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL */
 
-#ifdef CONFIG_EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL
-#undef EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL
-#define EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL                    CONFIG_EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL
-#endif
+/*
+ *  哈希表初始表大小
+ */
+#ifndef EH_HASHTBL_MIN_SIZE
+#define EH_HASHTBL_MIN_SIZE                                      16
+#endif /* EH_HASHTBL_MIN_SIZE */
 
 #endif // _EVENT_CONFIG_H_

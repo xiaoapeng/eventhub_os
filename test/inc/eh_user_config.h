@@ -25,7 +25,7 @@
  *  EH_CONFIG_MEM_ALLOC_ALIGN为分配空间的对齐粒度，为2的幂，这里默认为系统指针大小的2倍
  *  EH_CONFIG_MEM_HEAP_SIZE为堆内存大小，默认为20K
  */
-#define EH_CONFIG_USE_LIBC_MEM_MANAGE                            0
+#define EH_CONFIG_USE_LIBC_MEM_MANAGE                            1
 #if (!defined(EH_CONFIG_USE_LIBC_MEM_MANAGE)) || (EH_CONFIG_USE_LIBC_MEM_MANAGE == 0)
 #   define EH_CONFIG_MEM_ALLOC_ALIGN                             (sizeof(void*)*2)
 #   define EH_CONFIG_MEM_HEAP_SIZE                               (1024*1024U)
