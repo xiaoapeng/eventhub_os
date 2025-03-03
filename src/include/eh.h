@@ -14,12 +14,12 @@
 
 #include <stdint.h>
 
-#include "eh_config.h"
+#include <eh_config.h>
 #include <eh_types.h>
 #include <eh_list.h>
 #include <eh_rbtree.h>
 #include <eh_error.h>
-#include "eh_co.h"
+#include <eh_co.h>
 #include <eh_module.h>
 
 #ifdef __cplusplus
