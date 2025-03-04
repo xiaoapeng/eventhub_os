@@ -36,7 +36,16 @@ struct eh_hashtbl_node{
     uint8_t   eh_aligned(EH_HASHTBL_KV_ALIGN)   kv[0];
 };
 
+struct eh_hashtbl{
+    struct eh_list_head                         *table;                 /* 散列表 */
+    unsigned int                                mask;                   /* 散列表大小减1,散列表大小永远为2的次幂 */
+    unsigned int                                threshold;              /* 阈值,达到该值时自动扩容 */
+    unsigned int                                count;                  /* 元素个数 */
+};
 
+
+/* 判断哈希表节点是否需要重建*/
+#define eh_hash_table_node_is_need_remake(hashtbl, idx)  ((hashtbl)->table[idx].next == NULL)
 
 /**
  * @brief                   创建哈希表
@@ -143,6 +152,26 @@ extern int eh_hashtbl_find(eh_hashtbl_t hashtbl, const void *key, eh_hashtbl_kv_
  */
 extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str, struct eh_hashtbl_node **out_node);
 
+/**
+ * @brief                   遍历哈希表
+ * @param  hashtbl          哈希表句柄
+ * @param  node_pos         节点位置
+ * @param  tmp_n            临时变量
+ * @param  tmp_uint_i       临时变量
+
+ */
+#define eh_hashtbl_for_each_safe(hashtbl, node_pos, tmp_n, tmp_uint_i)                      \
+    for(({                                                                                  \
+            eh_static_assert(                                                               \
+                eh_same_type(hashtbl, eh_hashtbl_t),                                        \
+                "hashtbl must be eh_hashtbl_t"                                              \
+            );                                                                              \
+            tmp_uint_i = 0;                                                                 \
+        });                                                                                 \
+        tmp_uint_i <= ((struct eh_hashtbl*)(hashtbl))->mask;                                \
+        tmp_uint_i++)                                                                       \
+        if(!eh_hash_table_node_is_need_remake(((struct eh_hashtbl*)(hashtbl)), tmp_uint_i))  \
+            eh_list_for_each_entry_safe(node_pos, tmp_n, ((struct eh_hashtbl*)(hashtbl))->table + tmp_uint_i, node)
 
 #ifdef __cplusplus
 #if __cplusplus

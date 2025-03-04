@@ -34,6 +34,8 @@ int task_app(void *arg){
     (void)arg;
     eh_hashtbl_t hashtbl;
     struct eh_hashtbl_node *node;
+    struct eh_hashtbl_node *tmp_n;
+    unsigned int tmp_uint_i;
     uint32_t i = 0;
     char key[20];
     char value[20];
@@ -47,6 +49,15 @@ int task_app(void *arg){
         eh_snprintf(eh_hashtbl_node_value(node), eh_hashtbl_node_value_len(node), "value%d", i);
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
     }
+
+    i = 0;
+    eh_hashtbl_for_each_safe(hashtbl, node, tmp_n, tmp_uint_i){
+        eh_infofl("key:%.*s value:%.*s", 
+            eh_hashtbl_node_key_len(node), eh_hashtbl_node_const_key(node), 
+            eh_hashtbl_node_value_len(node), eh_hashtbl_node_value(node));
+        i++;
+    }
+    eh_infofl("node count:%d", i);
 
     for(i = 0; i < 10 * 10000; i++){
         eh_snprintf(key, 20, "%s%d", "test", i);

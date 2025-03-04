@@ -23,15 +23,8 @@ eh_static_assert(
 
 #define eh_hash_val(key, key_len)           fnv1a(key, key_len)
 #define eh_hash_str_val(str, out_len_ptr)   fnv1a_str(str, out_len_ptr)
-struct eh_hashtbl{
-    struct eh_list_head                 *table;                 /* 散列表 */
-    unsigned int                        mask;                   /* 散列表大小减1,散列表大小永远为2的次幂 */
-    unsigned int                        threshold;              /* 阈值,达到该值时自动扩容 */
-    unsigned int                        count;                  /* 元素个数 */
-};
 
-/* 判断哈希表节点是否需要重建*/
-#define eh_hash_table_node_is_need_remake(hashtbl, idx)  ((hashtbl)->table[idx].next == NULL)
+
 
 
 #define FNV_OFFSET_BASIS_32 2166136261U 
