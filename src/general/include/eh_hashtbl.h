@@ -44,6 +44,10 @@ struct eh_hashtbl{
 };
 
 
+
+extern struct eh_list_head *_eh_hashtbl_find_list_head(eh_hashtbl_t hashtbl, const void *key, eh_hashtbl_kv_len_t key_len);
+extern struct eh_list_head *_eh_hashtbl_find_list_head_with_string(eh_hashtbl_t hashtbl, const char *key_str);
+
 /* 判断哈希表节点是否需要重建*/
 #define eh_hash_table_node_is_need_remake(hashtbl, idx)  ((hashtbl)->table[idx].next == NULL)
 
@@ -170,8 +174,37 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
         });                                                                                 \
         tmp_uint_i <= ((struct eh_hashtbl*)(hashtbl))->mask;                                \
         tmp_uint_i++)                                                                       \
-        if(!eh_hash_table_node_is_need_remake(((struct eh_hashtbl*)(hashtbl)), tmp_uint_i))  \
-            eh_list_for_each_entry_safe(node_pos, tmp_n, ((struct eh_hashtbl*)(hashtbl))->table + tmp_uint_i, node)
+        if(!eh_hash_table_node_is_need_remake(((struct eh_hashtbl*)(hashtbl)), tmp_uint_i)) \
+            eh_list_for_each_entry_safe(node_pos, tmp_n,                                    \
+                ((struct eh_hashtbl*)(hashtbl))->table + tmp_uint_i, node)
+
+/**
+ * @brief                   遍历哈希表,键为字符串
+ * @param  hashtbl          哈希表句柄
+ * @param  string           字符串
+ * @param  node_pos         节点位置
+ * @param  tmp_n            临时变量
+ * @param  tmp_head         临时变量
+ */
+#define eh_hashtbl_for_each_with_string_safe(hashtbl, string, node_pos, tmp_n, tmp_head)    \
+    for (tmp_head = _eh_hashtbl_find_list_head_with_string(hashtbl, string),                \
+        node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
+        tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
+        &node_pos->node != (tmp_head);                                                      \
+        node_pos = tmp_n, tmp_n = eh_list_entry(n->node.next, typeof(*tmp_n), node))        \
+        if(strncmp((const char*)eh_hashtbl_node_const_key(node_pos), string, eh_hashtbl_node_key_len(node_pos)) == 0)
+
+/** */
+#define eh_hashtbl_for_each_with_key_safe(hashtbl, key, len, node_pos, tmp_n, tmp_head)     \
+    for (tmp_head = _eh_hashtbl_find_list_head(hashtbl, key, len),                          \
+        node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
+        tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
+        &node_pos->node != (tmp_head);                                                      \
+        node_pos = tmp_n, tmp_n = eh_list_entry(n->node.next, typeof(*tmp_n), node))        \
+        if(len == eh_hashtbl_node_key_len(node_pos) && memcmp(eh_hashtbl_node_const_key(node_pos), key, len) == 0)
+
+#endif
+
 
 #ifdef __cplusplus
 #if __cplusplus

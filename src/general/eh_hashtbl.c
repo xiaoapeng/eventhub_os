@@ -203,6 +203,24 @@ int eh_hashtbl_insert(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
     return EH_RET_OK;
 }
 
+struct eh_list_head *_eh_hashtbl_find_list_head(eh_hashtbl_t _hashtbl, const void *key, eh_hashtbl_kv_len_t key_len){
+    struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
+    unsigned int idx = eh_hash_val(key, key_len) & hashtbl->mask;
+    /* 尝试进行重建 */
+    eh_hashtbl_try_remake(hashtbl, idx);
+    return &hashtbl->table[idx];
+
+}
+
+struct eh_list_head *_eh_hashtbl_find_list_head_with_string(eh_hashtbl_t _hashtbl, const char *key_str){
+    struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
+    eh_hashtbl_kv_len_t key_len;
+    unsigned int idx = eh_hash_str_val(key_str, &key_len) & hashtbl->mask;
+    /* 尝试进行重建 */
+    eh_hashtbl_try_remake(hashtbl, idx);
+    return &hashtbl->table[idx];
+}
+
 int eh_hashtbl_find(eh_hashtbl_t _hashtbl, const void *key, eh_hashtbl_kv_len_t key_len, struct eh_hashtbl_node **out_node){
     struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
     unsigned int idx = eh_hash_val(key, key_len) & hashtbl->mask;
