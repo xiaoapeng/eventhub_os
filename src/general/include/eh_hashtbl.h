@@ -15,6 +15,7 @@
 #include <eh_list.h>
 #include <eh_error.h>
 #include <eh_types.h>
+#include <eh_list.h>
 
 typedef uint16_t eh_hashtbl_kv_len_t;
 typedef void *   eh_hashtbl_t;
@@ -191,7 +192,7 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
         node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
         tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
         &node_pos->node != (tmp_head);                                                      \
-        node_pos = tmp_n, tmp_n = eh_list_entry(n->node.next, typeof(*tmp_n), node))        \
+        node_pos = tmp_n, tmp_n = eh_list_entry(tmp_n->node.next, typeof(*tmp_n), node))    \
         if(strncmp((const char*)eh_hashtbl_node_const_key(node_pos), string, eh_hashtbl_node_key_len(node_pos)) == 0)
 
 /** */
@@ -200,11 +201,8 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
         node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
         tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
         &node_pos->node != (tmp_head);                                                      \
-        node_pos = tmp_n, tmp_n = eh_list_entry(n->node.next, typeof(*tmp_n), node))        \
+        node_pos = tmp_n, tmp_n = eh_list_entry(tmp_n->node.next, typeof(*tmp_n), node))    \
         if(len == eh_hashtbl_node_key_len(node_pos) && memcmp(eh_hashtbl_node_const_key(node_pos), key, len) == 0)
-
-#endif
-
 
 #ifdef __cplusplus
 #if __cplusplus
