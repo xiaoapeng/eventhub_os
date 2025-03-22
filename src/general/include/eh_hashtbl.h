@@ -195,7 +195,15 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
         node_pos = tmp_n, tmp_n = eh_list_entry(tmp_n->node.next, typeof(*tmp_n), node))    \
         if(strncmp((const char*)eh_hashtbl_node_const_key(node_pos), string, eh_hashtbl_node_key_len(node_pos)) == 0)
 
-/** */
+/**
+ * @brief                   遍历哈希表,键为二进制
+ * @param  hashtbl          哈希表句柄
+ * @param  key              键
+ * @param  len              键长度
+ * @param  node_pos         节点位置
+ * @param  tmp_n            临时变量
+ * @param  tmp_head         临时变量 eh_list_head 类型
+ */
 #define eh_hashtbl_for_each_with_key_safe(hashtbl, key, len, node_pos, tmp_n, tmp_head)     \
     for (tmp_head = _eh_hashtbl_find_list_head(hashtbl, key, len),                          \
         node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
