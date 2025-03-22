@@ -65,7 +65,7 @@ static int eh_hashtbl_resize(struct eh_hashtbl *hashtbl){
     /* 新的后一半表项应该设置为待重建，所以设置为0 */
     memset(new_table + old_size, 0, sizeof(struct eh_list_head) * old_size);
 
-    /* 前一半应该继承一起的表项 */
+    /* 前一半应该继承以前的表项 */
     for(i = 0; i < old_size; i++){
         /* 以前重建的依旧拷贝为重建 */
         if(eh_hash_table_node_is_need_remake(hashtbl, i)){
