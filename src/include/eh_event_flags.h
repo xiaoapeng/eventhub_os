@@ -30,6 +30,7 @@ struct eh_event_flags {
     unsigned long               flags;
 };
 
+eh_static_assert(eh_offsetof(struct eh_event_flags, event) == 0, "event must be the first member of struct");
 
 
 /**

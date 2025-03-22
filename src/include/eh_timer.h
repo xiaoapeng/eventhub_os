@@ -28,6 +28,9 @@ struct eh_event_timer {
     uint32_t                        attrribute;
 };
 
+
+eh_static_assert(eh_offsetof(struct eh_event_timer, event) == 0, "event must be the first member of struct");
+
 #define EH_TIMER_INIT(timer)    {                                               \
         .event = EH_EVENT_INIT(timer.event),                                    \
         .rb_node = EH_RBTREE_NODE_INIT(timer.rb_node),                          \
