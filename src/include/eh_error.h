@@ -34,7 +34,10 @@ extern "C"{
 #define EH_RET_EXISTS                       (-12 )
 #define EH_RET_NOT_EXISTS                   (-13 )
 #define EH_RET_AGAIN                        (-14 )              /* 资源暂时不可用 */
-#define EH_RET_MIN_ERROR_NUM                (-255)
+
+#define EH_RET_EHIP_ERROR_START             (-256)              /* EHIP错误码范围 [-256,-511] ehip_error.h */
+#define EH_RET_EHIP_ERROR_END               (-512)
+#define EH_RET_MIN_ERROR_NUM                (-1024)
 
 #define eh_param_assert(condition)                                      \
     do{                                                                 \
