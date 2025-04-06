@@ -36,14 +36,10 @@ int eh_dbg_set_level(enum eh_dbg_level level){
     return 0;
 }
 
-
-int eh_dbg_raw(enum eh_dbg_level level, 
-    enum eh_dbg_flags flags, const char *fmt, ...){
+static int eh_dbg_vprintf(enum eh_dbg_level level, 
+    enum eh_dbg_flags flags, const char *fmt, va_list args){
     int n = 0;
-    va_list args;
     eh_usec_t now_usec;
-    if(level > dbg_level)
-        return 0;
     now_usec = eh_clock_to_usec(eh_get_clock_monotonic_time());
     if(flags & EH_DBG_FLAGS_WALL_CLOCK){
         /* 打印墙上时间 */
@@ -55,9 +51,28 @@ int eh_dbg_raw(enum eh_dbg_level level,
     if(flags & EH_DBG_FLAGS_DEBUG_TAG && level >= EH_DBG_ERR && level <= EH_DBG_DEBUG){
         n += eh_printf("[%4s] ", eh_dbg_level_str[level]);
     }
-    va_start(args, fmt);
     n += eh_vprintf(fmt, args);
+    return n;
+}
+
+int eh_dbg_raw(enum eh_dbg_level level, 
+    enum eh_dbg_flags flags, const char *fmt, ...){
+    int n = 0;
+    va_list args;
+    if(level > dbg_level)
+        return 0;
+    va_start(args, fmt);
+    n = eh_dbg_vprintf(level, flags, fmt, args);
     va_end(args);
+    return n;
+}
+
+int eh_vdbg_raw(enum eh_dbg_level level, 
+    enum eh_dbg_flags flags, const char *fmt, va_list args){
+    int n = 0;
+    if(level > dbg_level)
+        return 0;
+    n = eh_dbg_vprintf(level, flags, fmt, args);
     return n;
 }
 

@@ -10,8 +10,11 @@
 #ifndef _EH_DEBUG_H_
 #define _EH_DEBUG_H_
 
-#include <eh_config.h>
 #include <stddef.h>
+#include <stdarg.h>
+
+#include <eh_config.h>
+#include <eh_types.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -20,11 +23,18 @@ extern "C"{
 #endif /* __cplusplus */
 
 enum eh_dbg_level{
-    EH_DBG_ERR = 1,
-    EH_DBG_WARNING,
-    EH_DBG_SYS,
-    EH_DBG_INFO,
-    EH_DBG_DEBUG,
+#define  EH_DBG_SUPPRESS                0
+#define  EH_DBG_ERR                     1
+#define  EH_DBG_WARNING                 2
+#define  EH_DBG_SYS                     3
+#define  EH_DBG_INFO                    4
+#define  EH_DBG_DEBUG                   5
+    _EH_DBG_SUPPRESS = EH_DBG_SUPPRESS,    /* 意味着不输出任何信息 */
+    _EH_DBG_ERR = EH_DBG_ERR,
+    _EH_DBG_WARNING = EH_DBG_WARNING,
+    _EH_DBG_SYS = EH_DBG_SYS,
+    _EH_DBG_INFO = EH_DBG_INFO,
+    _EH_DBG_DEBUG = EH_DBG_DEBUG,
 };
 
 enum eh_dbg_flags {
@@ -47,26 +57,62 @@ enum eh_dbg_flags {
 #define EH_DEBUG_ENTER_SIGN "\r\n"
 #endif
 
+
+#define EH_MACRO_DEBUG_LEVEL(name) ((uint32_t)(EH_STRINGIFY(name)[0] - '0'))
+
+#define eh_modeule_printfl(name, tag, level, fmt, ...) ({\
+        int n = 0; \
+        if( EH_MACRO_DEBUG_LEVEL(name) >= (uint32_t)level){ \
+            n = eh_dbg_printfl(level, "[" #tag "] ", fmt, ##__VA_ARGS__); \
+        } \
+        n; \
+    })
+
+#define eh_modeule_println(name, tag, level, fmt, ...) ({\
+        int n = 0; \
+        if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
+            n = eh_dbg_println(level, "[" #tag "] ", fmt, ##__VA_ARGS__); \
+        } \
+        n; \
+    })
+
+#define eh_modeule_printraw(name, level, fmt, ...) ({\
+        int n = 0; \
+        if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
+            n = eh_dbg_printraw(level, fmt, ##__VA_ARGS__); \
+        } \
+        n; \
+    })
+
+#define eh_modeule_hex(name, level, buf, len) ({\
+        int n = 0; \
+        if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
+            n = eh_dbg_hex(level, EH_DBG_FLAGS, len, buf); \
+        } \
+        n; \
+    })
+
 extern int eh_dbg_set_level(enum eh_dbg_level level);
 extern int eh_dbg_raw(enum eh_dbg_level level, enum eh_dbg_flags flags, const char *fmt, ...);
+extern int eh_vdbg_raw(enum eh_dbg_level level, enum eh_dbg_flags flags, const char *fmt, va_list args);
 extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t len, const void *buf);
-#define eh_dbg_println(level, fmt, ...)     eh_dbg_raw(level, EH_DBG_FLAGS, fmt EH_DEBUG_ENTER_SIGN , ##__VA_ARGS__)
-#define eh_dbg_printfl(level, fmt, ...)     eh_dbg_raw(level, EH_DBG_FLAGS, "[%s, %d]: " fmt EH_DEBUG_ENTER_SIGN , __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define eh_dbg_println(level, tag_str, fmt, ...)     eh_dbg_raw(level, EH_DBG_FLAGS, tag_str fmt EH_DEBUG_ENTER_SIGN , ##__VA_ARGS__)
+#define eh_dbg_printfl(level, tag_str, fmt, ...)     eh_dbg_raw(level, EH_DBG_FLAGS, tag_str "[%s, %d]: " fmt EH_DEBUG_ENTER_SIGN , __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #define eh_dbg_printraw(level, fmt, ...)    eh_dbg_raw(level, 0, fmt, ##__VA_ARGS__)
 
 /* ######################## 下面是简单写法 ####################### */
 /* 带自动回车的版本 */
-#define eh_debugln(fmt, ...)                eh_dbg_println(EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
-#define eh_infoln(fmt, ...)                 eh_dbg_println(EH_DBG_INFO, fmt, ##__VA_ARGS__)
-#define eh_sysln(fmt, ...)                  eh_dbg_println(EH_DBG_SYS, fmt, ##__VA_ARGS__)
-#define eh_warnln(fmt, ...)                 eh_dbg_println(EH_DBG_WARNING, fmt, ##__VA_ARGS__)
-#define eh_errln(fmt, ...)                  eh_dbg_println(EH_DBG_ERR, fmt, ##__VA_ARGS__)
+#define eh_debugln(fmt, ...)                eh_dbg_println(EH_DBG_DEBUG, "", fmt, ##__VA_ARGS__)
+#define eh_infoln(fmt, ...)                 eh_dbg_println(EH_DBG_INFO, "", fmt, ##__VA_ARGS__)
+#define eh_sysln(fmt, ...)                  eh_dbg_println(EH_DBG_SYS, "", fmt, ##__VA_ARGS__)
+#define eh_warnln(fmt, ...)                 eh_dbg_println(EH_DBG_WARNING, "", fmt, ##__VA_ARGS__)
+#define eh_errln(fmt, ...)                  eh_dbg_println(EH_DBG_ERR, "", fmt, ##__VA_ARGS__)
 /* 带自动回车，带函数定位 */
-#define eh_debugfl(fmt, ...)                eh_dbg_printfl(EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
-#define eh_infofl(fmt, ...)                 eh_dbg_printfl(EH_DBG_INFO, fmt, ##__VA_ARGS__)
-#define eh_sysfl(fmt, ...)                  eh_dbg_printfl(EH_DBG_SYS, fmt, ##__VA_ARGS__)
-#define eh_warnfl(fmt, ...)                 eh_dbg_printfl(EH_DBG_WARNING, fmt, ##__VA_ARGS__)
-#define eh_errfl(fmt, ...)                  eh_dbg_printfl(EH_DBG_ERR, fmt, ##__VA_ARGS__)
+#define eh_debugfl(fmt, ...)                eh_dbg_printfl(EH_DBG_DEBUG, "", fmt, ##__VA_ARGS__)
+#define eh_infofl(fmt, ...)                 eh_dbg_printfl(EH_DBG_INFO, "", fmt, ##__VA_ARGS__)
+#define eh_sysfl(fmt, ...)                  eh_dbg_printfl(EH_DBG_SYS, "", fmt, ##__VA_ARGS__)
+#define eh_warnfl(fmt, ...)                 eh_dbg_printfl(EH_DBG_WARNING, "", fmt, ##__VA_ARGS__)
+#define eh_errfl(fmt, ...)                  eh_dbg_printfl(EH_DBG_ERR, "", fmt, ##__VA_ARGS__)
 /* 原始数据版本 */
 #define eh_debugraw(fmt, ...)               eh_dbg_printraw(EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
 #define eh_inforaw(fmt, ...)                eh_dbg_printraw(EH_DBG_INFO, fmt, ##__VA_ARGS__)
@@ -82,6 +128,47 @@ extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t l
 
 
 /**
+ * 可通过编译宏来精细的控制不同模块的打印等级
+ * 假如有如下语句
+ *   void func(void){
+ *       eh_modeule_debugln(FUNC_A, "1 hello world");
+ *       eh_modeule_infoln(FUNC_A, "2 hello world");
+ *       eh_modeule_errln(FUNC_A, "3 hello world");
+ *   }
+ * 只有输出语句的打印等级同时满足全局打印等级和模块打印等级才会输出
+ * 全局打印等级可以通过eh_dbg_set_level函数设置
+ * 而模块打印等级则只能在编译器设置,设置宏为EH_DBG_MODEULE_LEVEL_<module_name>来设置
+ * 例如：
+ *   #define EH_DBG_MODEULE_LEVEL_FUNC_A  EH_DBG_DEBUG
+ *   或者由编译脚本来控制 -DEH_DBG_MODEULE_LEVEL_FUNC_A=EH_DBG_DEBUG
+ *
+ */
+/* 模块可进行宏控制打印是否输出*/
+#define eh_modeule_debugln(name, fmt, ...)  eh_modeule_println(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_modeule_infoln(name, fmt, ...)   eh_modeule_println(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_modeule_sysln(name, fmt, ...)    eh_modeule_println(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_modeule_warnln(name, fmt, ...)   eh_modeule_println(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_modeule_errln(name, fmt, ...)    eh_modeule_println(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+/* 模块可进行宏控制打印是否输出(带行号和函数名称) */
+#define eh_modeule_debugfl(name, fmt, ...)  eh_modeule_printfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_modeule_infofl(name, fmt, ...)   eh_modeule_printfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_modeule_sysfl(name, fmt, ...)    eh_modeule_printfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_modeule_warnfl(name, fmt, ...)   eh_modeule_printfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_modeule_errfl(name, fmt, ...)    eh_modeule_printfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+/* 模块可进行宏控制打印是否输出(原始数据) */
+#define eh_modeule_debugraw(name, fmt, ...)  eh_modeule_printraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_modeule_inforaw(name, fmt, ...)   eh_modeule_printraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_modeule_sysraw(name, fmt, ...)    eh_modeule_printraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_modeule_warnraw(name, fmt, ...)   eh_modeule_printraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_modeule_errraw(name, fmt, ...)    eh_modeule_printraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+/* 模块可进行宏控制打印是否输出(16进制) */
+#define eh_modeule_debughex(name, buf, len)  eh_modeule_hex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_DEBUG, buf, len)
+#define eh_modeule_infohex(name, buf, len)   eh_modeule_hex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_INFO, buf, len)
+#define eh_modeule_syshex(name, buf, len)    eh_modeule_hex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_SYS, buf, len)
+#define eh_modeule_warnhex(name, buf, len)   eh_modeule_hex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_WARNING, buf, len)
+#define eh_modeule_errhex(name, buf, len)    eh_modeule_hex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_ERR, buf, len)
+
+/**
  * @brief 打印错误原因，且执行 action 语句
  */
 #define EH_DBG_ERROR_EXEC(expression, action)  do{                              \
@@ -90,6 +177,10 @@ extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t l
         action;                                                                 \
     }                                                                           \
 }while(0)
+
+
+
+
 
 #ifdef __cplusplus
 #if __cplusplus
