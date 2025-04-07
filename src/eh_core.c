@@ -336,8 +336,8 @@ static int interior_init(void){
     s_main_task.is_static_stack = true;
 
     eh->dispatch_cnt = 0;
-    eh->eh_init_fini_array = (struct eh_module*)eh_modeule_section_begin();
-    eh->eh_init_fini_array_len = ((struct eh_module*)eh_modeule_section_end() - (struct eh_module*)eh_modeule_section_begin());
+    eh->eh_init_fini_array = (struct eh_module*)eh_module_section_begin();
+    eh->eh_init_fini_array_len = ((struct eh_module*)eh_module_section_end() - (struct eh_module*)eh_module_section_begin());
     return 0;
 }
 

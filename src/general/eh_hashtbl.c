@@ -232,7 +232,8 @@ int eh_hashtbl_find(eh_hashtbl_t _hashtbl, const void *key, eh_hashtbl_kv_len_t 
     eh_list_for_each(pos, &hashtbl->table[idx]){
         struct eh_hashtbl_node *node = eh_list_entry(pos, struct eh_hashtbl_node, node);
         if(node->key_len == key_len && memcmp(node->kv, key, key_len) == 0){
-            *out_node = node;
+            if(out_node)
+                *out_node = node;
             return EH_RET_OK;
         }
     }

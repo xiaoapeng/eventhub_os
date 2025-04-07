@@ -18,7 +18,7 @@
 #include <eh_list.h>
 
 typedef uint16_t eh_hashtbl_kv_len_t;
-typedef void *   eh_hashtbl_t;
+typedef int*    eh_hashtbl_t;
 typedef uint32_t eh_hash_val_t;
 #define EH_HASHTBL_DEFAULT_LOADFACTOR   0.75
 
@@ -161,22 +161,22 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
  * @brief                   遍历哈希表
  * @param  hashtbl          哈希表句柄
  * @param  node_pos         节点位置
- * @param  tmp_n            临时变量
+ * @param  node_tmp_n       临时变量
  * @param  tmp_uint_i       临时变量
 
  */
-#define eh_hashtbl_for_each_safe(hashtbl, node_pos, tmp_n, tmp_uint_i)                      \
-    for(({                                                                                  \
-            eh_static_assert(                                                               \
-                eh_same_type(hashtbl, eh_hashtbl_t),                                        \
-                "hashtbl must be eh_hashtbl_t"                                              \
-            );                                                                              \
-            tmp_uint_i = 0;                                                                 \
-        });                                                                                 \
-        tmp_uint_i <= ((struct eh_hashtbl*)(hashtbl))->mask;                                \
-        tmp_uint_i++)                                                                       \
-        if(!eh_hash_table_node_is_need_remake(((struct eh_hashtbl*)(hashtbl)), tmp_uint_i)) \
-            eh_list_for_each_entry_safe(node_pos, tmp_n,                                    \
+#define eh_hashtbl_for_each_safe(hashtbl, node_pos, node_tmp_n, tmp_uint_i)                                     \
+    for(({                                                                                                      \
+            eh_static_assert(                                                                                   \
+                eh_same_type(hashtbl, eh_hashtbl_t),                                                            \
+                "hashtbl must be eh_hashtbl_t"                                                                  \
+            );                                                                                                  \
+            tmp_uint_i = 0;                                                                                     \
+        });                                                                                                     \
+        tmp_uint_i <= ((struct eh_hashtbl*)(hashtbl))->mask;                                                    \
+        tmp_uint_i++)                                                                                           \
+        if(!eh_hash_table_node_is_need_remake(((struct eh_hashtbl*)(hashtbl)), tmp_uint_i))                     \
+            eh_list_for_each_entry_safe(node_pos, node_tmp_n,                                                   \
                 ((struct eh_hashtbl*)(hashtbl))->table + tmp_uint_i, node)
 
 /**
@@ -184,15 +184,15 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
  * @param  hashtbl          哈希表句柄
  * @param  string           字符串
  * @param  node_pos         节点位置
- * @param  tmp_n            临时变量
- * @param  tmp_head         临时变量
+ * @param  node_tmp_n       临时变量
+ * @param  list_tmp_head    临时变量
  */
-#define eh_hashtbl_for_each_with_string_safe(hashtbl, string, node_pos, tmp_n, tmp_head)    \
-    for (tmp_head = _eh_hashtbl_find_list_head_with_string(hashtbl, string),                \
-        node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
-        tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
-        &node_pos->node != (tmp_head);                                                      \
-        node_pos = tmp_n, tmp_n = eh_list_entry(tmp_n->node.next, typeof(*tmp_n), node))    \
+#define eh_hashtbl_for_each_with_string_safe(hashtbl, string, node_pos, node_tmp_n, list_tmp_head)              \
+    for (list_tmp_head = _eh_hashtbl_find_list_head_with_string(hashtbl, string),                               \
+        node_pos = eh_list_entry((list_tmp_head)->next, typeof(*node_pos), node),                               \
+        node_tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                               \
+        &node_pos->node != (list_tmp_head);                                                                     \
+        node_pos = node_tmp_n, node_tmp_n = eh_list_entry(node_tmp_n->node.next, typeof(*node_tmp_n), node))    \
         if(strncmp((const char*)eh_hashtbl_node_const_key(node_pos), string, eh_hashtbl_node_key_len(node_pos)) == 0)
 
 /**
@@ -201,15 +201,15 @@ extern int eh_hashtbl_find_with_string(eh_hashtbl_t hashtbl, const char *key_str
  * @param  key              键
  * @param  len              键长度
  * @param  node_pos         节点位置
- * @param  tmp_n            临时变量
- * @param  tmp_head         临时变量 eh_list_head 类型
+ * @param  node_tmp_n       临时变量
+ * @param  list_tmp_head    临时变量 eh_list_head 类型
  */
-#define eh_hashtbl_for_each_with_key_safe(hashtbl, key, len, node_pos, tmp_n, tmp_head)     \
-    for (tmp_head = _eh_hashtbl_find_list_head(hashtbl, key, len),                          \
-        node_pos = eh_list_entry((tmp_head)->next, typeof(*node_pos), node),                \
-        tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                \
-        &node_pos->node != (tmp_head);                                                      \
-        node_pos = tmp_n, tmp_n = eh_list_entry(tmp_n->node.next, typeof(*tmp_n), node))    \
+#define eh_hashtbl_for_each_with_key_safe(hashtbl, key, len, node_pos, node_tmp_n, list_tmp_head)               \
+    for (list_tmp_head = _eh_hashtbl_find_list_head(hashtbl, key, len),                                         \
+        node_pos = eh_list_entry((list_tmp_head)->next, typeof(*node_pos), node),                               \
+        node_tmp_n = eh_list_entry(node_pos->node.next, typeof(*node_pos), node);                               \
+        &node_pos->node != (list_tmp_head);                                                                     \
+        node_pos = node_tmp_n, node_tmp_n = eh_list_entry(node_tmp_n->node.next, typeof(*node_tmp_n), node))    \
         if(len == eh_hashtbl_node_key_len(node_pos) && memcmp(eh_hashtbl_node_const_key(node_pos), key, len) == 0)
 
 #ifdef __cplusplus
