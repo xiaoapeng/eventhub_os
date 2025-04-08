@@ -68,11 +68,12 @@ extern __safety void* eh_mem_pool_alloc(eh_mem_pool_t pool);
 extern __safety void  eh_mem_pool_free(eh_mem_pool_t pool, void* ptr);
 
 /**
- * @brief                   判断这个buf是否来自这个内存池
+ * @brief                   返回该指针在内存池索引
  * @param  pool             内存池句柄
  * @param  ptr              内存块指针
+ * @return int              若不是来自这个内存池，返回-1
  */
-extern  int eh_mem_pool_is_from_this(eh_mem_pool_t pool, void* ptr);
+extern  int eh_mem_pool_ptr_to_idx(eh_mem_pool_t pool, void* ptr);
 
 /**
  * @brief                   内存池信息打印
