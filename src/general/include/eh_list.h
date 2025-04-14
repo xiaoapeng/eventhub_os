@@ -192,7 +192,7 @@ static inline void __eh_list_splice(struct eh_list_head *eh_list,
 static inline void eh_list_splice(struct eh_list_head *eh_list, struct eh_list_head *head)
 {
     if (!eh_list_empty(eh_list))
-    __eh_list_splice(eh_list, head);
+        __eh_list_splice(eh_list, head);
 }
 
 /**
