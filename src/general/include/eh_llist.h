@@ -36,6 +36,17 @@ static inline void eh_llist_head_init(struct eh_llist_head *list)
     list->last = NULL;
 }
 
+/**
+ * @brief                   由旧的链表头来初始化新的链表头，旧的链表头将被清空
+ * @param  old_list         
+ * @param  new_list         
+ */
+static inline void eh_llist_head_move_init(struct eh_llist_head *old_list, struct eh_llist_head *new_list){
+    new_list->first = old_list->first;
+    new_list->last = old_list->last;
+    old_list->first = NULL;
+    old_list->last = NULL;
+}
 
 /**
  * @brief                   初始化链表节点
