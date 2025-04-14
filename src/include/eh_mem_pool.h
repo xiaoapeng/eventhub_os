@@ -101,6 +101,13 @@ extern void eh_mem_pool_dump(eh_mem_pool_t _pool);
     ((((struct eh_mem_pool*)(pool))->free_list[idx].next == ((struct eh_mem_pool*)(pool))->free_list + (idx)))
 
 
+/**
+ * @brief                   根据索引获取内存块指针
+ * @param  pool             内存池句柄
+ * @param  idx              索引
+ */
+#define eh_mem_pool_idx_to_ptr(pool, idx) \
+    ((void*)((char*)((struct eh_mem_pool*)(pool))->base + ((idx) * ((struct eh_mem_pool*)(pool))->align_size)))
 
 
 #ifdef __cplusplus
