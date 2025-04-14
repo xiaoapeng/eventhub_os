@@ -125,31 +125,31 @@ static inline void eh_list_del_init(struct eh_list_head *entry)
 /**
  * @brief 将节点从一个链表移动到另一个链表的头部
  *        Move a node from one list to the head of another list
- * @param eh_list 要移动的节点
+ * @param node 要移动的节点
  *        Node to be moved
  * @param head 目标链表的头部
  *        Head of the target list
  */
-static inline void eh_list_move(struct eh_list_head *eh_list,
+static inline void eh_list_move(struct eh_list_head *node,
                 struct eh_list_head *head)
 {
-    __eh_list_del(eh_list->prev, eh_list->next);
-    eh_list_add(eh_list, head);
+    __eh_list_del(node->prev, node->next);
+    eh_list_add(node, head);
 }
 
 /**
  * @brief 将节点从一个链表移动到另一个链表的尾部
  *        Move a node from one list to the tail of another list
- * @param eh_list 要移动的节点
+ * @param node 要移动的节点
  *        Node to be moved
  * @param head 目标链表的头部
  *        Head of the target list
  */
-static inline void eh_list_move_tail(struct eh_list_head *eh_list,
+static inline void eh_list_move_tail(struct eh_list_head *node,
                     struct eh_list_head *head)
 {
-    __eh_list_del(eh_list->prev, eh_list->next);
-    eh_list_add_tail(eh_list, head);
+    __eh_list_del(node->prev, node->next);
+    eh_list_add_tail(node, head);
 }
 
 /**
