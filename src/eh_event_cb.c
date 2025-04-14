@@ -7,7 +7,9 @@
  * @copyright Copyright (c) 2024  simon.xiaoapeng@gmail.com
  * 
  */
+
 #include <eh.h>
+#include <eh_list.h>
 #include <eh_event.h>
 #include <eh_event_cb.h>
 #include <eh_interior.h>
@@ -30,25 +32,39 @@ static void task_quit_event_cb(eh_event_t *e, void *param){
 
 static int task_signal_dispose(void *arg)
 {
-    int ret,i;
     (void) arg;
+    int ret,i;
     while(1){
         ret = eh_epoll_wait(signal_dispose_epoll, epool_slot, EH_EVENT_CB_EPOLL_SLOT_SIZE, EH_TIME_FOREVER);
         if(ret < 0)
             return ret;
         for(i=0;i<ret;i++){
-            eh_event_cb_trigger_t *trigger = (eh_event_cb_trigger_t*)epool_slot[i].userdata;
-            eh_event_cb_slot_t *slot,*n;
+            eh_event_cb_trigger_t   *trigger = (eh_event_cb_trigger_t*)epool_slot[i].userdata;
+            eh_event_cb_slot_t      *slot;
+            struct eh_list_head     *node;
+            struct eh_list_head     used_tmp_list;
             eh_event_t *e = epool_slot[i].event;
+            
             if(epool_slot[i].affair == EH_EPOLL_AFFAIR_ERROR || trigger == NULL){
                 eh_epoll_del_event(signal_dispose_epoll, e);
                 continue;
             }
-
-            eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node){
+            
+            /**
+             *  为了避免在执行回调的时候，list被修改，这里将分离node到临时的list,
+             */
+            eh_list_head_init(&used_tmp_list);
+            while(!eh_list_empty(&trigger->cb_head)){
+                node = trigger->cb_head.next;
+                eh_list_move_tail(node, &used_tmp_list);
+                slot = eh_list_entry(node, eh_event_cb_slot_t, cb_node);
                 if(slot->slot_function)
                     slot->slot_function(e, slot->slot_param);
             }
+
+            /* 还原list */
+            eh_list_splice(&used_tmp_list, &trigger->cb_head);
+
         }
     }
 }
