@@ -57,6 +57,9 @@ enum eh_dbg_flags {
 #define EH_DEBUG_ENTER_SIGN "\r\n"
 #endif
 
+static inline int _eh_dbg_feign_return(int n){
+    return n;
+}
 
 #define EH_MACRO_DEBUG_LEVEL(name) ((uint32_t)(EH_STRINGIFY(name)[0] - '0'))
 
@@ -65,7 +68,7 @@ enum eh_dbg_flags {
         if( EH_MACRO_DEBUG_LEVEL(name) >= (uint32_t)level){ \
             n = eh_dbg_printfl(level, "[" #tag "] ", fmt, ##__VA_ARGS__); \
         } \
-        n; \
+        _eh_dbg_feign_return(n); \
     })
 
 #define eh_mprintln(name, tag, level, fmt, ...) ({\
@@ -73,7 +76,7 @@ enum eh_dbg_flags {
         if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
             n = eh_dbg_println(level, "[" #tag "] ", fmt, ##__VA_ARGS__); \
         } \
-        n; \
+        _eh_dbg_feign_return(n); \
     })
 
 #define eh_mprintraw(name, level, fmt, ...) ({\
@@ -81,7 +84,7 @@ enum eh_dbg_flags {
         if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
             n = eh_dbg_printraw(level, fmt, ##__VA_ARGS__); \
         } \
-        n; \
+        _eh_dbg_feign_return(n); \
     })
 
 #define eh_mhex(name, level, buf, len) ({\
@@ -89,7 +92,7 @@ enum eh_dbg_flags {
         if( EH_MACRO_DEBUG_LEVEL(name) >= level){ \
             n = eh_dbg_hex(level, EH_DBG_FLAGS, len, buf); \
         } \
-        n; \
+        _eh_dbg_feign_return(n); \
     })
 
 extern int eh_dbg_set_level(enum eh_dbg_level level);
