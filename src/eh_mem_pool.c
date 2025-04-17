@@ -18,14 +18,6 @@
 #include <eh_debug.h>
 
 
-#if MEM_POOL_DEBUG
-#define mem_pool_debugfl(...) eh_debugfl(__VA_ARGS__)
-#else
-#define mem_pool_debugfl(...)
-#endif
-
-
-
 eh_mem_pool_t eh_mem_pool_create(size_t align, size_t size, size_t num){
     size_t allocation_size = sizeof(struct eh_mem_pool) + 
         num * sizeof(struct eh_mem_pool_list) + 
@@ -47,7 +39,15 @@ eh_mem_pool_t eh_mem_pool_create(size_t align, size_t size, size_t num){
     return (eh_mem_pool_t)pool;
 }
 
-void  eh_mem_pool_destroy(eh_mem_pool_t pool){
+void  eh_mem_pool_destroy(eh_mem_pool_t _pool){
+    int i;
+    void *ptr;
+    struct eh_mem_pool *pool = (struct eh_mem_pool *)_pool;
+    eh_mem_pool_for_each(i, pool, ptr){
+        if(eh_mem_pool_idx_is_used(pool, i)){
+            eh_mwarnfl(MEM_POOL, "pool mem is not freed pool=%p idx=%d", pool, i);
+        }
+    }
     eh_free(pool);
 }
 
@@ -66,7 +66,7 @@ void* eh_mem_pool_alloc(eh_mem_pool_t _pool){
 
     index = (size_t)(pool->free_list_head.next - pool->free_list);
     if(index >= pool->num){
-        eh_warnfl("pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
+        eh_mwarnfl(MEM_POOL, "pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
         goto quit;
     }
     new_mem_node = pool->free_list_head.next;
@@ -74,7 +74,7 @@ void* eh_mem_pool_alloc(eh_mem_pool_t _pool){
     pool->free_list_head.next = new_mem_node->next;
     /* 如果节点的下一个节点指向自己，那么意味着该节点已经被分配出去 */
     new_mem_node->next = new_mem_node;
-    mem_pool_debugfl("pool=%p index=%d new_mem=%p new_mem_node=%p", pool, index, new_mem, new_mem_node);
+    eh_mdebugfl(MEM_POOL, "pool=%p index=%d new_mem=%p new_mem_node=%p", pool, index, new_mem, new_mem_node);
 quit:
     eh_exit_critical(state);
     return new_mem;
@@ -87,12 +87,12 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
 
     index = (size_t)((char*)ptr - (char*)pool->base)/pool->align_size;
     if(index >= pool->num){
-        eh_warnfl("pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
+        eh_mwarnfl(MEM_POOL, "pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
         return ;
     }
     if(!eh_mem_pool_idx_is_used(_pool, index)){
         /* 释放一个没有被分配的pool mem */
-        eh_warnfl("Release an unallocated pool mem.");
+        eh_mwarnfl(MEM_POOL, "Release an unallocated pool mem.");
         return ;
     }
 
@@ -101,20 +101,20 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
     pool->free_list_head.next = pool->free_list + index;
     eh_exit_critical(state);
     
-    mem_pool_debugfl("pool=%p index=%d ptr=%p", pool, index, ptr);
+    eh_mdebugfl(MEM_POOL, "pool=%p index=%d ptr=%p", pool, index, ptr);
 }
 
 void eh_mem_pool_dump(eh_mem_pool_t _pool){
     struct eh_mem_pool *pool = (struct eh_mem_pool *)_pool;
     
     struct eh_mem_pool_list  *new_mem_node = pool->free_list_head.next;
-    eh_infoln("pool=%0#p base=%0#p align_size=%d num=%d\n", pool, pool->base, pool->align_size, pool->num);
-    eh_inforaw("free list:");
+    eh_minfoln(MEM_POOL, "pool=%0#p base=%0#p align_size=%d num=%d\n", pool, pool->base, pool->align_size, pool->num);
+    eh_minforaw(MEM_POOL, "free list:");
     while(new_mem_node != NULL){
-        eh_inforaw(" %d", new_mem_node - pool->free_list);
+        eh_minforaw(MEM_POOL, " %d", new_mem_node - pool->free_list);
         new_mem_node = new_mem_node->next;
     }
-    eh_inforaw("\n");
+    eh_minforaw(MEM_POOL, "\n");
 }
 
 
