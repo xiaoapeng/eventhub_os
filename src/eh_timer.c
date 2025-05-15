@@ -95,7 +95,7 @@ int eh_timer_start(eh_event_timer_t *timer){
     eh_save_state_t state;
     eh_param_assert(eh);
     eh_param_assert(timer);
-    eh_param_assert((eh_sclock_t)(timer->interval) > 0);
+    eh_param_assert((eh_sclock_t)(timer->interval) >= 0);
 
     state = eh_enter_critical();;
     timer_now = eh_get_clock_monotonic_time();
@@ -129,7 +129,7 @@ int eh_timer_restart(eh_event_timer_t *timer){
     int ret = EH_RET_OK;
 
     eh_param_assert(timer);
-    eh_param_assert(timer->interval > 0);
+    eh_param_assert(timer->interval >= 0);
 
     state = eh_enter_critical();
     timer_now = eh_get_clock_monotonic_time();
