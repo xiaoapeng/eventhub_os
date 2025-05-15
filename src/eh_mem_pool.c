@@ -92,7 +92,7 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
     }
     if(!eh_mem_pool_idx_is_used(_pool, index)){
         /* 释放一个没有被分配的pool mem */
-        eh_mwarnfl(MEM_POOL, "Release an unallocated pool mem.");
+        eh_mwarnfl(MEM_POOL, "Release an unallocated pool. mempool=%p index=%d num=%d", pool, index, pool->num);
         return ;
     }
 
