@@ -174,11 +174,11 @@ extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t l
 /**
  * @brief 打印错误原因，且执行 action 语句
  */
-#define EH_DBG_ERROR_EXEC(expression, action)  do{                              \
-    if(expression){                                                             \
-        eh_dbg_printfl(EH_DBG_ERR, "(%s) execute {%s}", #expression, #action); \
-        action;                                                                 \
-    }                                                                           \
+#define EH_DBG_ERROR_EXEC(expression, action)  do{                                 \
+    if(expression){                                                                \
+        eh_dbg_printfl(EH_DBG_ERR, "", "(%s) execute {%s}", #expression, #action); \
+        action;                                                                    \
+    }                                                                              \
 }while(0)
 
 
