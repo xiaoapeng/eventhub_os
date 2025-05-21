@@ -93,6 +93,12 @@ extern struct eh_hashtbl_node* eh_hashtbl_node_new_with_string(eh_hashtbl_t hash
  */
 extern struct eh_hashtbl_node* eh_hashtbl_node_renew(eh_hashtbl_t hashtbl, struct eh_hashtbl_node* old_node, eh_hashtbl_kv_len_t value_len);
 
+/**
+ * @brief                   刷新哈希表节点的键,在强制修改键值后必须调用
+ * @param  hashtbl          哈希表句柄
+ * @param  node             哈希表节点句柄
+ */
+extern void eh_hashtbl_node_key_refresh(eh_hashtbl_t hashtbl, struct eh_hashtbl_node* node);
 
 /**
  * @brief                   删除哈希表节点,如果该节点已经被挂在哈希表上，则会自动从哈希表上删除
@@ -104,9 +110,17 @@ extern void eh_hashtbl_node_delete(eh_hashtbl_t hashtbl, struct eh_hashtbl_node 
 /** 
  * @brief                  获取哈希表节点的键 
  * @param  node            哈希表节点句柄
- * @return void*           返回 “键”
+ * @return const void*     返回 “键”
  */
 #define eh_hashtbl_node_const_key(node)    ((const void*)((node)->kv))
+
+/**
+ * @brief                  获取哈希表节点的键,在使用时，你需要明白你在做什么，
+ *                          如果修改key,请调用eh_hashtbl_node_key_refresh
+ * @param  node            哈希表节点句柄
+ * @return void*           返回 “键”
+ */
+#define eh_hashtbl_node_key(node)         ((void*)((node)->kv))
 
 /** 
  * @brief                  获取哈希表节点的值 

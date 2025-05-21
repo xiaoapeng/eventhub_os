@@ -171,6 +171,16 @@ struct eh_hashtbl_node* eh_hashtbl_node_renew(eh_hashtbl_t hashtbl,
     return node;
 }
 
+void eh_hashtbl_node_key_refresh(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node* node){
+    struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
+    unsigned int idx;
+    node->hash_val = eh_hash_val((const char *)node->kv, node->key_len);
+    if(!eh_list_empty(&node->node)){
+        idx = node->hash_val & hashtbl->mask;
+        eh_list_del(&node->node);
+        eh_list_add(&node->node, hashtbl->table + idx);
+    }
+}
 
 void eh_hashtbl_node_delete(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
     struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
