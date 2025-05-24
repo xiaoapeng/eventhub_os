@@ -69,8 +69,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 /**
  * @brief 通用信号结构体，可用于定义通用信号，定义后需要init后方可使用
  */
-#define EH_STRUCT_SIGNAL    EH_STRUCT_CUSTOM_SIGNAL(eh_event_t)
-
+typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
 /**
  * @brief 声明一个私有的通用信号，在.c文件中定义后需注册使用，此方式定义的信号无需init
  *         .c中使用
