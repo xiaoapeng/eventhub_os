@@ -66,23 +66,32 @@ extern eh_hashtbl_t eh_hashtbl_create(float load_factor);
 extern void eh_hashtbl_destroy(eh_hashtbl_t hashtbl);
 
 /**
- * @brief                   创建哈希表节点
+ * @brief                   创建哈希表节点, 调用该函数后需要手动赋值key，
+ *                          然后调用 eh_hashtbl_node_key_refresh 进行刷新，最后在插入哈希表
+ * @param  key_len          键长度
+ * @param  value_len        值长度
+ * @return struct eh_hashtbl_node* 
+ */
+extern struct eh_hashtbl_node* eh_hashtbl_node_new(eh_hashtbl_kv_len_t key_len, eh_hashtbl_kv_len_t value_len);
+
+/**
+ * @brief                   创建哈希表节点,且自动刷新内部哈希值，节点不挂在任何哈希表上，若要进行插入需要显式调用
  * @param  hashtbl          哈希表句柄
  * @param  key              键
  * @param  key_len          键长度
  * @param  value_len        值长度
  * @return struct eh_hashtbl_node*      成功返回哈希表节点句柄，失败返回NULL
  */
-extern struct eh_hashtbl_node* eh_hashtbl_node_new(eh_hashtbl_t hashtbl, const void *key, eh_hashtbl_kv_len_t key_len, eh_hashtbl_kv_len_t value_len);
+extern struct eh_hashtbl_node* eh_hashtbl_node_new_refresh(eh_hashtbl_t hashtbl, const void *key, eh_hashtbl_kv_len_t key_len, eh_hashtbl_kv_len_t value_len);
 
 /**
- * @brief                   创建哈希表节点
+ * @brief                   创建哈希表节点,且自动刷新内部哈希值，节点不挂在任何哈希表上，若要进行插入需要显式调用
  * @param  hashtbl          哈希表句柄
  * @param  key              键
  * @param  value_len        值长度
  * @return struct eh_hashtbl_node*      成功返回哈希表节点句柄，失败返回NULL
  */
-extern struct eh_hashtbl_node* eh_hashtbl_node_new_with_string(eh_hashtbl_t hashtbl, const char *key, eh_hashtbl_kv_len_t value_len);
+extern struct eh_hashtbl_node* eh_hashtbl_node_new_with_string_refresh(eh_hashtbl_t hashtbl, const char *key, eh_hashtbl_kv_len_t value_len);
 
 /**
  * @brief                   重建哈希表节点，如果新值长度与旧值不一样，会重新分配内存，如何该节点被挂在哈希表上，则会自动更新
@@ -115,8 +124,7 @@ extern void eh_hashtbl_node_delete(eh_hashtbl_t hashtbl, struct eh_hashtbl_node 
 #define eh_hashtbl_node_const_key(node)    ((const void*)((node)->kv))
 
 /**
- * @brief                  获取哈希表节点的键,在使用时，你需要明白你在做什么，
- *                          如果修改key,请调用eh_hashtbl_node_key_refresh
+ * @brief                  获取哈希表节点的键,如果修改key,请立即调用 eh_hashtbl_node_key_refresh
  * @param  node            哈希表节点句柄
  * @return void*           返回 “键”
  */
@@ -143,6 +151,12 @@ extern void eh_hashtbl_node_delete(eh_hashtbl_t hashtbl, struct eh_hashtbl_node 
  */
 #define eh_hashtbl_node_value_len(node)    ((node)->value_len)
 
+/**
+ * @brief                   获取哈希表节点是否已经插入
+ * @param  node             哈希表节点句柄
+ * @return bool             插入状态
+ */
+#define eh_hashtbl_node_is_insert(_node)     (!eh_list_empty(&(_node)->node))
 
 /**
  * @brief                   向哈希表插入节点
@@ -151,6 +165,13 @@ extern void eh_hashtbl_node_delete(eh_hashtbl_t hashtbl, struct eh_hashtbl_node 
  * @return int              成功返回0，失败返回错误码
  */
 extern int eh_hashtbl_insert(eh_hashtbl_t hashtbl, struct eh_hashtbl_node *node);
+
+/**
+ * @brief                   把某节点从哈希表中移除
+ * @param  hashtbl          哈希表句柄
+ * @param  node             哈希表节点句柄
+ */
+extern void eh_hashtbl_remove(eh_hashtbl_t hashtbl, struct eh_hashtbl_node *node);
 
 /**
  * @brief                   从哈希表中寻找节点

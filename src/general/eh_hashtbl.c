@@ -112,7 +112,19 @@ static void eh_hashtbl_try_remake(struct eh_hashtbl *hashtbl, unsigned int idx){
     }
 }
 
-struct eh_hashtbl_node* eh_hashtbl_node_new(eh_hashtbl_t hashtbl, 
+
+struct eh_hashtbl_node* eh_hashtbl_node_new(eh_hashtbl_kv_len_t key_len, eh_hashtbl_kv_len_t value_len){
+    struct eh_hashtbl_node *node = eh_malloc(sizeof(struct eh_hashtbl_node) + 
+        eh_align_up(key_len, EH_HASHTBL_KV_ALIGN) +  eh_align_up(value_len, EH_HASHTBL_KV_ALIGN));
+    if(node == NULL)
+        return NULL;
+    eh_list_head_init(&node->node);
+    node->value_len = value_len;
+    node->key_len = key_len;
+    return node;
+}
+
+struct eh_hashtbl_node* eh_hashtbl_node_new_refresh(eh_hashtbl_t hashtbl, 
         const void *key, eh_hashtbl_kv_len_t key_len, eh_hashtbl_kv_len_t value_len){
     (void)hashtbl;
     struct eh_hashtbl_node *node = eh_malloc(sizeof(struct eh_hashtbl_node) + 
@@ -128,7 +140,7 @@ struct eh_hashtbl_node* eh_hashtbl_node_new(eh_hashtbl_t hashtbl,
 }
 
 
-struct eh_hashtbl_node* eh_hashtbl_node_new_with_string(eh_hashtbl_t hashtbl, 
+struct eh_hashtbl_node* eh_hashtbl_node_new_with_string_refresh(eh_hashtbl_t hashtbl, 
     const char *key, eh_hashtbl_kv_len_t value_len){
     (void)hashtbl;
     eh_hashtbl_kv_len_t key_len;
@@ -175,7 +187,7 @@ void eh_hashtbl_node_key_refresh(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node* 
     struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
     unsigned int idx;
     node->hash_val = eh_hash_val((const char *)node->kv, node->key_len);
-    if(!eh_list_empty(&node->node)){
+    if(eh_hashtbl_node_is_insert(node)){
         idx = node->hash_val & hashtbl->mask;
         eh_list_del(&node->node);
         eh_list_add(&node->node, hashtbl->table + idx);
@@ -184,7 +196,7 @@ void eh_hashtbl_node_key_refresh(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node* 
 
 void eh_hashtbl_node_delete(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
     struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
-    if(!eh_list_empty(&node->node)){
+    if(eh_hashtbl_node_is_insert(node)){
         eh_list_del(&node->node);
         hashtbl->count--;
     }
@@ -196,7 +208,7 @@ int eh_hashtbl_insert(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
     struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
     int ret;
     unsigned int idx;
-    if(!eh_list_empty(&node->node))
+    if(eh_hashtbl_node_is_insert(node))
         return EH_RET_EXISTS;
     if(hashtbl->count + 1 >= hashtbl->threshold && hashtbl->mask != UINT32_MAX){
         ret = eh_hashtbl_resize(hashtbl);
@@ -211,6 +223,15 @@ int eh_hashtbl_insert(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
     eh_list_add(&node->node, hashtbl->table + idx);
     hashtbl->count++;
     return EH_RET_OK;
+}
+
+
+void eh_hashtbl_remove(eh_hashtbl_t _hashtbl, struct eh_hashtbl_node *node){
+    struct eh_hashtbl *hashtbl = (struct eh_hashtbl *)_hashtbl;
+    if(eh_hashtbl_node_is_insert(node)){
+        eh_list_del_init(&node->node);
+        hashtbl->count--;
+    }
 }
 
 struct eh_list_head *_eh_hashtbl_find_list_head(eh_hashtbl_t _hashtbl, const void *key, eh_hashtbl_kv_len_t key_len){
