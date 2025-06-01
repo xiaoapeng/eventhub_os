@@ -131,6 +131,30 @@ const uint8_t* eh_ringbuf_peek(eh_ringbuf_t *ringbuf, int32_t offset, uint8_t *b
     }
 }
 
+
+int32_t eh_ringbuf_peek_copy(eh_ringbuf_t *ringbuf, int32_t offset, uint8_t *buf, int32_t len){
+    uint32_t r;
+    int32_t size;
+    int32_t read_size_first_max;
+    int32_t rl;
+
+    /* 为了性能，这里不进行负数的判断 */
+
+    size = eh_ringbuf_size(ringbuf) - offset;
+    rl = len;
+    if(size < rl ) return 0; /* 数量不足，禁止偷看 */
+    r = (ringbuf->r + (uint32_t)offset)%(uint32_t)ringbuf->size;
+    read_size_first_max = ringbuf->size - (int32_t)r;
+
+    if(rl <= read_size_first_max){
+        memcpy(buf, ringbuf->buf + r, (size_t)rl);
+    }else{
+        memcpy(buf, ringbuf->buf + r, (size_t)read_size_first_max);
+        memcpy(buf + read_size_first_max, ringbuf->buf, (size_t)(rl - read_size_first_max));
+    }
+    return rl;
+}
+
 void eh_ringbuf_clear(eh_ringbuf_t *ringbuf){
     eh_memory_order_release_barrier();
     ringbuf->r = ringbuf->w;
