@@ -48,7 +48,7 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
         }
 
 /**
- * @brief 定义并初步初始化一个全局自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册
+ * @brief 定义并初步初始化一个全局自定义信号，在.c中使用，建议将自定义部分初始化后再进行注册,
  *         .c中使用，此方式定义的信号无需init
  */
 #define EH_DEFINE_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)               \
