@@ -75,6 +75,36 @@ int32_t eh_ringbuf_write(eh_ringbuf_t *ringbuf, const uint8_t *buf, int32_t len)
     return wl;
 }
 
+
+int32_t eh_ringbuf_draft_write(eh_ringbuf_t *ringbuf, int32_t offset, const uint8_t *buf, int32_t len){
+    uint32_t w;
+    int32_t free_size = eh_ringbuf_free_size(ringbuf) -  offset;
+    int32_t write_size_first_max,wl;
+    wl = len > free_size ? free_size : len;
+    if(wl <= 0) return 0;
+    w = (ringbuf->w + (uint32_t)offset) % (uint32_t)ringbuf->size;
+    write_size_first_max = ringbuf->size - (int32_t)w;
+    
+    if(wl <= write_size_first_max){
+        memcpy(ringbuf->buf + w, buf, (size_t)wl);
+    }else{
+        memcpy(ringbuf->buf + w, buf, (size_t)write_size_first_max);
+        memcpy(ringbuf->buf, buf + write_size_first_max, (size_t)(wl - write_size_first_max));
+    }
+    
+    return wl;
+}
+
+int32_t eh_ringbuf_write_skip(eh_ringbuf_t *ringbuf, int32_t len){
+    int32_t free_size = eh_ringbuf_free_size(ringbuf);
+    int32_t wl;
+    wl = len > free_size ? free_size : len;
+    if(wl <= 0) return 0;
+    eh_memory_order_release_barrier();
+    ringbuf->w = eh_ringbuf_fix(ringbuf, ringbuf->w + (uint32_t)wl);
+    return wl;
+}
+
 int32_t eh_ringbuf_read(eh_ringbuf_t *ringbuf, uint8_t *buf, int32_t len){
     uint32_t r;
     int32_t size = eh_ringbuf_size(ringbuf);

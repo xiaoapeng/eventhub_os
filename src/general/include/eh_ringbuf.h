@@ -73,6 +73,24 @@ static inline int32_t eh_ringbuf_total_size(eh_ringbuf_t *ringbuf){
 extern int32_t eh_ringbuf_write(eh_ringbuf_t *ringbuf, const uint8_t *buf, int32_t len);
 
 /**
+ * @brief                           预写入环形缓冲区,但不改变读写指针
+ * @param  ringbuf                  环形缓冲区指针
+ * @param  offset                   预写入偏移量
+ * @param  buf                      缓冲区指针
+ * @param  len                      要写的环形缓冲区长度
+ * @return int32_t                  返回写入成功的数量
+ */
+extern int32_t eh_ringbuf_draft_write(eh_ringbuf_t *ringbuf, int32_t offset, const uint8_t *buf, int32_t len);
+
+/**
+ * @brief                           写入环形缓冲区, 并跳过指定长度
+ * @param  ringbuf                  环形缓冲区指针
+ * @param  len                      要写的环形缓冲区长度
+ * @return int32_t                  返回写入跳过成功的数量
+ */
+extern int32_t eh_ringbuf_write_skip(eh_ringbuf_t *ringbuf, int32_t len);
+
+/**
  * @brief                           读取环形缓冲区
  * @param  ringbuf                  环形缓冲区指针
  * @param  buf                      要读到的缓冲区指针
@@ -91,6 +109,7 @@ extern int32_t eh_ringbuf_read_skip(eh_ringbuf_t *ringbuf, int32_t len);
 
 /**
  * @brief                           偷看环形缓冲区,当数据未绕回时自动触发0拷贝，当数据饶回时触发拷贝进所传入的buf中
+ *                                  当缓冲区的数量小于要偷看的数量会直接返回NULL,这样设计是为了在高性能场景下防止无意义的拷贝
  * @param  ringbuf                  环形缓冲区指针
  * @param  offset                   从哪开始偷看
  * @param  buf                      要读到的缓冲区指针
@@ -104,6 +123,7 @@ extern const uint8_t* eh_ringbuf_peek(eh_ringbuf_t *ringbuf, int32_t offset, uin
 
 /**
  * @brief                           偷看环形缓冲区,并将数据拷贝到buf中
+ *                                  当缓冲区的数量小于要偷看的数量会直接返回NULL,这样设计是为了在高性能场景下防止无意义的拷贝
  * @param  ringbuf                  环形缓冲区指针
  * @param  offset                   从哪开始偷看
  * @param  buf                      要读到的缓冲区指针
