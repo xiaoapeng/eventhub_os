@@ -139,7 +139,7 @@ void __async eh_task_next(void){
     
 
     for(;;){
-        state = eh_enter_critical();;
+        state = eh_enter_critical();
         if(!eh_list_empty(&current_task->task_list_node))
             break;
         eh_exit_critical(state);
