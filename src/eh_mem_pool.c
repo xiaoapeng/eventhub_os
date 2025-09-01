@@ -90,15 +90,18 @@ void  eh_mem_pool_free(eh_mem_pool_t _pool, void* ptr){
         eh_mwarnfl(MEM_POOL, "pool index out of range pool=%p index=%d num=%d", pool, index, pool->num);
         return ;
     }
+
     state = eh_enter_critical();
     if(!eh_mem_pool_idx_is_used(_pool, index)){
         /* 释放一个没有被分配的pool mem */
         eh_mwarnfl(MEM_POOL, "Release an unallocated pool. mempool=%p index=%d num=%d", pool, index, pool->num);
-        return ;
+        goto quit;
     }
 
     pool->free_list[index].next = pool->free_list_head.next;
     pool->free_list_head.next = pool->free_list + index;
+
+quit:
     eh_exit_critical(state);
     
     eh_mdebugfl(MEM_POOL, "pool=%p index=%d ptr=%p", pool, index, ptr);
