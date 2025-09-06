@@ -149,8 +149,16 @@ extern unsigned long platform_get_clock_freq(void);
 /*
  *  哈希表初始表大小
  */
-#ifndef EH_HASHTBL_MIN_SIZE
-#define EH_HASHTBL_MIN_SIZE                                      16
-#endif /* EH_HASHTBL_MIN_SIZE */
+#ifndef EH_CONFIG_HASHTBL_MIN_SIZE
+#define EH_CONFIG_HASHTBL_MIN_SIZE                              16
+#endif /* EH_CONFIG_HASHTBL_MIN_SIZE */
+
+#ifndef EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_YIELD
+#define EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_YIELD               4
+#endif
+
+#ifndef EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_CHECKTIMER
+#define EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_CHECKTIMER          4
+#endif
 
 #endif // _EVENT_CONFIG_H_

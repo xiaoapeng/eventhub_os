@@ -16,8 +16,8 @@
 #include <eh_hashtbl.h>
 
 eh_static_assert(
-    (EH_HASHTBL_MIN_SIZE >= 8) && ((EH_HASHTBL_MIN_SIZE & (EH_HASHTBL_MIN_SIZE - 1)) == 0),
-    "EH_HASHTBL_MIN_SIZE must be a power of 2 and at least 8"
+    (EH_CONFIG_HASHTBL_MIN_SIZE >= 8) && ((EH_CONFIG_HASHTBL_MIN_SIZE & (EH_CONFIG_HASHTBL_MIN_SIZE - 1)) == 0),
+    "EH_CONFIG_HASHTBL_MIN_SIZE must be a power of 2 and at least 8"
 );
 
 
@@ -302,15 +302,15 @@ eh_hashtbl_t eh_hashtbl_create(float load_factor){
     if(hashtbl == NULL){
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     }
-    hashtbl->mask = EH_HASHTBL_MIN_SIZE - 1;
-    hashtbl->threshold = (unsigned int)(EH_HASHTBL_MIN_SIZE * load_factor);
+    hashtbl->mask = EH_CONFIG_HASHTBL_MIN_SIZE - 1;
+    hashtbl->threshold = (unsigned int)(EH_CONFIG_HASHTBL_MIN_SIZE * load_factor);
     hashtbl->count = 0;
-    hashtbl->table = eh_malloc(sizeof(struct eh_list_head) * EH_HASHTBL_MIN_SIZE);
+    hashtbl->table = eh_malloc(sizeof(struct eh_list_head) * EH_CONFIG_HASHTBL_MIN_SIZE);
     if(hashtbl->table == NULL){
         ret = eh_error_to_ptr(EH_RET_MALLOC_ERROR);
         goto table_malloc_error;
     }
-    for(int i = 0; i < EH_HASHTBL_MIN_SIZE; i++){
+    for(int i = 0; i < EH_CONFIG_HASHTBL_MIN_SIZE; i++){
         eh_list_head_init(&hashtbl->table[i]);
     }
     return (eh_hashtbl_t)hashtbl;

@@ -158,6 +158,12 @@ extern void eh_task_destroy(eh_task_t *task);
 
 
 /**
+ * @brief                获取当前被调度的次数
+ * @return  unsigned int 
+ */
+ extern unsigned int eh_task_dispatch_cnt(void);
+
+/**
  * @brief                   添加一个轮询任务，轮询任务会在系统栈(系统任务中)内循环执行，
  *                          在世界循环每次都会被执行到，请勿在此循环中做任何超时服务，包括await
  *                          非必要，请不要使用，可使用timer event_cb代替

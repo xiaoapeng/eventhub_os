@@ -34,6 +34,9 @@ static int task_signal_dispose(void *arg)
 {
     (void) arg;
     int ret,i;
+    unsigned int last_task_dispatch_cnt = eh_task_dispatch_cnt();
+    unsigned int task_dispatch_cnt = last_task_dispatch_cnt;
+    unsigned int continue_cnt0 = 0,continue_cnt1 = 0;
     while(1){
         ret = eh_epoll_wait(signal_dispose_epoll, epool_slot, EH_EVENT_CB_EPOLL_SLOT_SIZE, EH_TIME_FOREVER);
         if(ret < 0)
@@ -65,7 +68,24 @@ static int task_signal_dispose(void *arg)
             /* 还原list */
             eh_list_splice(&used_tmp_list, &trigger->cb_head);
 
+            continue_cnt1++;
+            if(continue_cnt1%EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_CHECKTIMER == 0){
+                eh_timer_check();
+            }
         }
+
+        task_dispatch_cnt = eh_task_dispatch_cnt();
+        if(last_task_dispatch_cnt != task_dispatch_cnt){
+            continue_cnt0 = 0;
+            last_task_dispatch_cnt = task_dispatch_cnt;
+        }else{
+            continue_cnt0++;
+            if(continue_cnt0 >= EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_YIELD){
+                continue_cnt0 = 0;
+                eh_task_yield();
+            }
+        }
+
     }
 }
 

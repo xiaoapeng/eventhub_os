@@ -126,6 +126,12 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
 #define eh_signal_to_custom_event(signal)                                               \
     (&(signal)->custom_event)
 
+/**
+ * @brief 获取事件所对应的信号
+ */
+#define eh_signal_from_event(event_base_ptr)                                            \
+    eh_container_of(event_base_ptr, eh_signal_base_t, event)
+
 
 /**
  * @brief 定义一个槽，并进行初始化（无需再调用 eh_signal_slot_init）

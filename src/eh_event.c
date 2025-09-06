@@ -397,7 +397,7 @@ int __async eh_epoll_wait(eh_epoll_t _epoll,eh_epoll_slot_t *epool_slot, int slo
     if(timeout > 0)
         return __await  _eh_epoll_wait_timeout(epoll, epool_slot, slot_size, timeout);
     /* timeout == 0 || timeout != EH_TIME_FOREVER 时，不进行任何等待 */
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
     eh_exit_critical(state);
     return ret == 0 ? EH_RET_TIMEOUT : ret;

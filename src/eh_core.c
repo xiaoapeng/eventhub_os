@@ -179,6 +179,10 @@ void __async eh_task_next(void){
 
 }
 
+unsigned int eh_task_dispatch_cnt(void){
+    return eh_read_once(eh_get_global_handle()->dispatch_cnt);
+}
+
 void eh_task_wake_up(eh_task_t *wakeup_task){
     eh_save_state_t state;
     state = eh_enter_critical();
