@@ -132,6 +132,7 @@ void __async eh_task_next(void){
     eh_save_state_t state;
     eh_task_t *current_task = eh_task_get_current();
     eh_task_t *to;
+    eh_clock_t idle_time = 0;
     
     if( eh->dispatch_cnt % EH_CONFIG_TASK_DISPATCH_CNT_PER_POLL == 0 ){
         eh_poll();
@@ -141,7 +142,11 @@ void __async eh_task_next(void){
     for(;;){
         state = eh_enter_critical();
         if(!eh_list_empty(&current_task->task_list_node))
+        {
+            if(idle_time)
+                eh->idle_time += (eh_get_clock_monotonic_time() - idle_time);
             break;
+        }
         eh_exit_critical(state);
 
         /* task list 为空，说明已经没有任务了*/
@@ -149,8 +154,13 @@ void __async eh_task_next(void){
         if( current_task->state == EH_TASK_STATE_RUNING || 
             current_task->state == EH_TASK_STATE_READY ){
             current_task->state = EH_TASK_STATE_RUNING;
+            if(idle_time)
+                eh->idle_time += (eh_get_clock_monotonic_time() - idle_time);
             return ;
         }
+        
+        if(idle_time == 0)
+            idle_time = eh_get_clock_monotonic_time();
     }
 
     to = eh_list_entry(current_task->task_list_node.next, eh_task_t, task_list_node);
@@ -181,6 +191,10 @@ void __async eh_task_next(void){
 
 unsigned int eh_task_dispatch_cnt(void){
     return eh_read_once(eh_get_global_handle()->dispatch_cnt);
+}
+
+eh_clock_t eh_task_idle_time(void){
+    return eh_read_once(eh_get_global_handle()->idle_time);
 }
 
 void eh_task_wake_up(eh_task_t *wakeup_task){
@@ -340,6 +354,7 @@ static int interior_init(void){
     s_main_task.is_static_stack = true;
 
     eh->dispatch_cnt = 0;
+    eh->idle_time = 0;
     eh->eh_init_fini_array = (struct eh_module*)eh_module_section_begin();
     eh->eh_init_fini_array_len = ((struct eh_module*)eh_module_section_end() - (struct eh_module*)eh_module_section_begin());
     return 0;

@@ -161,7 +161,13 @@ extern void eh_task_destroy(eh_task_t *task);
  * @brief                获取当前被调度的次数
  * @return  unsigned int 
  */
- extern unsigned int eh_task_dispatch_cnt(void);
+extern unsigned int eh_task_dispatch_cnt(void);
+
+/**
+ * @brief                获取当前的空闲时间片数
+ * @return  eh_clock_t 
+ */
+extern eh_clock_t eh_task_idle_time(void);
 
 /**
  * @brief                   添加一个轮询任务，轮询任务会在系统栈(系统任务中)内循环执行，
