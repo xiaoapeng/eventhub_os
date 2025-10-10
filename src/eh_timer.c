@@ -59,7 +59,7 @@ void eh_timer_check(void){
     eh_event_timer_t *first_timer;
     eh_clock_t base;
     
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     
     timer_now = eh_get_clock_monotonic_time();
 
@@ -97,7 +97,7 @@ int eh_timer_start(eh_event_timer_t *timer){
     eh_param_assert(timer);
     eh_param_assert((eh_sclock_t)(timer->interval) >= 0);
 
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     timer_now = eh_get_clock_monotonic_time();
     ret = _eh_timer_start_no_lock(timer_now, timer);
     if(ret == FIRST_TIMER_UPDATE){
@@ -112,7 +112,7 @@ int eh_timer_stop(eh_event_timer_t *timer){
     int ret = EH_RET_OK;
     eh_param_assert(timer);
 
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     if(eh_rb_node_is_empty(&timer->rb_node))
         goto out;
     
