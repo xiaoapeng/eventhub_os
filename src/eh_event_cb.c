@@ -13,32 +13,58 @@
 #include <eh_event.h>
 #include <eh_event_cb.h>
 #include <eh_interior.h>
+#include <eh_debug.h>
 
 #define EH_EVENT_CB_EPOLL_SLOT_SIZE 8
-static eh_task_t *signal_dispose_task = NULL;
-static eh_epoll_t signal_dispose_epoll = NULL;
-static eh_epoll_slot_t epool_slot[EH_EVENT_CB_EPOLL_SLOT_SIZE];
 
-/* 辅助自己退出 */
-static eh_event_t event_task_quit;
-static eh_event_cb_trigger_t trigger_task_quit;
-static eh_event_cb_slot_t slot_task_quit;
-
-static void task_quit_event_cb(eh_event_t *e, void *param){
-    (void)e;
-    (void)param;
-    eh_task_exit(0);
+static void task_system_data_destruct_function(eh_task_t *task){
+    eh_epoll_t epoll = (eh_epoll_t)task->system_data;
+    eh_epoll_del_event(epoll, &task->event);
+    eh_epoll_del(epoll);
+    task->system_data = NULL;
+    task->system_data_destruct_function = NULL;
 }
 
-static int task_signal_dispose(void *arg)
+static eh_epoll_t task_get_epoll(eh_task_t *task){
+    eh_epoll_t epoll = NULL;
+    int ret;
+    if(task->system_data){
+        return (eh_epoll_t)task->system_data;
+    }
+    epoll = eh_epoll_new();
+    if(eh_ptr_to_error(epoll) < 0){
+        return epoll;
+    }
+    ret = eh_epoll_add_event(epoll, &task->event, NULL);
+    if(ret < 0){
+        eh_epoll_del(epoll);
+        return eh_error_to_ptr(ret);
+    }
+    task->system_data = epoll;
+    task->system_data_destruct_function = task_system_data_destruct_function;
+    return epoll;
+}
+
+
+
+int eh_event_loop(void)
 {
-    (void) arg;
     int ret,i;
     unsigned int last_task_dispatch_cnt = eh_task_dispatch_cnt();
     unsigned int task_dispatch_cnt = last_task_dispatch_cnt;
     unsigned int continue_cnt0 = 0,continue_cnt1 = 0;
+    eh_epoll_slot_t epool_slot[EH_EVENT_CB_EPOLL_SLOT_SIZE];
+    eh_task_t *task = eh_task_self();
+    eh_epoll_t epoll;
+
+    if(eh_read_once(task->flags) & EH_TASK_FLAGS_INTERIOR_REQUEST_QUIT)
+        return EH_RET_OK;
+
+    epoll = task_get_epoll(task);
+    if(eh_ptr_to_error(epoll) < 0)
+        return eh_ptr_to_error(epoll);
     while(1){
-        ret = eh_epoll_wait(signal_dispose_epoll, epool_slot, EH_EVENT_CB_EPOLL_SLOT_SIZE, EH_TIME_FOREVER);
+        ret = eh_epoll_wait(epoll, epool_slot, EH_EVENT_CB_EPOLL_SLOT_SIZE, EH_TIME_FOREVER);
         if(ret < 0)
             return ret;
         for(i=0;i<ret;i++){
@@ -47,12 +73,15 @@ static int task_signal_dispose(void *arg)
             struct eh_list_head     *node;
             struct eh_list_head     used_tmp_list;
             eh_event_t *e = epool_slot[i].event;
-            
-            if(epool_slot[i].affair == EH_EPOLL_AFFAIR_ERROR || trigger == NULL){
-                eh_epoll_del_event(signal_dispose_epoll, e);
+
+            if(epool_slot[i].affair == EH_EPOLL_AFFAIR_ERROR){
+                eh_epoll_del_event(epoll, e);
                 continue;
             }
-            
+
+            if(trigger == NULL)
+                continue;
+
             /**
              *  为了避免在执行回调的时候，list被修改，这里将分离node到临时的list,
              */
@@ -74,6 +103,9 @@ static int task_signal_dispose(void *arg)
             }
         }
 
+        if(eh_read_once(task->flags) & EH_TASK_FLAGS_INTERIOR_REQUEST_QUIT)
+            break;
+
         task_dispatch_cnt = eh_task_dispatch_cnt();
         if(last_task_dispatch_cnt != task_dispatch_cnt){
             continue_cnt0 = 0;
@@ -85,17 +117,29 @@ static int task_signal_dispose(void *arg)
                 eh_task_yield();
             }
         }
-
     }
+    return EH_RET_OK;
 }
 
-int eh_event_cb_register(eh_event_t *e, eh_event_cb_trigger_t *trigger){
+void eh_event_loop_request_quit(eh_task_t *task){
+    eh_event_notify(&task->event);
+    task->flags |= EH_TASK_FLAGS_INTERIOR_REQUEST_QUIT;
+}
+
+int eh_event_cb_register(eh_task_t *task, eh_event_t *e, eh_event_cb_trigger_t *trigger){
+    eh_param_assert(task);
     eh_param_assert(trigger);
-    return eh_epoll_add_event(signal_dispose_epoll, e, (void*)trigger);
+    eh_epoll_t epoll = task_get_epoll(task);
+    if(eh_ptr_to_error(epoll) < 0)
+        return eh_ptr_to_error(epoll);
+    return eh_epoll_add_event(epoll, e, (void*)trigger);
 }
 
-int eh_event_cb_unregister(eh_event_t *e){
-    return eh_epoll_del_event(signal_dispose_epoll, e);
+int eh_event_cb_unregister(eh_task_t *task, eh_event_t *e){
+    eh_epoll_t epoll = task_get_epoll(task);
+    if(eh_ptr_to_error(epoll) < 0)
+        return eh_ptr_to_error(epoll);
+    return eh_epoll_del_event(epoll, e);
 }
 int eh_event_cb_connect(eh_event_cb_trigger_t *trigger, eh_event_cb_slot_t *slot){
     eh_param_assert(trigger);
@@ -117,47 +161,5 @@ void eh_event_cb_trigger_clean(eh_event_cb_trigger_t *trigger){
     eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node)
         eh_event_cb_disconnect(slot);
 }
-static int __init eh_event_cb_init(void)
-{
-    int ret = EH_RET_OK;
-    signal_dispose_epoll = eh_epoll_new();
-    ret = eh_ptr_to_error(signal_dispose_epoll);
-    if(ret < 0)
-        return ret;
-    eh_event_init(&event_task_quit);
-    eh_event_cb_slot_init(&slot_task_quit, task_quit_event_cb, NULL);
-    eh_event_cb_trigger_init(&trigger_task_quit);
-    
-    eh_event_cb_connect(&trigger_task_quit, &slot_task_quit);
-    eh_event_cb_register(&event_task_quit, &trigger_task_quit);
-    
-    signal_dispose_task = eh_task_create("event_cb", EH_TASK_FLAGS_SYSTEM_TASK, EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE, NULL, task_signal_dispose);
-    ret = eh_ptr_to_error(signal_dispose_task);
-    if(ret < 0)
-        goto eh_task_create_error;
-
-    return ret;
-eh_task_create_error:
-    eh_event_cb_unregister(&event_task_quit);
-    eh_event_cb_disconnect(&slot_task_quit);
-    eh_task_destroy(signal_dispose_task);
-    return ret;
-}
-
-static void __exit eh_event_cb_exit(void)
-{
-    eh_event_notify(&event_task_quit);
-    
-    eh_task_join(signal_dispose_task, NULL, EH_TIME_FOREVER);
-    
-    eh_event_cb_unregister(&event_task_quit);
-    eh_event_cb_disconnect(&slot_task_quit);
-    eh_epoll_del(signal_dispose_epoll);
-}
-
-
-eh_interior_module_export(eh_event_cb_init, eh_event_cb_exit);
-
-
 
 

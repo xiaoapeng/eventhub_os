@@ -64,22 +64,27 @@ struct eh_event_receptor{
 
 struct eh_task{
     const char                          *name;               
-    struct eh_list_head                 task_list_node;          /* 任务链表,可被挂载到就绪，等待，完成等链表上 */
-    int                                 (*task_function)(void*); /* 任务函数 */
-    void                                *task_arg;               /* 任务相关参数 */
-    void                                *stack;                  /* 协程栈内存 */
-    unsigned long                       stack_size;              /* 任务栈大小 */
-    context_t                           context;                 /* 协程上下文 */
-    int                                 task_ret;                /* 任务返回值 */
-    volatile enum EH_TASK_STATE         state;                   /* 任务运行状态*/
-    eh_event_t                          event;                   /* 任务相关事件，任务退出 */
+    struct eh_list_head                 task_list_node;                             /* 任务链表,可被挂载到就绪，等待，完成等链表上 */
+    int                                 (*task_function)(void*);                    /* 任务函数 */
+    void                                *task_arg;                                  /* 任务相关参数 */
+    void                                *stack;                                     /* 协程栈内存 */
+    unsigned long                       stack_size;                                 /* 任务栈大小 */
+    context_t                           context;                                    /* 协程上下文 */
+    int                                 task_ret;                                   /* 任务返回值 */
+    volatile enum EH_TASK_STATE         state;                                      /* 任务运行状态*/
+    eh_event_t                          event;                                      /* 任务相关事件，任务退出 */
+    void                                *system_data;                               /* 系统数据 */
+    void                                (*system_data_destruct_function)(eh_task_t*);    /* 系统数据销毁函数 */
     union{
+#define EH_TASK_FLAGS_INTERIOR_REQUEST_QUIT          0x80000000U
         uint32_t                        flags;
         struct{
             /* 顺序很重要 */
             uint32_t                    is_static_stack:1;          /* 是否是静态栈 */
             uint32_t                    is_system_task:1;           /* 是否是系统任务 EH_TASK_FLAGS_SYSTEM_TASK */
             uint32_t                    is_auto_destruct:1;         /* 是否是自动销毁任务 EH_TASK_FLAGS_DETACH */
+            uint32_t                    reserved:28;
+            uint32_t                    is_request_quit:1;          /* 是否是请求退出任务 */
         };
     };
     
@@ -162,6 +167,13 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
  * @brief               返回当前任务
  */
 #define eh_task_get_current()                (eh_get_global_handle()->current_task)
+
+/**
+ * @brief               获取主任务
+ * @return eh_task_t*   主任务句柄
+ */
+#define eh_task_get_main()                      (eh_get_global_handle()->main_task)
+
 /**
  * @brief               设置当前任务
  * @param _current_task 被设置的任务对象

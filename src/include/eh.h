@@ -39,7 +39,7 @@ typedef struct eh_task_sta                  eh_task_sta_t;
 
 #define EH_TASK_FLAGS_SYSTEM_TASK          0x00000002
 #define EH_TASK_FLAGS_DETACH               0x00000004   /* 自动分离，指定此参数在任务退出时自动释放 */
-
+#define EH_TASK_FLAGS_MASK                 0x00000006
 enum EH_TASK_STATE{
     /* 顺序很重要，不要轻易调整 */
     EH_TASK_STATE_READY,                            /* 就绪状态 */
@@ -134,6 +134,12 @@ extern void  eh_task_exit(int ret);
  * @return eh_task_t*       返回当前的任务句柄
  */
 extern eh_task_t* eh_task_self(void);
+
+/**
+ * @brief                   获取主任务
+ * @return eh_task_t*       主任务句柄
+ */
+extern eh_task_t* eh_task_main(void);
 
 /**
  * @brief                   获取任务状态

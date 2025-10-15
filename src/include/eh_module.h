@@ -50,7 +50,8 @@ struct module_group{
 
 
 #define eh_memory_module_export(_init__func_, _exit__func_)     _eh_define_module_export(_init__func_, _exit__func_, "1.0.0")
-#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_module_export(_init__func_, _exit__func_, "1.0.1")
+#define eh_main_task_module_export(_init__func_, _exit__func_)  _eh_define_module_export(_init__func_, _exit__func_, "1.0.1")
+#define eh_core_module_export(_init__func_, _exit__func_)       _eh_define_module_export(_init__func_, _exit__func_, "1.0.2")
 #define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_module_export(_init__func_, _exit__func_, "1.1.0")
 
 /* 2.0.0 -> 2.9.9 Reserved for ehip */

@@ -31,12 +31,12 @@ static int __async _eh_event_wait(eh_event_t *e, void* arg, bool (*condition)(vo
 
     eh_event_receptor_init(&receptor, eh_task_get_current());
 
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     eh_event_add_receptor_no_lock(e, &receptor);
     eh_exit_critical(state);
 
     for(;;){
-        state = eh_enter_critical();;
+        state = eh_enter_critical();
         if(condition){
             if(receptor.error){
                 ret = EH_RET_EVENT_ERROR;
@@ -87,7 +87,7 @@ static int __async _eh_event_wait_timeout(eh_event_t *e, void* arg, bool (*condi
     eh_exit_critical(state);
 
     for(;;){
-        state = eh_enter_critical();;
+        state = eh_enter_critical();
         if(condition){
             if(receptor.error){
                 ret = EH_RET_EVENT_ERROR;
@@ -148,7 +148,7 @@ void eh_event_clean(eh_event_t *e){
     struct eh_event_receptor *pos ,*n;
     
     if(!e) return ;
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     eh_list_for_each_entry_safe(pos, n, &e->receptor_list_head, list_node){
         pos->error = 1;
         _eh_event_trigger_receptor_no_lock(pos);
@@ -269,7 +269,7 @@ int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
     eh_rb_node_init(&receptor->rb_node);
     receptor->event = e;
     receptor->userdata = userdata;
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     /* 添加到epoll树中 */
     ret_rb = eh_rb_find_add(&receptor->rb_node, &epoll->all_receptor_tree);
     if( ret_rb ){
@@ -292,7 +292,7 @@ int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
     eh_param_assert(_epoll);
     eh_param_assert(e);
 
-    state = eh_enter_critical();;
+    state = eh_enter_critical();
     
     epoll_receptor = eh_rb_entry_safe(
         eh_rb_match_find(e, &epoll->all_receptor_tree, __epoll_rbtree_match),
@@ -365,7 +365,7 @@ static int __async _eh_epoll_wait_timeout(struct eh_epoll *epoll, eh_epoll_slot_
     eh_timer_start(&timeout_timer);
 
     for(;;){
-        state = eh_enter_critical();;
+        state = eh_enter_critical();
         ret = _eh_epoll_pending_read_on_lock(epoll, epool_slot, slot_size);
         if(ret != 0){
             goto unlock_out;

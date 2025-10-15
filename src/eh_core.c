@@ -55,6 +55,8 @@ static bool _task_is_finish(void *arg){
 
 static void _task_destroy(eh_task_t *task){
     eh_save_state_t state;
+    if(task->system_data && task->system_data_destruct_function)
+        task->system_data_destruct_function(task);
     eh_event_clean(&task->event);
     state = eh_enter_critical();
     eh_list_del(&task->task_list_node);
@@ -215,14 +217,8 @@ out:
     eh_exit_critical(state);
 }
 
-
-static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, uint32_t flags,
-            void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
-    eh_task_t *task = (eh_task_t *)eh_malloc(sizeof(eh_task_t) + strlen(name) + 1);
-    if(task == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
-    task->name = (char*)(task + 1);
-    strcpy((char*)task->name, name);
-    memset(stack, EH_STACK_PAD_BYTE, stack_size);
+static void _eh_task_struct_init(eh_task_t *task, int is_static_stack, uint32_t flags,
+    void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
     eh_list_head_init(&task->task_list_node);
     task->task_function = task_function;
     task->task_arg = task_arg;
@@ -231,9 +227,21 @@ static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, ui
     task->context = co_context_make(stack, ((uint8_t*)stack) + stack_size, _task_entry);
     task->task_ret = 0;
     task->state = EH_TASK_STATE_WAIT;
-    task->flags = flags;
+    task->flags = flags & EH_TASK_FLAGS_MASK;
     task->is_static_stack = !!is_static_stack;
+    task->system_data = NULL;
+    task->system_data_destruct_function = NULL;
     eh_event_init(&task->event);
+}
+
+static eh_task_t* _eh_task_create_stack(const char *name,int is_static_stack, uint32_t flags,
+            void *stack, unsigned long stack_size, void *task_arg, int (*task_function)(void*)){
+    eh_task_t *task = (eh_task_t *)eh_malloc(sizeof(eh_task_t) + strlen(name) + 1);
+    if(task == NULL) return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
+    memset(stack, EH_STACK_PAD_BYTE, stack_size);
+    task->name = (char*)(task + 1);
+    strcpy((char*)task->name, name);
+    _eh_task_struct_init(task, is_static_stack, flags, stack, stack_size, task_arg, task_function);
     eh_task_wake_up(task);
     return task;
 }
@@ -309,6 +317,11 @@ eh_task_t* eh_task_self(void){
     return eh_task_get_current();
 }
 
+
+eh_task_t* eh_task_main(void){
+    return eh_task_get_main();
+}
+
 eh_sclock_t eh_get_loop_idle_time(void){
     eh_save_state_t state;
     eh_sclock_t half_time;
@@ -337,21 +350,6 @@ static int interior_init(void){
     eh_list_head_init(&eh->task_finish_list_head);
     eh_list_head_init(&eh->loop_poll_task_head);
     eh_list_head_init(&eh->task_finish_auto_destruct_list_head);
-
-
-    eh->main_task = &s_main_task;
-    eh->current_task = &s_main_task;
-    s_main_task.task_arg = NULL;
-    s_main_task.name = "main_task";
-    eh_list_head_init( &s_main_task.task_list_node );
-    s_main_task.task_function = NULL;
-    s_main_task.task_arg = NULL;
-    s_main_task.context = NULL;
-    s_main_task.stack = NULL;
-    s_main_task.stack_size = 0;
-    s_main_task.state = EH_TASK_STATE_RUNING;
-    s_main_task.flags = 0;
-    s_main_task.is_static_stack = true;
 
     eh->dispatch_cnt = 0;
     eh->idle_time = 0;
@@ -410,7 +408,25 @@ void eh_global_exit(void){
     module_group_exit();
 }
 
+static __init int main_task_init(void){
+    eh_t *eh = eh_get_global_handle();
+    eh->main_task = &s_main_task;
+    eh->current_task = &s_main_task;
+    
+    s_main_task.name = "main_task";
+    _eh_task_struct_init(&s_main_task, 1, 0, NULL, 0, NULL, NULL);
+    s_main_task.state = EH_TASK_STATE_RUNING;
 
+    return 0;
+}
+
+static __exit void main_task_exit(void){
+    /* 清理main 任务的一些资源 */
+    if(s_main_task.system_data && s_main_task.system_data_destruct_function)
+        s_main_task.system_data_destruct_function(&s_main_task);
+}
+
+eh_main_task_module_export(main_task_init, main_task_exit);
 
 
 
