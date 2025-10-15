@@ -78,12 +78,14 @@ struct {
     struct eh_mem_block first_block;
     eh_size_t mem_total_size;
     eh_size_t mem_free_size;
+    eh_size_t mem_use_block_cnt;
     eh_size_t mem_min_ever_free_size_level;
 }_eh_mem_run;
 
 #define first_block                     (_eh_mem_run.first_block)
 #define mem_total_size                  (_eh_mem_run.mem_total_size)
 #define mem_free_size                   (_eh_mem_run.mem_free_size)
+#define mem_use_block_cnt               (_eh_mem_run.mem_use_block_cnt)
 #define mem_min_ever_free_size_level    (_eh_mem_run.mem_min_ever_free_size_level)
 
 static void eh_mem_insert(struct eh_mem_block *new_free_block){
@@ -118,6 +120,7 @@ static void eh_mem_insert(struct eh_mem_block *new_free_block){
         new_free_block->next = pos_block->next;
         mem_free_size += EH_MEM_BLOCK_HEAD_SIZE;
     }
+    mem_use_block_cnt--;
 }
 
 void eh_free_block_dump(void dump_func(void* start, size_t size)){
@@ -178,6 +181,7 @@ void* eh_malloc(size_t _size){
         mem_min_ever_free_size_level = mem_free_size;
     new_mem = (void*)((uint8_t*)new_block + EH_MEM_BLOCK_HEAD_SIZE);
     prev_block->next = new_block->next;
+    mem_use_block_cnt++;
 out:
     eh_exit_critical(state);
     return new_mem;
@@ -229,18 +233,19 @@ static int __init eh_mem_init(void){
         block->size = (eh_size_t)(end - (uint8_t*)block) - EH_MEM_BLOCK_HEAD_SIZE;
         eh_mem_insert(block);
     }
+    mem_use_block_cnt = 0;
     mem_total_size = mem_free_size;
     mem_min_ever_free_size_level = mem_free_size;
     eh_infoln("Initializes the heap information:");
     eh_infoln("%11s\t%11s\t%11s\t%11s","total", "used" ,"free" ,"mefsl");
-    eh_infoln("%11lu\t%11lu\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
+    eh_infoln("%11lu\t%11lu(%d)\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_use_block_cnt, mem_free_size, mem_min_ever_free_size_level);
     return 0;
 }
 
 static void __exit eh_mem_exit(void){
     eh_infoln("Exits the heap information:");
     eh_infoln("%11s\t%11s\t%11s\t%11s","total", "used" ,"free" ,"mefsl");
-    eh_infoln("%11lu\t%11lu\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_free_size, mem_min_ever_free_size_level);
+    eh_infoln("%11lu\t%11lu(%d)\t%11lu\t%11lu", mem_total_size, mem_total_size - mem_free_size, mem_use_block_cnt, mem_free_size, mem_min_ever_free_size_level);
     
 }
 
