@@ -19,7 +19,13 @@
 
 typedef unsigned long eh_size_t;
 
+#ifndef EH_DBG_MODEULE_LEVEL_MEM_ALLOC
+#define EH_DBG_MODEULE_LEVEL_MEM_ALLOC EH_DBG_INFO
+#endif
+
 #if (defined(EH_CONFIG_USE_LIBC_MEM_MANAGE)) && (EH_CONFIG_USE_LIBC_MEM_MANAGE == 1)
+
+
 
 #include <stdlib.h>
 void* eh_malloc(size_t size){
@@ -184,6 +190,7 @@ void* eh_malloc(size_t _size){
     mem_use_block_cnt++;
 out:
     eh_exit_critical(state);
+    eh_mdebugfl(MEM_ALLOC,"malloc @%#p size:%d", new_mem, align_size);
     return new_mem;
 }
 
@@ -193,6 +200,7 @@ void  eh_free(void* ptr){
     eh_save_state_t state;
     struct eh_mem_block *new_free_block = (struct eh_mem_block *)((uint8_t*)ptr - EH_MEM_BLOCK_HEAD_SIZE);
     if(ptr == NULL) return ;
+    eh_mdebugfl(MEM_ALLOC,"free @%#p size:%d", ptr, new_free_block->size);
     state = eh_enter_critical();
     eh_mem_insert(new_free_block);
     eh_exit_critical(state);
