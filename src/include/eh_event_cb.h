@@ -19,7 +19,6 @@ extern "C"{
 #endif /* __cplusplus */
 
 typedef struct eh_event_cb_slot eh_event_cb_slot_t;
-typedef struct eh_event_cb_trigger eh_event_cb_trigger_t;
 
 struct eh_event_cb_slot{
     void                    (*slot_function)(eh_event_t *e, void *slot_param);
@@ -27,13 +26,6 @@ struct eh_event_cb_slot{
     struct eh_list_head     cb_node;
 };
 
-struct eh_event_cb_trigger{
-    struct eh_list_head     cb_head;
-};
-
-#define EH_EVENT_CB_TRIGGER_INIT(trigger)   {               \
-        .cb_head = EH_LIST_HEAD_INIT(trigger.cb_head),  \
-    }
 
 static inline void eh_event_cb_slot_init(eh_event_cb_slot_t *slot, 
     void (*slot_function)(eh_event_t *e, void *slot_param), void *slot_param){
@@ -42,52 +34,29 @@ static inline void eh_event_cb_slot_init(eh_event_cb_slot_t *slot,
    eh_list_head_init(&slot->cb_node);
 }
 
-static inline void eh_event_cb_trigger_init(eh_event_cb_trigger_t *trigger){
-    eh_list_head_init(&trigger->cb_head);
-}
-
-
-/**
- * @brief                   注册一个事件触发器
- *                           只有注册的的触发器才能进行槽函数的连接
- *                           注册事件触发器并不会影响事件触发器与槽函数的连接
- * @param  task             执行触发回调的主体任务
- * @param  e                事件
- * @param  trigger          触发器
- * @return int 
- */
-extern int eh_event_cb_register(eh_task_t *task, eh_event_t *e, eh_event_cb_trigger_t *trigger);
-
-/**
- * @brief                   注销一个事件触发器
- *                           注销事件触发器并不会影响事件触发器与槽函数的连接
- * @param  task             执行触发回调的主体任务
- * @param  e                注册事件触发器时的事件
- * @return int 
- */
-extern int eh_event_cb_unregister(eh_task_t *task, eh_event_t *e);
-
-
 /**
  * @brief                   连接一个触发器与槽函数
- * @param  trigger          触发器
+ * @param  e                事件
  * @param  slot             槽函数
+ * @param  task             执行触发回调的主体任务
  * @return int
  */
-extern int eh_event_cb_connect(eh_event_cb_trigger_t *trigger, eh_event_cb_slot_t *slot);
+extern int eh_event_cb_connect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task);
 
 /**
  * @brief                   断开一个触发器与槽函数的连接
+ * @param  e                事件
  * @param  slot             槽函数
+ * @param  task             执行触发回调的主体任务
  */
-extern void eh_event_cb_disconnect(eh_event_cb_slot_t *slot);
+extern void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task);
 
 /**
- * @brief                   清除此触发器和槽函数的全部连接
- * @param  trigger          触发器
+ * @brief                   清理一个任务下的所有触发器与槽函数的连接
+ * @param  e                事件
+ * @param  task             执行触发回调的主体任务
  */
-extern void eh_event_cb_trigger_clean(eh_event_cb_trigger_t *trigger);
-
+extern void eh_event_cb_clean(eh_event_t *e, eh_task_t *task);
 
 /**
  * @brief                   执行事件处理

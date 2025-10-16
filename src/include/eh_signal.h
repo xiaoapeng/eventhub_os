@@ -27,7 +27,6 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
 /* 泛型自定义信号 */
 #define EH_STRUCT_CUSTOM_SIGNAL(event_type)                                             \
     struct {                                                                            \
-        eh_event_cb_trigger_t               trigger;                                    \
         union{                                                                          \
             eh_event_t                      event;                                      \
             event_type                      custom_event;                               \
@@ -44,7 +43,6 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
  */
 #define EH_DEFINE_LOCAL_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)         \
         EH_STRUCT_CUSTOM_SIGNAL(event_type)  signal_name = {                            \
-            .trigger = EH_EVENT_CB_TRIGGER_INIT(signal_name.trigger),                   \
             .custom_event = signal_init_val,                                            \
         }
 
@@ -55,7 +53,6 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
  */
 #define EH_DEFINE_STATIC_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)        \
         static EH_STRUCT_CUSTOM_SIGNAL(event_type)  signal_name = {                     \
-            .trigger = EH_EVENT_CB_TRIGGER_INIT(signal_name.trigger),                   \
             .custom_event = signal_init_val,                                            \
         }
 
@@ -66,7 +63,6 @@ typedef eh_event_cb_slot_t eh_signal_slot_t;
  */
 #define EH_DEFINE_CUSTOM_SIGNAL(signal_name, event_type, signal_init_val)               \
         signal_name##_##event_type##_signal_type_t signal_name = {                      \
-            .trigger = EH_EVENT_CB_TRIGGER_INIT(signal_name.trigger),                   \
             .custom_event = signal_init_val,                                            \
         }
 
@@ -119,46 +115,7 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
  *          若为自定义信号，调用该函数后需要再调用自定义的初始化
  */
 #define eh_signal_init(signal)   do{                                                    \
-        eh_event_cb_trigger_init(&(signal)->trigger);                                   \
         eh_event_init(&(signal)->event);                                                \
-    }while(0)
-
-/**
- * @brief 信号注册，只有注册的信号才能正常回调槽函数,注意信号拥有线程亲和性，
- *        该函数会将信号注册到当前任务，相关槽函数将在当前任务中执行。
- *        注册任务后必须要调用eh_signal_dispatch_loop开始循环处理信号
- * @param signal 信号实例指针
- * @return 0:成功，负数:失败
- */
-#define eh_signal_register(signal)                                                      \
-    eh_event_cb_register(eh_task_self(), (&(signal)->event), &(signal)->trigger)
-
-/**
- * @brief 信号注销，注销后无法再回调槽函数,注意信号拥有线程亲和性，调用本函数时，
- *        必须从注册任务中注销，否则应该使用eh_signal_unregister_from_task函数
- * @param signal 信号实例指针
- */
-#define eh_signal_unregister(signal)                                                    \
-    eh_event_cb_unregister(eh_task_self(), (&(signal)->event))
-
-/**
- * @brief  信号注册，注册信号到指定任务
- */
-#define eh_signal_register_to_task(signal, task)                                        \
-    eh_event_cb_register(task, (&(signal)->event), &(signal)->trigger)
-
-/**
- * @brief  信号注销，注销信号从指定任务
- */
-#define eh_signal_unregister_from_task(signal, task)                                    \
-    eh_event_cb_unregister(task, (&(signal)->event))
-
-/**
- * @brief 清除信号和槽函数的全部连接,清除等待该事件的接收器
- */
-#define eh_signal_clean(signal)  do{                                                    \
-        eh_event_cb_trigger_clean(&(signal)->trigger);                                  \
-        eh_event_clean((&(signal)->event));                                             \
     }while(0)
 
 /**
@@ -183,18 +140,49 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
  * @brief 连接信号和槽
  */
 #define eh_signal_slot_connect(signal, slot)                                            \
-    eh_event_cb_connect((&(signal)->trigger), slot)
+    eh_event_cb_connect((&(signal)->event), slot, eh_task_self())
+
+/**
+ * @brief 连接信号和槽到指定任务
+ */
+#define eh_signal_slot_connect_to_task(signal, slot, task)                              \
+    eh_event_cb_connect((&(signal)->event), slot, task)
 
 /**
  * @brief 断开信号和槽
  */
-#define eh_signal_slot_disconnect(slot)                                                 \
-    eh_event_cb_disconnect(slot)
+#define eh_signal_slot_disconnect(signal, slot)                                         \
+    eh_event_cb_disconnect((&(signal)->event), slot, eh_task_self())
+
+/**
+ * @brief 从指定任务断开信号和槽
+ */
+#define eh_signal_slot_disconnect_form_task(signal, slot, task)                         \
+    eh_event_cb_disconnect((&(signal)->event), slot, task)
+
+/**
+ * @brief 断开指定任务上的该信号，
+ */
+#define eh_signal_slot_disconnect_all_form_task(signal, task)                           \
+    eh_event_cb_disconnect_all_form_task((&(signal)->event), task)
+
+/**
+ * @brief 清除信号和槽函数在当前任务上的全部连接
+ */
+#define eh_signal_slot_clean(signal)                                                    \
+    eh_event_cb_clean((&(signal)->event), eh_task_self())
+
+/**
+ * @brief 清除信号和槽函数在指定任务上的全部连接
+ */
+#define eh_signal_slot_clean_form_task(signal, task)                                    \
+    eh_event_cb_clean((&(signal)->event), task)
+
 
 /**
  * @brief 触发信号
  */
-#define eh_signal_notify(signal)                                                        \
+#define eh_signal_notify(signal)                                                         \
     eh_event_notify((&(signal)->event))
 
 /**

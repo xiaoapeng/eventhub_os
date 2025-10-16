@@ -132,6 +132,14 @@ extern __safety eh_epoll_t eh_epoll_new(void);
 extern __safety void eh_epoll_del(eh_epoll_t epoll);
 
 /**
+ * @brief                   获取epoll句柄的描述符
+ * @param  epoll            epoll句柄
+ * @param  free_func        释放节点句柄的函数（可以在其中释放节点用户数据），若为NULL，不进行任何操作
+ * @return int 
+ */
+void __safety eh_epoll_del_advanced(eh_epoll_t _epoll, void (*free_func)(void *node_handle));
+
+/**
  * @brief                   为epoll添加一个被监视事件
  * @param  epoll            epoll句柄
  * @param  e                事件句柄
@@ -141,12 +149,46 @@ extern __safety void eh_epoll_del(eh_epoll_t epoll);
 extern int eh_epoll_add_event(eh_epoll_t epoll, eh_event_t *e, void *userdata);
 
 /**
+ * @brief                   为epoll添加一个被监视事件
+ * @param  epoll            epoll句柄
+ * @param  e                事件句柄
+ * @param  set_userdata_ptr 将userdata的地址通过传递出来，通过外部来进行设置
+ * @return int
+ */
+extern int eh_epoll_add_event_advanced(eh_epoll_t _epoll, eh_event_t *e, void ***set_userdata_ptr);
+
+
+/**
  * @brief                   为epoll删除一个被监视事件
  * @param  epoll            epoll句柄
  * @param  e                事件句柄
  * @return int 
  */
 extern int eh_epoll_del_event(eh_epoll_t epoll,eh_event_t *e);
+
+/**
+ * @brief                   获取epoll中指定事件的节点句柄 （用户请勿使用）
+ * @param  epoll            epoll句柄
+ * @param  e                事件句柄
+ * @return void*            返回epoll中指定事件的句柄，返回值使用 eh_ptr_to_error来判断
+ */
+extern void* eh_epoll_get_node_handle_no_lock(eh_epoll_t epoll, eh_event_t *e);
+
+/**
+ * @brief                   获取epoll中指定节点的用户数据 （用户请勿使用）
+ * @param  node_handle      epoll中指定事件节点的句柄
+ * @return void*            返回epoll中指定事件的用户数据，返回值使用 eh_ptr_to_error来判断
+ */
+extern void* eh_epoll_get_handle_userdata_no_lock(void* node_handle);
+
+/**
+ * @brief                   删除epoll中指定节点句柄 （用户请勿使用）
+ * @param  epoll            epoll句柄
+ * @param  node_handle      epoll中指定事件节点的句柄
+ * @return void*            返回epoll中指定事件用户数据，返回值使用 eh_ptr_to_error来判断
+ */
+extern void eh_epoll_del_event_form_handle_no_lock(eh_epoll_t epoll, void* node_handle);
+
 
 /**
  * @brief                   epoll事件等待

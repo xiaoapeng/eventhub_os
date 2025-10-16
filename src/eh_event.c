@@ -136,6 +136,33 @@ static void _eh_event_trigger_receptor_no_lock(struct eh_event_receptor *recepto
     }
 }
 
+struct epoll_new_node_param{
+    eh_event_t *e;
+    void ***set_userdata_ptr;
+    struct eh_epoll *epoll;
+    int ret;
+};
+
+static struct eh_rbtree_node *_eh_event_epoll_new_node_callback(void *user_data){
+    struct epoll_new_node_param *param = user_data;
+    struct eh_event_epoll_receptor *receptor;
+    receptor = eh_malloc(sizeof(struct eh_event_epoll_receptor));
+    if( receptor == NULL ){
+        param->ret = EH_RET_MALLOC_ERROR;
+        return NULL;
+    }
+    eh_event_receptor_epoll_init(&receptor->receptor, param->epoll);
+    eh_list_head_init(&receptor->pending_list_node);
+    eh_rb_node_init(&receptor->rb_node);
+    receptor->event = param->e;
+    receptor->userdata = NULL;
+    if(param->set_userdata_ptr){
+        *param->set_userdata_ptr = &receptor->userdata;
+    }
+    param->ret = EH_RET_OK;
+    return &receptor->rb_node;
+}
+
 int eh_event_init(eh_event_t *e){
     eh_param_assert(e);
     eh_list_head_init(&e->receptor_list_head);
@@ -239,12 +266,14 @@ eh_epoll_t eh_epoll_new(void){
     return (eh_epoll_t)epoll;
 }
 
-void eh_epoll_del(eh_epoll_t _epoll){
+void eh_epoll_del_advanced(eh_epoll_t _epoll, void (*free_func)(void *node_handle)){
     struct eh_event_epoll_receptor *pos,*n;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     eh_save_state_t state;
     state = eh_enter_critical();
     eh_rb_postorder_for_each_entry_safe(pos, n, &epoll->all_receptor_tree, rb_node){
+        if(free_func)
+            free_func(pos);
         eh_event_remove_receptor_no_lock(&pos->receptor);
         eh_free(pos);
     }
@@ -252,37 +281,92 @@ void eh_epoll_del(eh_epoll_t _epoll){
     eh_free(epoll);
 }
 
-int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
+
+void eh_epoll_del(eh_epoll_t _epoll){
+    eh_epoll_del_advanced(_epoll, NULL);
+}
+
+
+ int eh_epoll_add_event_advanced(eh_epoll_t _epoll, eh_event_t *e, void ***set_userdata_ptr){
     eh_save_state_t state;
     int ret = EH_RET_OK;
     struct eh_rbtree_node  *ret_rb;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     struct eh_event_epoll_receptor *receptor;
+    struct epoll_new_node_param param = {
+        .e = e,
+        .set_userdata_ptr = set_userdata_ptr,
+        .epoll = epoll,
+        .ret = EH_RET_EXISTS,
+    };
     eh_param_assert(_epoll);
     eh_param_assert(e);
     
-    receptor = eh_malloc(sizeof(struct eh_event_epoll_receptor));
-    if( receptor == NULL )
-        return EH_RET_MALLOC_ERROR;
-    eh_event_receptor_epoll_init(&receptor->receptor, epoll);
-    eh_list_head_init(&receptor->pending_list_node);
-    eh_rb_node_init(&receptor->rb_node);
-    receptor->event = e;
-    receptor->userdata = userdata;
     state = eh_enter_critical();
     /* 添加到epoll树中 */
-    ret_rb = eh_rb_find_add(&receptor->rb_node, &epoll->all_receptor_tree);
-    if( ret_rb ){
-        eh_free(receptor);
-        ret = EH_RET_INVALID_PARAM;
+    ret_rb = eh_rb_find_new_add(e, &epoll->all_receptor_tree, __epoll_rbtree_match, &param, _eh_event_epoll_new_node_callback);
+    if(param.ret != EH_RET_EXISTS && param.ret != EH_RET_OK){
+        ret = param.ret;
         goto out;
     }
+    receptor = eh_rb_entry(ret_rb, struct eh_event_epoll_receptor, rb_node);
+    if(param.ret == EH_RET_EXISTS){
+        if(set_userdata_ptr)
+            *set_userdata_ptr = &receptor->userdata;
+        ret = EH_RET_EXISTS;
+        goto out;
+    }
+    receptor = eh_rb_entry(ret_rb, struct eh_event_epoll_receptor, rb_node);
     /* 添加接收器到event中 */
     eh_event_add_receptor_no_lock(e, &receptor->receptor);
 out:
     eh_exit_critical(state);
     return ret;
 }
+
+
+
+int eh_epoll_add_event(eh_epoll_t _epoll, eh_event_t *e, void *userdata){
+    void **set_userdata_ptr = NULL;
+    int ret;
+    ret = eh_epoll_add_event_advanced(_epoll, e, &set_userdata_ptr);
+    if(ret < 0)
+        return ret;
+    *set_userdata_ptr = userdata;
+    return EH_RET_OK;
+}
+
+
+void* eh_epoll_get_node_handle_no_lock(eh_epoll_t _epoll, eh_event_t *e){
+    struct eh_event_epoll_receptor *epoll_receptor;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
+    if(_epoll == NULL || e == NULL)
+        return eh_error_to_ptr(EH_RET_INVALID_PARAM);
+
+    epoll_receptor = eh_rb_entry_safe(
+        eh_rb_match_find(e, &epoll->all_receptor_tree, __epoll_rbtree_match),
+        struct eh_event_epoll_receptor, rb_node );
+    if(epoll_receptor == NULL){
+        return eh_error_to_ptr(EH_RET_NOT_EXISTS);
+    }
+    return epoll_receptor;
+}
+
+void* eh_epoll_get_handle_userdata_no_lock(void* node_handle){
+    return ((struct eh_event_epoll_receptor *)node_handle)->userdata;
+}
+
+extern void eh_epoll_del_event_form_handle_no_lock(eh_epoll_t _epoll, void* node_handle){
+    struct eh_event_epoll_receptor *epoll_receptor = (struct eh_event_epoll_receptor *)node_handle;
+    struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
+    if(epoll_receptor == NULL || _epoll == NULL)
+        return ;
+    eh_event_remove_receptor_no_lock(&epoll_receptor->receptor);
+    eh_list_del(&epoll_receptor->pending_list_node);
+    eh_rb_del(&epoll_receptor->rb_node, &epoll->all_receptor_tree);
+    eh_free(epoll_receptor);
+}
+
 
 int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
     eh_save_state_t state;
@@ -299,7 +383,7 @@ int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
         struct eh_event_epoll_receptor, rb_node );
     if(epoll_receptor == NULL){
         eh_exit_critical(state);
-        return EH_RET_INVALID_PARAM;
+        return EH_RET_NOT_EXISTS;
     }
     /* 从事件中删除接收器 */
     eh_event_remove_receptor_no_lock(&epoll_receptor->receptor);
@@ -309,6 +393,7 @@ int eh_epoll_del_event(eh_epoll_t _epoll,eh_event_t *e){
     eh_free(epoll_receptor);
     return EH_RET_OK;
 }
+
 
 static int _eh_epoll_pending_read_on_lock(struct eh_epoll *epoll, eh_epoll_slot_t *epool_slot, int slot_size){
     struct eh_event_epoll_receptor *pos, *n;
