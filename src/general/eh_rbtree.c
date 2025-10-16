@@ -642,7 +642,39 @@ struct eh_rbtree_node *eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbt
     if (leftmost)
         tree->rb_leftmost = node;
     rb_insert_color(node, tree);
-    return NULL;
+    return node;
+}
+
+struct eh_rbtree_node *eh_rb_find_new_add(const void *key, struct eh_rbtree_root *tree,
+          int (*cmp)(const void *key, const struct eh_rbtree_node *), void *user_data,
+          struct eh_rbtree_node* (new_node)(void *user_data))
+{
+    struct eh_rbtree_node **link = &tree->rb_node;
+    struct eh_rbtree_node *parent = NULL;
+    struct eh_rbtree_node *node; 
+    bool leftmost = true;
+    int c;
+
+    while (*link) {
+        parent = *link;
+        c = cmp(key, parent);
+
+        if (c < 0)
+            link = &parent->rb_left;
+        else if (c > 0){
+            link = &parent->rb_right;
+            leftmost = false;
+        }else
+            return parent;
+    }
+    node = new_node(user_data);
+    if(!node)
+        return NULL;
+    rb_link_node(node, parent, link);
+    if (leftmost)
+        tree->rb_leftmost = node;
+    rb_insert_color(node, tree);
+    return node;
 }
 
 

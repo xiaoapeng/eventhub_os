@@ -87,7 +87,7 @@ extern struct eh_rbtree_node * eh_rb_del(struct eh_rbtree_node *, struct eh_rbtr
  * @brief                     添加节点
  * @param  node             要添加的节点
  * @param  tree             rb树对象
- * @return                     正常返回NULL, 返回 node 说明 插入最左的节点
+ * @return                     正常返回NULL, 返回 node 说明 插入最左的节点(为定时器而考虑的逻辑)
  */
 extern struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree);
 
@@ -95,9 +95,25 @@ extern struct eh_rbtree_node * eh_rb_add(struct eh_rbtree_node *node, struct eh_
  * @brief                     添加节点
  * @param  node             要添加的节点
  * @param  tree             rb树对象
- * @return                     正常返回NULL, 返回非NULL说明find成功
+ * @return                  返回找到的节点, 如果没有找到返回插入的节点
  */
 extern struct eh_rbtree_node * eh_rb_find_add(struct eh_rbtree_node *node, struct eh_rbtree_root *tree);
+
+
+
+
+/**
+ * @brief                     找到一个与key匹配的节点, 如果没有找到, 则创建一个新节点
+ * @param  key              用于cmp函数比较的第一个参数
+ * @param  tree             rb树对象
+ * @param  cmp              比较函数
+ * @param  user_data        用于new_node函数的参数
+ * @param  new_node         创建新节点的函数
+ * @return struct eh_rbtree_node* 
+ */
+extern struct eh_rbtree_node *eh_rb_find_new_add(const void *key, struct eh_rbtree_root *tree,
+          int (*cmp)(const void *key, const struct eh_rbtree_node *), void *user_data,
+          struct eh_rbtree_node* (new_node)(void *user_data));
 
 /**
  * @brief                     找到一个与key匹配的节点
