@@ -142,6 +142,13 @@ extern eh_task_t* eh_task_self(void);
 extern eh_task_t* eh_task_main(void);
 
 /**
+ * @brief                   获取任务名称
+ * @param  task             任务句柄
+ * @return const char*      任务名称
+ */
+extern const char* eh_task_name(const eh_task_t *task);
+
+/**
  * @brief                   获取任务状态
  * @param  task             任务句柄
  * @param  sta              任务状态

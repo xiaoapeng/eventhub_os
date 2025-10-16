@@ -322,6 +322,11 @@ eh_task_t* eh_task_main(void){
     return eh_task_get_main();
 }
 
+
+const char* eh_task_name(const eh_task_t *task){
+    return task->name;
+}
+
 eh_sclock_t eh_get_loop_idle_time(void){
     eh_save_state_t state;
     eh_sclock_t half_time;
