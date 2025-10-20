@@ -37,7 +37,7 @@ struct eh{
     struct      eh_task                  *main_task;                                            /* 系统栈任务 */
     struct      eh_module                *eh_init_fini_array;
     long                                 eh_init_fini_array_len;
-    unsigned    long                     dispatch_cnt;                                          /* 调度次数 */
+    unsigned int                         dispatch_cnt;                                          /* 调度次数 */
     eh_clock_t                           idle_time;                                             /* 空闲任务占用的时间片 */
 };
 

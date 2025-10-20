@@ -93,30 +93,26 @@ int task_app(void *arg){
         (eh_sclock_t)eh_msec_to_clock(1000), 
         EH_TIMER_ATTR_AUTO_CIRCULATION
     ); 
-    eh_signal_register(&timer_1000ms_signal);
     eh_signal_slot_connect(&timer_1000ms_signal, &timer_1000ms_slot0);
     eh_signal_slot_connect(&timer_1000ms_signal, &timer_1000ms_slot1);
     eh_signal_slot_connect(&timer_1000ms_signal, &timer_1000ms_slot2);
     eh_timer_start(eh_signal_to_custom_event(&timer_1000ms_signal));
     
-    eh_signal_register(&test_signal);
     eh_signal_slot_connect(&test_signal, &test_slot0);
     eh_signal_slot_connect(&test_signal, &test_slot1);
 
     eh_usleep(1000*1000*10);
 
-    eh_signal_slot_disconnect(&test_slot1);
-    eh_signal_slot_disconnect(&test_slot0);
-    eh_signal_unregister(&test_signal);
-    eh_signal_clean(&test_signal);
+    eh_signal_slot_disconnect(&test_signal, &test_slot1);
+    eh_signal_slot_disconnect(&test_signal, &test_slot0);
+    eh_signal_slot_clean(&test_signal);
 
 
-    eh_signal_slot_disconnect(&timer_1000ms_slot2);
-    eh_signal_slot_disconnect(&timer_1000ms_slot1);
-    eh_signal_slot_disconnect(&timer_1000ms_slot0);
+    eh_signal_slot_disconnect(&timer_1000ms_signal, &timer_1000ms_slot2);
+    eh_signal_slot_disconnect(&timer_1000ms_signal, &timer_1000ms_slot1);
+    eh_signal_slot_disconnect(&timer_1000ms_signal, &timer_1000ms_slot0);
     eh_timer_stop(eh_signal_to_custom_event(&timer_1000ms_signal));
-    eh_signal_unregister(&timer_1000ms_signal);
-    eh_signal_clean(&timer_1000ms_signal);
+    eh_signal_slot_clean(&timer_1000ms_signal);
 
     eh_infofl("exit!!");
     return 0;

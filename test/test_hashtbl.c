@@ -45,7 +45,7 @@ int task_app(void *arg){
 
     for(i = 0; i < 10 * 10000; i++){
         eh_snprintf(key, 20, "%s%d", "test", i);
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string(hashtbl, key, 20)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string_refresh(hashtbl, key, 20)) == NULL, goto test_quit);
         eh_snprintf(eh_hashtbl_node_value(node), eh_hashtbl_node_value_len(node), "value%d", i);
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
     }
@@ -71,7 +71,7 @@ int task_app(void *arg){
 
     start_time = eh_get_clock_monotonic_time();
     for(i = 0; i < 10 * 10000; i++){
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &i, 4, 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &i, 4, 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = i;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
     }
@@ -104,7 +104,7 @@ int task_app(void *arg){
                 case 0:
                 case 1:{
                     /* 插入 */
-                    EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
+                    EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
                     *(uint32_t*)eh_hashtbl_node_value(node) = insert_i;
                     EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
                     insert_i++;
@@ -150,19 +150,19 @@ int task_app(void *arg){
 
 
         uint32_t insert_i = 0xffeeccaa;
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x01;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x02;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x03;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_refresh(hashtbl, &insert_i, 4, 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x04;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
         
@@ -171,19 +171,19 @@ int task_app(void *arg){
             eh_hashtbl_node_value_len(node_pos), eh_hashtbl_node_value(node_pos));
         }
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string_refresh(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x01;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string_refresh(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x02;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string_refresh(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x03;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
-        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
+        EH_DBG_ERROR_EXEC((node = eh_hashtbl_node_new_with_string_refresh(hashtbl, "abcdef", 4)) == NULL, goto test_quit);
         *(uint32_t*)eh_hashtbl_node_value(node) = 0x04;
         EH_DBG_ERROR_EXEC(eh_hashtbl_insert(hashtbl, node) < 0, goto test_quit);
 
