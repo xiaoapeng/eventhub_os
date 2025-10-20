@@ -194,7 +194,7 @@ int eh_event_cb_connect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task
         trigger = (struct eh_event_cb_trigger *)(*set_trigger_ptr);
     }else{
         trigger = eh_malloc(sizeof(struct eh_event_cb_trigger));
-        if(!trigger) 
+        if(!trigger)
             return EH_RET_MALLOC_ERROR;
         trigger_init(trigger);
         *set_trigger_ptr = trigger;
@@ -211,7 +211,7 @@ void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *
     void *node_handle;
     struct eh_event_cb_trigger *trigger = NULL;
 
-    if(!slot || !e || !task || !epoll) 
+    if(!slot || !e || !task || !epoll || eh_list_empty(&slot->cb_node)) 
         return ;
     eh_list_del_init(&slot->cb_node);
     state = eh_enter_critical();
