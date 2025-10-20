@@ -672,7 +672,7 @@ extern __safety void eh_timer_clean(eh_event_timer_t *timer);
 | now_time | 当前时间,典型值:eh_get_clock_monotonic_time() |
 | timer_ptr | 定时器句柄 |
 
-#### 10.衍生睡眠函数
+#### 10.延时睡眠函数
 
 睡眠函数
 
@@ -727,9 +727,6 @@ EH_DEFINE_SLOT(
 );
 
 void run(void){
-    /* 注册信号 */
-    eh_signal_register(&test_signal);
-
     /* 连接信号和槽 */
     eh_signal_slot_connect(&test_signal, &test_signal_slot1);
     eh_signal_slot_connect(&test_signal, &test_signal_slot2);
@@ -746,7 +743,6 @@ void run(void){
     /* 反初始化是一个好习惯 */
     eh_signal_slot_disconnect(&test_signal_slot2);
     eh_signal_slot_disconnect(&test_signal_slot1);
-    eh_signal_unregister(&test_signal);
 
 }
 
@@ -773,20 +769,6 @@ EH_DEFINE_SIGNAL(test_signal);
 void test_signal_public_trigger(void){
     eh_signal_notify(&test_signal);
 }
-
-
-static int __init test_signal_public_init(void){
-    /* 注册信号 */
-    eh_signal_register(&test_signal);
-}
-
-static void __exit test_signal_public_exit(void){
-    /* 注销信号 */
-    eh_signal_unregister(&test_signal);
-}
-
-
-eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```
 
@@ -876,9 +858,6 @@ void run(void){
         EH_TIMER_ATTR_AUTO_CIRCULATION
     );
 
-    /* 然后在注册信号 */
-    eh_signal_register(&timer_1000ms_signal);
-
     /* 连接信号和槽 */
     eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot1);
     eh_signal_slot_connect(&timer_1000ms_signal, &test_signal_slot2);
@@ -897,8 +876,6 @@ void run(void){
 
     eh_signal_slot_disconnect(&test_signal_slot2);
     eh_signal_slot_disconnect(&test_signal_slot1);
-
-    eh_signal_unregister(&timer_1000ms_signal);
 
     eh_signal_clean(&timer_1000ms_signal);
 }
@@ -930,9 +907,6 @@ static int __init test_signal_public_init(void){
         EH_TIMER_ATTR_AUTO_CIRCULATION
     );
 
-    /* 然后在注册信号 */
-    eh_signal_register(&timer_1000ms_signal);
-
     /* 启动定时器 */
     eh_timer_start(eh_signal_to_custom_event(&timer_1000ms_signal));
 
@@ -942,12 +916,9 @@ static int __init test_signal_public_init(void){
 static void __exit test_signal_public_exit(void){
     /* 停止定时器 */
     eh_timer_stop(eh_signal_to_custom_event(&timer_1000ms_signal));
-    eh_signal_unregister(&timer_1000ms_signal);
     eh_signal_clean(&timer_1000ms_signal);
 }
 
-
-eh_module_level0_export(test_signal_public_init, test_signal_public_exit);
 
 ```
 
