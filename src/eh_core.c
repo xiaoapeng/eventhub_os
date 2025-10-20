@@ -224,7 +224,11 @@ static void _eh_task_struct_init(eh_task_t *task, int is_static_stack, uint32_t 
     task->task_arg = task_arg;
     task->stack = stack;
     task->stack_size = stack_size;
-    task->context = co_context_make(stack, ((uint8_t*)stack) + stack_size, _task_entry);
+    if(task_function){
+        task->context = co_context_make(stack, ((uint8_t*)stack) + stack_size, _task_entry);
+    }else{
+        task->context = NULL;
+    }
     task->task_ret = 0;
     task->state = EH_TASK_STATE_WAIT;
     task->flags = flags & EH_TASK_FLAGS_MASK;
