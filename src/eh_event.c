@@ -356,7 +356,7 @@ void* eh_epoll_get_handle_userdata_no_lock(void* node_handle){
     return ((struct eh_event_epoll_receptor *)node_handle)->userdata;
 }
 
-extern void eh_epoll_del_event_form_handle_no_lock(eh_epoll_t _epoll, void* node_handle){
+extern void eh_epoll_del_event_from_handle_no_lock(eh_epoll_t _epoll, void* node_handle){
     struct eh_event_epoll_receptor *epoll_receptor = (struct eh_event_epoll_receptor *)node_handle;
     struct eh_epoll *epoll = (struct eh_epoll *)_epoll;
     if(epoll_receptor == NULL || _epoll == NULL)

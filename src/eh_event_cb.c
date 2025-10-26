@@ -222,7 +222,7 @@ void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *
     if(!eh_list_empty(&trigger->cb_head))
         goto out;
     eh_free(trigger);
-    eh_epoll_del_event_form_handle_no_lock(epoll, node_handle);
+    eh_epoll_del_event_from_handle_no_lock(epoll, node_handle);
 out:
     eh_exit_critical(state);
 }
@@ -244,7 +244,7 @@ void eh_event_cb_clean(eh_event_t *e, eh_task_t *task){
     if(!trigger)
         goto out;
     trigger_clean(trigger);
-    eh_epoll_del_event_form_handle_no_lock(epoll, node_handle);
+    eh_epoll_del_event_from_handle_no_lock(epoll, node_handle);
     eh_free(trigger);
 out:
     eh_exit_critical(state);

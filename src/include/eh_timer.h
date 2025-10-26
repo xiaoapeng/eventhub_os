@@ -22,9 +22,9 @@ typedef struct eh_event_timer eh_event_timer_t;
 
 struct eh_event_timer {
     eh_event_t                      event;
-    struct eh_rbtree_node           rb_node;                    /* 定时器链，挂在在eh->timer_tree_root */
     eh_clock_t                      expire;                     /* 定时器到期时间 */
     eh_sclock_t                     interval;                   /* 定时器间隔时间 */
+    struct eh_rbtree_node           rb_node;                    /* 定时器链，挂在在eh->timer_tree_root */
     uint32_t                        attrribute;
 };
 

@@ -187,7 +187,7 @@ extern void* eh_epoll_get_handle_userdata_no_lock(void* node_handle);
  * @param  node_handle      epoll中指定事件节点的句柄
  * @return void*            返回epoll中指定事件用户数据，返回值使用 eh_ptr_to_error来判断
  */
-extern void eh_epoll_del_event_form_handle_no_lock(eh_epoll_t epoll, void* node_handle);
+extern void eh_epoll_del_event_from_handle_no_lock(eh_epoll_t epoll, void* node_handle);
 
 
 /**

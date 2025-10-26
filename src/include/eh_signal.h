@@ -143,6 +143,12 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
     eh_event_cb_connect((&(signal)->event), slot, eh_task_self())
 
 /**
+ * @brief 槽初始化并连接到主任务
+ */
+#define eh_signal_slot_connect_to_main(signal, slot)                                    \
+    eh_event_cb_connect((&(signal)->event), slot, eh_task_main())
+
+/**
  * @brief 连接信号和槽到指定任务
  */
 #define eh_signal_slot_connect_to_task(signal, slot, task)                              \
@@ -155,16 +161,16 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
     eh_event_cb_disconnect((&(signal)->event), slot, eh_task_self())
 
 /**
- * @brief 从指定任务断开信号和槽
+ * @brief 从主任务断开信号和槽
  */
-#define eh_signal_slot_disconnect_form_task(signal, slot, task)                         \
-    eh_event_cb_disconnect((&(signal)->event), slot, task)
+#define eh_signal_slot_disconnect_from_main(signal, slot)                               \
+    eh_event_cb_disconnect((&(signal)->event), slot, eh_task_main())
 
 /**
- * @brief 断开指定任务上的该信号，
+ * @brief 从指定任务断开信号和槽
  */
-#define eh_signal_slot_disconnect_all_form_task(signal, task)                           \
-    eh_event_cb_disconnect_all_form_task((&(signal)->event), task)
+#define eh_signal_slot_disconnect_from_task(signal, slot, task)                         \
+    eh_event_cb_disconnect((&(signal)->event), slot, task)
 
 /**
  * @brief 清除信号和槽函数在当前任务上的全部连接
@@ -175,7 +181,7 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
 /**
  * @brief 清除信号和槽函数在指定任务上的全部连接
  */
-#define eh_signal_slot_clean_form_task(signal, task)                                    \
+#define eh_signal_slot_clean_from_task(signal, task)                                    \
     eh_event_cb_clean((&(signal)->event), task)
 
 
@@ -198,7 +204,7 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
 /**
  * @brief 请求指定任务退出信号处理循环
  */
-#define eh_signal_dispatch_loop_request_quit_form_task(task)    eh_event_loop_request_quit(task)
+#define eh_signal_dispatch_loop_request_quit_from_task(task)    eh_event_loop_request_quit(task)
 
 
 #ifdef __cplusplus
