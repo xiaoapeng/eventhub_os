@@ -7,12 +7,6 @@
 
 
 /**
- *  配置事件回调函数的栈大小
- */
-#define EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE            (8*1024U)
-
-
-/**
  *  platform_get_clock_monotonic_time 函数获取到的时钟使用的时钟频率
  */
 #define EH_CONFIG_CLOCKS_PER_SEC                                (1000000UL)

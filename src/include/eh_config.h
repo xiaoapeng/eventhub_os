@@ -13,18 +13,6 @@
 #if __has_include("eh_user_config.h")
 #include "eh_user_config.h"
 #endif
-/**
- *  配置事件回调函数的栈大小
- */
-#ifndef EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE
-#define EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE            (1*1024U)
-#endif /* EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE */
-
-#ifdef CONFIG_EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE
-#undef EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE
-#define EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE            CONFIG_EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE
-#endif
-
 
 /**
  *  platform_get_clock_monotonic_time 函数获取到的时钟使用的时钟频率
@@ -39,6 +27,11 @@ extern unsigned long platform_get_clock_freq(void);
 #define EH_CONFIG_CLOCKS_PER_SEC                                CONFIG_EH_CONFIG_CLOCKS_PER_SEC
 #endif
 
+#if defined(EH_SYSTEM_IS_LINUX)
+#undef EH_CONFIG_CLOCKS_PER_SEC
+#define EH_CONFIG_CLOCKS_PER_SEC                                (1000000U)
+#endif
+
 
 /**
  *  EH_CONFIG_USE_LIBC_MEM_MANAGE为1时,将使用libc库的内存管理,未定义
@@ -49,7 +42,11 @@ extern unsigned long platform_get_clock_freq(void);
  *  EH_CONFIG_MEM_HEAP_SIZE为堆内存大小，默认为20K
  */
 #ifndef EH_CONFIG_USE_LIBC_MEM_MANAGE
+#if defined(EH_SYSTEM_IS_LINUX)
+#define EH_CONFIG_USE_LIBC_MEM_MANAGE                            1
+#else
 #define EH_CONFIG_USE_LIBC_MEM_MANAGE                            0
+#endif
 #endif /* EH_CONFIG_USE_LIBC_MEM_MANAGE */
 
 #ifdef CONFIG_EH_CONFIG_USE_LIBC_MEM_MANAGE
@@ -113,6 +110,12 @@ extern unsigned long platform_get_clock_freq(void);
 #undef EH_CONFIG_DEBUG_ENTER_SIGN
 #define EH_CONFIG_DEBUG_ENTER_SIGN                               CONFIG_EH_CONFIG_DEBUG_ENTER_SIGN
 #endif
+
+#if defined(EH_SYSTEM_IS_LINUX)
+#undef EH_CONFIG_DEBUG_ENTER_SIGN
+#define EH_CONFIG_DEBUG_ENTER_SIGN                               "\n"
+#endif
+
 
 /**
  *  DEBUG打印的TAG配置

@@ -22,6 +22,6 @@ target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_options( eventhub PUBLIC "-T${CMAKE_CURRENT_SOURCE_DIR}/eh.lds" )
-    target_compile_definitions( eventhub PUBLIC "-DEH_CMAKE_CONFIG_DEBUG_ENTER_SIGN=\"\\n\"" )
+    target_compile_definitions( eventhub PUBLIC "-DEH_SYSTEM_IS_LINUX" )
 endif()
 

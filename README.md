@@ -221,7 +221,6 @@ PROVIDE_HIDDEN (__end_eh_init_fini_array = .);
 
 | 配置项 | 解释 |
 | --- | --- |
-| `EH_CONFIG_EVENT_CALLBACK_FUNCTION_STACK_SIZE` | 回调槽函数堆栈大小默认为1024字节，可以根据需要调整 |
 | `EH_CONFIG_CLOCKS_PER_SEC` | `platform_get_clock_monotonic_time`返回的时钟周期数比如`48000000`/`72000000`一般是单片机的MAIN频率 |
 | `EH_CONFIG_USE_LIBC_MEM_MANAGE` | 是否使用C库进行内存管理，默认为0时使用自带的内存管理 |
 | `EH_CONFIG_MEM_ALLOC_ALIGN` | `EH_CONFIG_USE_LIBC_MEM_MANAGE`为0时有效，内部分配内存对齐字节数，默认为指针大小的两倍 |
