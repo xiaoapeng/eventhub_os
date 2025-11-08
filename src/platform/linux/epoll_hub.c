@@ -15,9 +15,14 @@
 #include <sys/eventfd.h>
 #include <eh.h>
 #include <eh_module.h>
+#include <eh_debug.h>
 #include <epoll_hub.h>
 
 #define EPOLL_WAIT_MAX_EVENTS 1024
+
+#ifndef EH_DBG_MODEULE_LEVEL_EPOL_HUB
+#define EH_DBG_MODEULE_LEVEL_EPOL_HUB EH_DBG_WARNING
+#endif
 
 struct epoll_hub{
     int                         epoll_fd;
@@ -72,7 +77,9 @@ int epoll_hub_poll(eh_usec_t usec_timeout){
     }
 
     timerfd_settime(epoll_hub.timeout_fd, 0, &timeout_spec, NULL);
+    eh_mdebugfl(EPOL_HUB, "epoll_wait timeout: %ld", usec_timeout);
     ret = epoll_wait(epoll_hub.epoll_fd,  epoll_hub.wait_events, EPOLL_WAIT_MAX_EVENTS, epoll_parameter_timeout);
+    eh_mdebugfl(EPOL_HUB, "epoll_wait ret: %d", ret);
     if(ret <= 0) return  ret;
     for(int i = 0; i < ret; i++){
         struct epoll_event *event = &epoll_hub.wait_events[i];
