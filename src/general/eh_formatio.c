@@ -77,14 +77,14 @@ __weak void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)size;
 }
 
-struct stream_out _eh_stdout = {
-    .type = STREAM_TYPE_FUNCTION,
-    .f = {
-        .write = stdout_write,
-        .cache = _stdout_cache,
-        .pos = _stdout_cache,
-        .end = _stdout_cache + EH_CONFIG_STDOUT_MEM_CACHE_SIZE,
+struct stream_function _eh_stdout = {
+    .base = {
+        .type = STREAM_TYPE_FUNCTION,
     },
+    .write = stdout_write,
+    .cache = _stdout_cache,
+    .pos = _stdout_cache,
+    .end = _stdout_cache + EH_CONFIG_STDOUT_MEM_CACHE_SIZE,
 };
 struct double_components {
   uint64_t              integral;
@@ -172,43 +172,52 @@ static int num_bit_count(unsigned long long number, int base){
     return res;
 }
 
-static inline void streamout_in_byte(struct stream_out *stream, char ch){
+static inline void streamout_in_byte(struct stream_base *stream, char ch){
     bool out = false;
     switch(stream->type){
-        case STREAM_TYPE_FUNCTION:
-            if(stream->f.pos < stream->f.end){
-                *stream->f.pos = (uint8_t)ch;
-                stream->f.pos++;
+        case STREAM_TYPE_FUNCTION:{
+            struct stream_function *f = (struct stream_function *)stream;
+            if(f->pos < f->end){
+                *f->pos = (uint8_t)ch;
+                f->pos++;
                 if(ch == '\n') out = true;
             }
-            if( stream->f.pos == stream->f.end || out ){
-                stream->f.write(&stream, stream->f.cache,  (size_t)(stream->f.pos - stream->f.cache));
-                stream->f.pos = stream->f.cache;
+            if( f->pos == f->end || out ){
+                f->write(&stream, f->cache,  (size_t)(f->pos - f->cache));
+                f->pos = f->cache;
             }
             break;
-        case STREAM_TYPE_FUNCTION_NO_CACHE:
-            stream->f.write(&stream, (uint8_t*)&ch, 1);
+        }
+        case STREAM_TYPE_FUNCTION_NO_CACHE:{
+            struct stream_function_no_cache *f = (struct stream_function_no_cache *)stream;
+            f->write(&stream, (uint8_t*)&ch, 1);
             break;
-        case STREAM_TYPE_MEMORY:
-            if(stream->m.pos < stream->m.end){
-                *stream->m.pos = (uint8_t)ch;
-                stream->m.pos++;
+        }
+        case STREAM_TYPE_MEMORY:{
+            struct stream_memory *m = (struct stream_memory *)stream;
+            if(m->pos < m->end){
+                *m->pos = (uint8_t)ch;
+                m->pos++;
             }
             break;
+        }
     }
 }
 
-static inline void streamout_finish(struct stream_out *stream){
+static inline void streamout_finish(struct stream_base *stream){
     switch(stream->type){
         case STREAM_TYPE_FUNCTION:
         case STREAM_TYPE_FUNCTION_NO_CACHE:
             break;
-        case STREAM_TYPE_MEMORY:
-            if(stream->m.pos < stream->m.end){
-                *stream->m.pos = '\0';
+        case STREAM_TYPE_MEMORY:{
+            struct stream_memory *m = (struct stream_memory *)stream;
+            if(m->pos < m->end){
+                *m->pos = '\0';
             }else{
-                *(stream->m.end - 1) = '\0';
+                *(m->end - 1) = '\0';
             }
+            break;
+        }
     }
 }
 
@@ -220,7 +229,7 @@ static inline int skip_atoi(const char **s)
     return i;
 }
 
-static inline int vprintf_char(struct stream_out *stream, char ch, int field_width, int flags){
+static inline int vprintf_char(struct stream_base *stream, char ch, int field_width, int flags){
     int n = 0;
     n = field_width <= 1 ? 1 : field_width;
     if(flags & FORMAT_LEFT)
@@ -232,7 +241,7 @@ static inline int vprintf_char(struct stream_out *stream, char ch, int field_wid
     return n;
 }
 
-static inline int vprintf_string(struct stream_out *stream, char *s, int field_width, int precision, int flags){
+static inline int vprintf_string(struct stream_base *stream, char *s, int field_width, int precision, int flags){
     int n = 0;
     int len;
     int diff;
@@ -397,7 +406,7 @@ static void float_normalized_decentralized(
 
 }
 
-static int vprintf_float_decimalism_or_normalized(struct stream_out *stream, struct double_components *components_num, 
+static int vprintf_float_decimalism_or_normalized(struct stream_base *stream, struct double_components *components_num, 
     int field_width, int precision, int flags, int floored_exp10){
     char _number_buf[FORMAT_STACK_CACHE_SIZE];
     char *number_buf = _number_buf;
@@ -556,7 +565,7 @@ static int vprintf_float_decimalism_or_normalized(struct stream_out *stream, str
     return n;
 }
 
-static int vprintf_float_e(struct stream_out *stream, double num, int field_width, int precision, int flags){
+static int vprintf_float_e(struct stream_base *stream, double num, int field_width, int precision, int flags){
     union double_union du = {.d = num};
     double abs_number =  du.sign ? -num : num;
     int floored_exp10;
@@ -587,7 +596,7 @@ static int vprintf_float_e(struct stream_out *stream, double num, int field_widt
     return 0;
 }
 
-static inline int vprintf_float_f_or_g(struct stream_out *stream, double num, int field_width, int precision, int flags){
+static inline int vprintf_float_f_or_g(struct stream_base *stream, double num, int field_width, int precision, int flags){
     struct double_components components_num;
     if(num < FORMAT_FLOAT_F_RANGE_MIN || num > FORMAT_FLOAT_F_RANGE_MAX)
         return 0;
@@ -597,7 +606,7 @@ static inline int vprintf_float_f_or_g(struct stream_out *stream, double num, in
     return vprintf_float_decimalism_or_normalized(stream, &components_num, field_width, precision, flags, 0);
 }
 
-static int vprintf_float(struct stream_out *stream, double num, int field_width, int precision, int flags){
+static int vprintf_float(struct stream_base *stream, double num, int field_width, int precision, int flags){
     int n=0;
     if(isinf(num) || isnan(num)){
         char *out_str = NULL;
@@ -629,7 +638,7 @@ static int vprintf_float(struct stream_out *stream, double num, int field_width,
     return vprintf_float_e(stream, num, field_width, precision, flags);
 }
 
-static int vprintf_array(struct stream_out *stream, const uint8_t *array, int field_width, 
+static int vprintf_array(struct stream_base *stream, const uint8_t *array, int field_width, 
     int precision, int flags, enum format_qualifier qualifier){
     const char *digits = small_digits;
     const uint8_t *item;
@@ -722,7 +731,7 @@ static int vprintf_array(struct stream_out *stream, const uint8_t *array, int fi
     }
     return n;
 }
-static inline int vprintf_number(struct stream_out *stream, unsigned long long num, int field_width, int precision, int flags, enum base_type base){
+static inline int vprintf_number(struct stream_base *stream, unsigned long long num, int field_width, int precision, int flags, enum base_type base){
     char _number_buf[FORMAT_STACK_CACHE_SIZE];
     char *number_buf = _number_buf;
     char sign = 0;
@@ -831,7 +840,7 @@ static inline int vprintf_number(struct stream_out *stream, unsigned long long n
     return n;
 }
 
-static int streamout_vprintf(struct stream_out *stream, const char *fmt, va_list args){
+static int streamout_vprintf(struct stream_base *stream, const char *fmt, va_list args){
     int n = 0;
     int flags;
     int field_width;
@@ -1064,10 +1073,10 @@ static int streamout_vprintf(struct stream_out *stream, const char *fmt, va_list
 
 int eh_vsnprintf(char *buf, size_t size, const char *fmt, va_list args){
     int n;
-    struct stream_out stream;
+    struct stream_memory stream;
     eh_stream_memory_init(&stream, (uint8_t*)buf, size);
-    n = streamout_vprintf(&stream, fmt, args);
-    streamout_finish(&stream);
+    n = streamout_vprintf((struct stream_base *)&stream, fmt, args);
+    streamout_finish((struct stream_base *)&stream);
     return n;
 }
 
@@ -1092,8 +1101,8 @@ int eh_sprintf(char *buf, const char *fmt, ...){
 
 int eh_vprintf(const char *fmt, va_list args){
     int n;
-    n = streamout_vprintf(&_eh_stdout, fmt, args);
-    streamout_finish(&_eh_stdout);
+    n = streamout_vprintf(EH_STDOUT, fmt, args);
+    streamout_finish(EH_STDOUT);
     return n;
 }
 
@@ -1101,19 +1110,19 @@ int eh_printf(const char *fmt, ...){
     int n;
     va_list args;
     va_start(args, fmt);
-    n = streamout_vprintf(&_eh_stdout, fmt, args);
+    n = streamout_vprintf(EH_STDOUT, fmt, args);
     va_end(args);
-    streamout_finish(&_eh_stdout);
+    streamout_finish(EH_STDOUT);
     return n;
 }
 
-int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list args){
+int eh_stream_vprintf(struct stream_base *stream, const char *fmt, va_list args){
     int n;
     n = streamout_vprintf(stream, fmt, args);
     return n;
 }
 
-int eh_stream_printf(struct stream_out *stream, const char *fmt, ...){
+int eh_stream_printf(struct stream_base *stream, const char *fmt, ...){
     int n;
     va_list args;
     va_start(args, fmt);
@@ -1122,16 +1131,17 @@ int eh_stream_printf(struct stream_out *stream, const char *fmt, ...){
     return n;
 }
 
-void eh_stream_putc(struct stream_out *stream, int c){
+void eh_stream_putc(struct stream_base *stream, int c){
     streamout_in_byte(stream, (char)c);
 }
 
-int eh_stream_puts(struct stream_out *stream, const char *s){
+int eh_stream_puts(struct stream_base *stream, const char *s){
     const char *p;
     size_t n = 0;
     if(stream->type == STREAM_TYPE_FUNCTION_NO_CACHE){
+        struct stream_function_no_cache *f = (struct stream_function_no_cache *)stream;
         n = strlen(s);
-        stream->f.write(stream, (uint8_t*)s, n);
+        f->write(stream, (uint8_t*)s, n);
         return (int)n;
     }
     p = s;
@@ -1139,6 +1149,6 @@ int eh_stream_puts(struct stream_out *stream, const char *s){
         streamout_in_byte(stream, (char)*p++);
     return (int)(p - s);
 }
-void eh_stream_finish(struct stream_out *stream){
+void eh_stream_finish(struct stream_base *stream){
     streamout_finish(stream);
 }

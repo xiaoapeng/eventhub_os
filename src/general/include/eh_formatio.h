@@ -30,26 +30,33 @@ enum stream_type{
     STREAM_TYPE_MEMORY,
 };
 
-struct stream_out{
+struct stream_base{
     enum stream_type type;
-    union{
-        struct{
-            void (*write)(void *stream, const uint8_t *buf, size_t size);
-            uint8_t *cache;
-            uint8_t *pos;
-            uint8_t *end;
-        }f;
-        struct{
-            uint8_t *buf;
-            uint8_t *pos;
-            uint8_t *end;
-        }m;
-    };
 };
 
-extern struct stream_out _eh_stdout;
+struct stream_function{
+    struct stream_base base;
+    void (*write)(void *stream, const uint8_t *buf, size_t size);
+    uint8_t *cache;
+    uint8_t *pos;
+    uint8_t *end;
+};
 
-#define EH_STDOUT (&_eh_stdout)
+struct stream_function_no_cache{
+    struct stream_base base;
+    void (*write)(void *stream, const uint8_t *buf, size_t size);
+};
+
+struct stream_memory{
+    struct stream_base base;
+    uint8_t *buf;
+    uint8_t *pos;
+    uint8_t *end;
+};
+
+extern struct stream_function _eh_stdout;
+
+#define EH_STDOUT ((struct stream_base*)&_eh_stdout)
 
 
 extern int eh_vprintf(const char *fmt, va_list args);
@@ -62,27 +69,33 @@ static inline int eh_vsprintf(char *buf, const char *fmt, va_list args){
 extern int eh_snprintf(char *buf, size_t size, const char *fmt, ...);
 extern int eh_sprintf(char *buf, const char *fmt, ...);
 
-extern int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list args);
-extern int eh_stream_printf(struct stream_out *stream, const char *fmt, ...);
-extern void eh_stream_putc(struct stream_out *stream, int c);
-extern int eh_stream_puts(struct stream_out *stream, const char *s);
-extern void eh_stream_finish(struct stream_out *stream);
+extern int eh_stream_vprintf(struct stream_base *stream, const char *fmt, va_list args);
+extern int eh_stream_printf(struct stream_base *stream, const char *fmt, ...);
+extern void eh_stream_putc(struct stream_base *stream, int c);
+extern int eh_stream_puts(struct stream_base *stream, const char *s);
+extern void eh_stream_finish(struct stream_base *stream);
 
-static inline void eh_stream_function_init(struct stream_out *stream, 
+static inline void eh_stream_function_init(struct stream_function *stream, 
     void (*write)(void *stream, const uint8_t *buf, size_t size), 
     uint8_t *cache, size_t cache_size){
-    stream->type = cache ? STREAM_TYPE_FUNCTION : STREAM_TYPE_FUNCTION_NO_CACHE;
-    stream->f.write = write;
-    stream->f.cache = cache;
-    stream->f.pos = cache;
-    stream->f.end = cache + cache_size;
+    stream->base.type = STREAM_TYPE_FUNCTION;
+    stream->write = write;
+    stream->cache = cache;
+    stream->pos = cache;
+    stream->end = cache + cache_size;
 }
 
-static inline void eh_stream_memory_init(struct stream_out *stream, uint8_t *buf, size_t size){
-    stream->type = STREAM_TYPE_MEMORY;
-    stream->m.buf = buf;
-    stream->m.pos = buf;
-    stream->m.end = buf + size;
+static inline void eh_stream_function_no_cache_init(struct stream_function_no_cache *stream, 
+    void (*write)(void *stream, const uint8_t *buf, size_t size)){
+    stream->base.type = STREAM_TYPE_FUNCTION_NO_CACHE;
+    stream->write = write;
+}
+
+static inline void eh_stream_memory_init(struct stream_memory *stream, uint8_t *buf, size_t size){
+    stream->base.type = STREAM_TYPE_MEMORY;
+    stream->buf = buf;
+    stream->pos = buf;
+    stream->end = buf + size;
 }
 
 #ifdef __cplusplus
