@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <limits.h>
 #include <eh_mem.h>
 #include <eh_types.h>
 #include <eh_formatio.h>
@@ -44,10 +43,7 @@
 #define FORMAT_FLOAT_F      0x00000100          /* 浮点数输出  F格式*/
 #define FORMAT_FLOAT_G      0x00000200          /* 浮点数输出  G格式*/
 
-enum stream_type{
-    STREAM_TYPE_FUNCTION,
-    STREAM_TYPE_MEMORY,
-};
+
 
 enum format_qualifier{
     FORMAT_QUALIFIER_NONE,
@@ -65,22 +61,6 @@ enum base_type{
     BASE_TYPE_HEX = 16
 };
 
-struct stream_out{
-    enum stream_type type;
-    union{
-        struct{
-            void (*write)(void *stream, const uint8_t *buf, size_t size);
-            uint8_t *cache;
-            uint8_t *pos;
-            uint8_t *end;
-        }f;
-        struct{
-            uint8_t *buf;
-            uint8_t *pos;
-            uint8_t *end;
-        }m;
-    };
-};
 
 
 static const char small_digits[] = "0123456789abcdef";
@@ -97,7 +77,7 @@ __weak void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)size;
 }
 
-static struct stream_out _stdout = {
+struct stream_out _eh_stdout = {
     .type = STREAM_TYPE_FUNCTION,
     .f = {
         .write = stdout_write,
@@ -847,7 +827,7 @@ static inline int vprintf_number(struct stream_out *stream, unsigned long long n
     return n;
 }
 
-static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list args){
+static int streamout_vprintf(struct stream_out *stream, const char *fmt, va_list args){
     int n = 0;
     int flags;
     int field_width;
@@ -1080,15 +1060,9 @@ static int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list
 
 int eh_vsnprintf(char *buf, size_t size, const char *fmt, va_list args){
     int n;
-    struct stream_out stream = {
-        .type = STREAM_TYPE_MEMORY,
-        .m = {
-            .buf = (uint8_t*)buf,
-            .pos = (uint8_t*)buf,
-            .end = (uint8_t*)buf + size,
-        },
-    };
-    n = eh_stream_vprintf(&stream, fmt, args);
+    struct stream_out stream;
+    eh_stream_memory_init(&stream, (uint8_t*)buf, size);
+    n = streamout_vprintf(&stream, fmt, args);
     streamout_finish(&stream);
     return n;
 }
@@ -1114,8 +1088,8 @@ int eh_sprintf(char *buf, const char *fmt, ...){
 
 int eh_vprintf(const char *fmt, va_list args){
     int n;
-    n = eh_stream_vprintf(&_stdout, fmt, args);
-    streamout_finish(&_stdout);
+    n = streamout_vprintf(&_eh_stdout, fmt, args);
+    streamout_finish(&_eh_stdout);
     return n;
 }
 
@@ -1123,8 +1097,37 @@ int eh_printf(const char *fmt, ...){
     int n;
     va_list args;
     va_start(args, fmt);
-    n = eh_stream_vprintf(&_stdout, fmt, args);
+    n = streamout_vprintf(&_eh_stdout, fmt, args);
     va_end(args);
-    streamout_finish(&_stdout);
+    streamout_finish(&_eh_stdout);
     return n;
+}
+
+int eh_stream_vprintf(struct stream_out *stream, const char *fmt, va_list args){
+    int n;
+    n = streamout_vprintf(stream, fmt, args);
+    return n;
+}
+
+int eh_stream_printf(struct stream_out *stream, const char *fmt, ...){
+    int n;
+    va_list args;
+    va_start(args, fmt);
+    n = eh_stream_vprintf(stream, fmt, args);
+    va_end(args);
+    return n;
+}
+
+void eh_stream_putc(struct stream_out *stream, int c){
+    streamout_in_byte(stream, (char)c);
+}
+
+int eh_stream_puts(struct stream_out *stream, const char *s){
+    const char *p = s;
+    while(*p)
+        streamout_in_byte(stream, (char)*p++);
+    return (int)(p - s);
+}
+void eh_stream_finish(struct stream_out *stream){
+    streamout_finish(stream);
 }
