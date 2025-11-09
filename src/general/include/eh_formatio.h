@@ -26,6 +26,7 @@ extern "C"{
 
 enum stream_type{
     STREAM_TYPE_FUNCTION,
+    STREAM_TYPE_FUNCTION_NO_CACHE,
     STREAM_TYPE_MEMORY,
 };
 
@@ -70,12 +71,13 @@ extern void eh_stream_finish(struct stream_out *stream);
 static inline void eh_stream_function_init(struct stream_out *stream, 
     void (*write)(void *stream, const uint8_t *buf, size_t size), 
     uint8_t *cache, size_t cache_size){
-    stream->type = STREAM_TYPE_FUNCTION;
+    stream->type = cache ? STREAM_TYPE_FUNCTION : STREAM_TYPE_FUNCTION_NO_CACHE;
     stream->f.write = write;
     stream->f.cache = cache;
     stream->f.pos = cache;
     stream->f.end = cache + cache_size;
 }
+
 static inline void eh_stream_memory_init(struct stream_out *stream, uint8_t *buf, size_t size){
     stream->type = STREAM_TYPE_MEMORY;
     stream->m.buf = buf;

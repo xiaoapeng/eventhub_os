@@ -186,6 +186,9 @@ static inline void streamout_in_byte(struct stream_out *stream, char ch){
                 stream->f.pos = stream->f.cache;
             }
             break;
+        case STREAM_TYPE_FUNCTION_NO_CACHE:
+            stream->f.write(&stream, (uint8_t*)&ch, 1);
+            break;
         case STREAM_TYPE_MEMORY:
             if(stream->m.pos < stream->m.end){
                 *stream->m.pos = (uint8_t)ch;
@@ -198,6 +201,7 @@ static inline void streamout_in_byte(struct stream_out *stream, char ch){
 static inline void streamout_finish(struct stream_out *stream){
     switch(stream->type){
         case STREAM_TYPE_FUNCTION:
+        case STREAM_TYPE_FUNCTION_NO_CACHE:
             break;
         case STREAM_TYPE_MEMORY:
             if(stream->m.pos < stream->m.end){
@@ -1123,7 +1127,14 @@ void eh_stream_putc(struct stream_out *stream, int c){
 }
 
 int eh_stream_puts(struct stream_out *stream, const char *s){
-    const char *p = s;
+    const char *p;
+    size_t n = 0;
+    if(stream->type == STREAM_TYPE_FUNCTION_NO_CACHE){
+        n = strlen(s);
+        stream->f.write(stream, (uint8_t*)s, n);
+        return (int)n;
+    }
+    p = s;
     while(*p)
         streamout_in_byte(stream, (char)*p++);
     return (int)(p - s);
