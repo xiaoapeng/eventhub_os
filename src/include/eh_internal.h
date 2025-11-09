@@ -1,5 +1,5 @@
 /**
- * @file eh_interior.h
+ * @file eh_internal.h
  * @brief  内部进行使用的定义
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @date 2024-05-10
@@ -8,8 +8,8 @@
  * 
  */
 
-#ifndef _EH_INTERIOR_H_
-#define _EH_INTERIOR_H_
+#ifndef _EH_INTERNAL_H_
+#define _EH_INTERNAL_H_
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -209,4 +209,4 @@ extern void eh_task_wake_up(eh_task_t *wakeup_task);
 #endif /* __cplusplus */
 
 
-#endif // _EH_INTERIOR_H_
+#endif // _EH_INTERNAL_H_

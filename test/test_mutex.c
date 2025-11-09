@@ -15,7 +15,7 @@
 #include <eh_platform.h>
 #include <eh_timer.h>
 #include <eh_sleep.h> 
-#include <eh_interior.h>
+#include <eh_internal.h>
 #include <eh_mutex.h>
 
 eh_mutex_t sem;

@@ -13,7 +13,7 @@
 #include <eh_platform.h>
 #include <eh_event.h>
 #include <eh_event_cb.h>
-#include <eh_interior.h>
+#include <eh_internal.h>
 #include <eh_debug.h>
 #include <eh_mem.h>
 

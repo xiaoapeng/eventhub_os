@@ -18,7 +18,7 @@
 #include <eh_platform.h>
 #include <eh_timer.h>
 #include <eh_sleep.h> 
-#include <eh_interior.h>
+#include <eh_internal.h>
 #include <eh_sem.h>
 
 eh_sem_t sem;

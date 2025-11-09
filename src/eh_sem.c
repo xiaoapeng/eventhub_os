@@ -16,7 +16,7 @@
 #include <eh_event.h>
 #include <eh_mem.h>
 #include <eh_platform.h>
-#include <eh_interior.h>
+#include <eh_internal.h>
 #include <eh_sem.h>
 #include <stdbool.h>
 

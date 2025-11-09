@@ -11,7 +11,7 @@
 #include <eh.h>
 #include <eh_event.h>
 #include <eh_platform.h>
-#include <eh_interior.h>
+#include <eh_internal.h>
 #include <eh_timer.h>
 
 #define timer_is_empty()            (eh_rb_root_is_empty(&timer_tree_root))

@@ -99,7 +99,7 @@ add_executable(you_target)
     ├── eh_event_cb.h
     ├── eh_event.h
     ├── eh.h
-    ├── eh_interior.h
+    ├── eh_internal.h
     ├── eh_mem.h
     ├── eh_module.h
     ├── eh_mutex.h
