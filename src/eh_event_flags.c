@@ -19,7 +19,6 @@ enum event_flags_condition_type{
 };
 struct event_flags_condition_arg{
     eh_event_flags_t *ef;
-    enum event_flags_condition_type type;
     eh_flags_t wait_flags;
     
     union{
@@ -27,6 +26,7 @@ struct event_flags_condition_arg{
         eh_flags_t set_flags;
     };
     eh_flags_t *reality_flags;
+    enum event_flags_condition_type type;
 };
 
 

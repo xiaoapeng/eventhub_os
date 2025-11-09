@@ -15,7 +15,7 @@
 #include <eh_types.h>
 
 typedef struct eh_event_flags eh_event_flags_t;
-typedef unsigned long eh_flags_t;
+typedef size_t eh_flags_t;
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -27,7 +27,7 @@ extern "C"{
 struct eh_event_flags {
     /* 必须在第一位 */
     eh_event_t                  event;
-    unsigned long               flags;
+    eh_flags_t                  flags;
 };
 
 eh_static_assert(eh_offsetof(struct eh_event_flags, event) == 0, "event must be the first member of struct");
