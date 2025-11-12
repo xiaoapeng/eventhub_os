@@ -1118,6 +1118,8 @@ int eh_printf(const char *fmt, ...){
 
 int eh_stream_vprintf(struct stream_base *stream, const char *fmt, va_list args){
     int n;
+    if(stream == NULL)
+        return 0;
     n = streamout_vprintf(stream, fmt, args);
     return n;
 }
@@ -1125,6 +1127,8 @@ int eh_stream_vprintf(struct stream_base *stream, const char *fmt, va_list args)
 int eh_stream_printf(struct stream_base *stream, const char *fmt, ...){
     int n;
     va_list args;
+    if(stream == NULL)
+        return 0;
     va_start(args, fmt);
     n = eh_stream_vprintf(stream, fmt, args);
     va_end(args);
@@ -1132,12 +1136,16 @@ int eh_stream_printf(struct stream_base *stream, const char *fmt, ...){
 }
 
 void eh_stream_putc(struct stream_base *stream, int c){
+    if(stream == NULL)
+        return ;
     streamout_in_byte(stream, (char)c);
 }
 
 int eh_stream_puts(struct stream_base *stream, const char *s){
     const char *p;
     size_t n = 0;
+    if(stream == NULL)
+        return 0;
     if(stream->type == STREAM_TYPE_FUNCTION_NO_CACHE){
         struct stream_function_no_cache *f = (struct stream_function_no_cache *)stream;
         n = strlen(s);
@@ -1150,5 +1158,7 @@ int eh_stream_puts(struct stream_base *stream, const char *s){
     return (int)(p - s);
 }
 void eh_stream_finish(struct stream_base *stream){
+    if(stream == NULL)
+        return ;
     streamout_finish(stream);
 }
