@@ -45,6 +45,7 @@ struct stream_function{
 struct stream_function_no_cache{
     struct stream_base base;
     void (*write)(void *stream, const uint8_t *buf, size_t size);
+    void (*finish)(void *stream);
 };
 
 struct stream_memory{
@@ -86,9 +87,11 @@ static inline void eh_stream_function_init(struct stream_function *stream,
 }
 
 static inline void eh_stream_function_no_cache_init(struct stream_function_no_cache *stream, 
-    void (*write)(void *stream, const uint8_t *buf, size_t size)){
+    void (*write)(void *stream, const uint8_t *buf, size_t size),
+    void (*finish)(void *stream)){
     stream->base.type = STREAM_TYPE_FUNCTION_NO_CACHE;
     stream->write = write;
+    stream->finish = finish;
 }
 
 static inline void eh_stream_memory_init(struct stream_memory *stream, uint8_t *buf, size_t size){

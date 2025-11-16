@@ -183,14 +183,14 @@ static inline void streamout_in_byte(struct stream_base *stream, char ch){
                 if(ch == '\n') out = true;
             }
             if( f->pos == f->end || out ){
-                f->write(&stream, f->cache,  (size_t)(f->pos - f->cache));
+                f->write(stream, f->cache,  (size_t)(f->pos - f->cache));
                 f->pos = f->cache;
             }
             break;
         }
         case STREAM_TYPE_FUNCTION_NO_CACHE:{
             struct stream_function_no_cache *f = (struct stream_function_no_cache *)stream;
-            f->write(&stream, (uint8_t*)&ch, 1);
+            f->write(stream, (uint8_t*)&ch, 1);
             break;
         }
         case STREAM_TYPE_MEMORY:{
@@ -206,9 +206,19 @@ static inline void streamout_in_byte(struct stream_base *stream, char ch){
 
 static inline void streamout_finish(struct stream_base *stream){
     switch(stream->type){
-        case STREAM_TYPE_FUNCTION:
-        case STREAM_TYPE_FUNCTION_NO_CACHE:
+        case STREAM_TYPE_FUNCTION:{
+            struct stream_function *f = (struct stream_function *)stream;
+            if(f->pos > f->cache){
+                f->write(stream, f->cache,  (size_t)(f->pos - f->cache));
+                f->pos = f->cache;
+            }
             break;
+        }
+        case STREAM_TYPE_FUNCTION_NO_CACHE:{
+            struct stream_function_no_cache *f = (struct stream_function_no_cache *)stream;
+            f->finish(stream);
+            break;
+        }
         case STREAM_TYPE_MEMORY:{
             struct stream_memory *m = (struct stream_memory *)stream;
             if(m->pos < m->end){
@@ -1102,7 +1112,6 @@ int eh_sprintf(char *buf, const char *fmt, ...){
 int eh_vprintf(const char *fmt, va_list args){
     int n;
     n = streamout_vprintf(EH_STDOUT, fmt, args);
-    streamout_finish(EH_STDOUT);
     return n;
 }
 
@@ -1112,7 +1121,6 @@ int eh_printf(const char *fmt, ...){
     va_start(args, fmt);
     n = streamout_vprintf(EH_STDOUT, fmt, args);
     va_end(args);
-    streamout_finish(EH_STDOUT);
     return n;
 }
 
