@@ -79,7 +79,11 @@ extern unsigned long platform_get_clock_freq(void);
  *  配置标准输出缓存大小,该缓冲为单次输出的最大字节数，并不限制eh_printf的输出字节数
  */
 #ifndef EH_CONFIG_STDOUT_MEM_CACHE_SIZE
-#define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                          (32U)
+#if defined(EH_SYSTEM_IS_LINUX)
+#define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                           (4096)
+#else
+#define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                           (32)
+#endif
 #endif /* EH_CONFIG_STDOUT_MEM_CACHE_SIZE */
 
 #ifdef CONFIG_EH_CONFIG_STDOUT_MEM_CACHE_SIZE
@@ -103,19 +107,17 @@ extern unsigned long platform_get_clock_freq(void);
  *  DEBUG时的回车符号，当未定义时会根据系统类型自动判断
  */
 #ifndef EH_CONFIG_DEBUG_ENTER_SIGN
+#if defined(EH_SYSTEM_IS_LINUX)
 #define EH_CONFIG_DEBUG_ENTER_SIGN                               "\n"
+#else
+#define EH_CONFIG_DEBUG_ENTER_SIGN                               "\r\n"
+#endif
 #endif /* EH_CONFIG_DEBUG_ENTER_SIGN */
 
 #ifdef CONFIG_EH_CONFIG_DEBUG_ENTER_SIGN
 #undef EH_CONFIG_DEBUG_ENTER_SIGN
 #define EH_CONFIG_DEBUG_ENTER_SIGN                               CONFIG_EH_CONFIG_DEBUG_ENTER_SIGN
 #endif
-
-#if defined(EH_SYSTEM_IS_LINUX)
-#undef EH_CONFIG_DEBUG_ENTER_SIGN
-#define EH_CONFIG_DEBUG_ENTER_SIGN                               "\n"
-#endif
-
 
 /**
  *  DEBUG打印的TAG配置
