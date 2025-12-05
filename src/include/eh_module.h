@@ -55,6 +55,7 @@ struct module_group{
 #define eh_interior_module_export(_init__func_, _exit__func_)   _eh_define_module_export(_init__func_, _exit__func_, "1.1.0")
 
 /* 2.0.0 -> 2.9.9 Reserved for ehip */
+/* 3.0.0 -> 3.0.9 Reserved for ehshell */
 
 #define eh_module_level0_export(_init__func_, _exit__func_)     _eh_define_module_export(_init__func_, _exit__func_, "7.0.0")
 #define eh_module_level1_export(_init__func_, _exit__func_)     _eh_define_module_export(_init__func_, _exit__func_, "7.0.1")
