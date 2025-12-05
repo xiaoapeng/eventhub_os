@@ -23,6 +23,8 @@
 
 struct eh_event_cb_trigger{
     struct eh_list_head     cb_head;
+#define EH_EVENT_CB_TRIGGER_IN_USE  0x00000001U
+    uint32_t                flags;
 };
 
 #define EH_EVENT_CB_TRIGGER_INIT(trigger)   {               \
@@ -124,6 +126,7 @@ int eh_event_loop(void)
             /**
              *  为了避免在执行回调的时候，list被修改，这里将分离node到临时的list,
              */
+            trigger->flags |= EH_EVENT_CB_TRIGGER_IN_USE;
             eh_list_head_init(&used_tmp_list);
             while(!eh_list_empty(&trigger->cb_head)){
                 node = trigger->cb_head.next;
@@ -135,6 +138,11 @@ int eh_event_loop(void)
 
             /* 还原list */
             eh_list_splice(&used_tmp_list, &trigger->cb_head);
+            trigger->flags &= ~EH_EVENT_CB_TRIGGER_IN_USE;
+            if(eh_list_empty(&trigger->cb_head)){
+                eh_free(trigger);
+                eh_epoll_del_event(epoll, e);
+            }
 
             continue_cnt1++;
             if(continue_cnt1%EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_CHECKTIMER == 0){
@@ -219,7 +227,7 @@ void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *
     if(eh_ptr_to_error(node_handle) < 0)
         goto out;
     trigger = eh_epoll_get_handle_userdata_no_lock(node_handle);
-    if(!eh_list_empty(&trigger->cb_head))
+    if(!eh_list_empty(&trigger->cb_head) || (trigger->flags & EH_EVENT_CB_TRIGGER_IN_USE))
         goto out;
     eh_free(trigger);
     eh_epoll_del_event_from_handle_no_lock(epoll, node_handle);
