@@ -107,6 +107,7 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
     eh_signal_slot_t slot_name = {                                                      \
         .slot_function = _slot_function,                                                \
         .slot_param = _slot_param,                                                      \
+        .task = NULL,                                                                   \
         .cb_node = EH_LIST_HEAD_INIT(slot_name.cb_node)                                 \
     }
 
@@ -158,19 +159,7 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
  * @brief 断开信号和槽
  */
 #define eh_signal_slot_disconnect(signal, slot)                                         \
-    eh_event_cb_disconnect((&(signal)->event), slot, eh_task_self())
-
-/**
- * @brief 从主任务断开信号和槽
- */
-#define eh_signal_slot_disconnect_from_main(signal, slot)                               \
-    eh_event_cb_disconnect((&(signal)->event), slot, eh_task_main())
-
-/**
- * @brief 从指定任务断开信号和槽
- */
-#define eh_signal_slot_disconnect_from_task(signal, slot, task)                         \
-    eh_event_cb_disconnect((&(signal)->event), slot, task)
+    eh_event_cb_disconnect((&(signal)->event), slot)
 
 /**
  * @brief 清除信号和槽函数在当前任务上的全部连接

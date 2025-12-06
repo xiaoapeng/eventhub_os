@@ -24,6 +24,7 @@ struct eh_event_cb_slot{
     void                    (*slot_function)(eh_event_t *e, void *slot_param);
     void                    *slot_param;
     struct eh_list_head     cb_node;
+    eh_task_t               *task;
 };
 
 
@@ -31,6 +32,7 @@ static inline void eh_event_cb_slot_init(eh_event_cb_slot_t *slot,
     void (*slot_function)(eh_event_t *e, void *slot_param), void *slot_param){
    slot->slot_function = slot_function;
    slot->slot_param = slot_param;
+   slot->task = NULL;
    eh_list_head_init(&slot->cb_node);
 }
 
@@ -47,9 +49,8 @@ extern int eh_event_cb_connect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_
  * @brief                   断开一个触发器与槽函数的连接
  * @param  e                事件
  * @param  slot             槽函数
- * @param  task             执行触发回调的主体任务
  */
-extern void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task);
+extern void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot);
 
 /**
  * @brief                   清理一个任务下的所有触发器与槽函数的连接

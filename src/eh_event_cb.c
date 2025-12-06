@@ -23,31 +23,75 @@
 
 struct eh_event_cb_trigger{
     struct eh_list_head     cb_head;
-#define EH_EVENT_CB_TRIGGER_IN_USE  0x00000001U
-    uint32_t                flags;
+    uint32_t                connect_cnt:31;
+    uint32_t                forced_ref:1;
 };
 
-#define EH_EVENT_CB_TRIGGER_INIT(trigger)   {               \
-        .cb_head = EH_LIST_HEAD_INIT(trigger.cb_head),  \
+#define trigger_init(trigger) do{               \
+    eh_list_head_init(&trigger->cb_head);       \
+    trigger->rc = 0;                            \
+}while(0)
+
+
+static struct eh_event_cb_trigger * trigger_weak_ref_new(void){
+    struct eh_event_cb_trigger *trigger = eh_malloc(sizeof(struct eh_event_cb_trigger));
+    if(trigger == NULL){
+        return NULL;
     }
+    eh_list_head_init(&trigger->cb_head);
+    trigger->connect_cnt = 0;
+    trigger->forced_ref = 0;
+    return trigger;
+}
 
+static inline void trigger_connect(struct eh_event_cb_trigger *trigger, eh_event_cb_slot_t *slot){
+    eh_list_add(&slot->cb_node, &trigger->cb_head);
+    trigger->connect_cnt++;
+}
 
-#define trigger_init(trigger) eh_list_head_init(&trigger->cb_head)
+static inline uint32_t trigger_disconnect(struct eh_event_cb_trigger *trigger, eh_event_cb_slot_t *slot){
+    uint32_t ret = 0;
+    eh_list_del_init(&slot->cb_node);
+    ret = --trigger->connect_cnt;
+    if(trigger->connect_cnt == 0 && trigger->forced_ref == 0){
+        if(!eh_list_empty(&trigger->cb_head))
+            eh_warnfl("trigger_disconnect: trigger %#p is not empty", trigger);
+        eh_free(trigger);
+    }
+    return ret;
+}
 
+static inline void trigger_forced_get_ref(struct eh_event_cb_trigger *trigger){
+    trigger->forced_ref = 1;
+}
+
+static inline void trigger_forced_release_ref(struct eh_event_cb_trigger *trigger){
+    trigger->forced_ref = 0;
+    if(trigger->connect_cnt == 0){
+        eh_free(trigger);
+    }
+}
 
 static void trigger_clean(struct eh_event_cb_trigger *trigger){
     eh_event_cb_slot_t *slot,*n;
     if(trigger) return ;
     eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node)
         eh_list_del_init(&slot->cb_node);
+    eh_free(trigger);
 }
 
 static void epoll_userdata_free(void *node_handle){
+    eh_event_cb_slot_t *slot,*n;
     struct eh_event_cb_trigger *trigger = 
         (struct eh_event_cb_trigger *)eh_epoll_get_handle_userdata_no_lock(node_handle);
     if(trigger == NULL)
         return ;
-    trigger_clean(trigger);
+    /* 自动析构槽函数连接，提示用户部分槽函数未被断开 */
+    eh_warnfl("trigger_clean: trigger %#p has %d slots connected", trigger, trigger->connect_cnt);
+    eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node){
+        eh_warnfl("slot %#p is not disconnected", slot);
+        eh_list_del_init(&slot->cb_node);
+    }
     eh_free(trigger);
 }
 
@@ -106,27 +150,29 @@ int eh_event_loop(void)
             return ret;
         for(i=0;i<ret;i++){
             struct eh_event_cb_trigger   *trigger = (struct eh_event_cb_trigger*)epool_slot[i].userdata;
+            if(epool_slot[i].affair == EH_EPOLL_AFFAIR_ERROR){
+                if(trigger){
+                    trigger_clean(trigger);
+                    epool_slot[i].userdata = NULL;
+                }
+                eh_epoll_del_event(epoll, epool_slot[i].event);
+                continue;
+            }
+            if(trigger == NULL)
+                continue;
+            trigger_forced_get_ref(trigger);
+        }
+        for(i=0;i<ret;i++){
+            struct eh_event_cb_trigger   *trigger = (struct eh_event_cb_trigger*)epool_slot[i].userdata;
             eh_event_cb_slot_t      *slot;
             struct eh_list_head     *node;
             struct eh_list_head     used_tmp_list;
             eh_event_t *e = epool_slot[i].event;
-
-            if(epool_slot[i].affair == EH_EPOLL_AFFAIR_ERROR){
-                if(trigger){
-                    trigger_clean(trigger);
-                    eh_free(trigger);
-                }
-                eh_epoll_del_event(epoll, e);
-                continue;
-            }
-
             if(trigger == NULL)
                 continue;
-
             /**
              *  为了避免在执行回调的时候，list被修改，这里将分离node到临时的list,
              */
-            trigger->flags |= EH_EVENT_CB_TRIGGER_IN_USE;
             eh_list_head_init(&used_tmp_list);
             while(!eh_list_empty(&trigger->cb_head)){
                 node = trigger->cb_head.next;
@@ -138,12 +184,7 @@ int eh_event_loop(void)
 
             /* 还原list */
             eh_list_splice(&used_tmp_list, &trigger->cb_head);
-            trigger->flags &= ~EH_EVENT_CB_TRIGGER_IN_USE;
-            if(eh_list_empty(&trigger->cb_head)){
-                eh_free(trigger);
-                eh_epoll_del_event(epoll, e);
-            }
-
+            trigger_forced_release_ref(trigger);
             continue_cnt1++;
             if(continue_cnt1%EH_CONFIG_EVENT_CB_DISPATCH_CNT_PER_CHECKTIMER == 0){
                 eh_timer_check();
@@ -201,35 +242,40 @@ int eh_event_cb_connect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task
         /* 获取以前的trigger */
         trigger = (struct eh_event_cb_trigger *)(*set_trigger_ptr);
     }else{
-        trigger = eh_malloc(sizeof(struct eh_event_cb_trigger));
+        trigger = trigger_weak_ref_new();
         if(!trigger)
             return EH_RET_MALLOC_ERROR;
-        trigger_init(trigger);
         *set_trigger_ptr = trigger;
     }
     /* 连接slot到trigger */
-    eh_list_add_tail(&slot->cb_node, &trigger->cb_head);
+    trigger_connect(trigger, slot);
+    slot->task = task;
     return EH_RET_OK;
 }
 
 
-void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_t *task){
+void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot){
     eh_save_state_t state;
-    eh_epoll_t epoll = task_get_epoll(task);
+    eh_epoll_t epoll;
     void *node_handle;
     struct eh_event_cb_trigger *trigger = NULL;
 
-    if(!slot || !e || !task || !epoll || eh_list_empty(&slot->cb_node)) 
+    if(!slot || !e || eh_list_empty(&slot->cb_node) || slot->task == NULL) 
         return ;
-    eh_list_del_init(&slot->cb_node);
+
+    epoll = task_get_epoll(slot->task);
+    if(!epoll){
+        eh_mwarnfl(EVENT_CB, "slot@%#p---sig@%#p is not connected to any task", slot, e);
+        return ;
+    }
+
     state = eh_enter_critical();
     node_handle = eh_epoll_get_node_handle_no_lock(epoll, e);
     if(eh_ptr_to_error(node_handle) < 0)
         goto out;
     trigger = eh_epoll_get_handle_userdata_no_lock(node_handle);
-    if(!eh_list_empty(&trigger->cb_head) || (trigger->flags & EH_EVENT_CB_TRIGGER_IN_USE))
+    if(trigger_disconnect(trigger, slot))
         goto out;
-    eh_free(trigger);
     eh_epoll_del_event_from_handle_no_lock(epoll, node_handle);
 out:
     eh_exit_critical(state);
@@ -253,7 +299,6 @@ void eh_event_cb_clean(eh_event_t *e, eh_task_t *task){
         goto out;
     trigger_clean(trigger);
     eh_epoll_del_event_from_handle_no_lock(epoll, node_handle);
-    eh_free(trigger);
 out:
     eh_exit_critical(state);
 }
