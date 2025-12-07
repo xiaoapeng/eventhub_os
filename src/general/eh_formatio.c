@@ -943,14 +943,14 @@ static int streamout_vprintf(struct stream_base *stream, const char *fmt, va_lis
                 continue;
             }
             case 'd':
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'i':
                 flags |= FORMAT_SIGNED;
             case 'u':
                 goto _print_number;
             case 'X':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'x':
                 base = BASE_TYPE_HEX;
                 goto _print_number;
@@ -965,7 +965,7 @@ static int streamout_vprintf(struct stream_base *stream, const char *fmt, va_lis
             }
             case 'B':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'b':{
                 base = BASE_TYPE_BIN;
                 goto _print_number;
@@ -984,25 +984,25 @@ static int streamout_vprintf(struct stream_base *stream, const char *fmt, va_lis
             }
             case 'E':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'e':
                 flags |= FORMAT_FLOAT_E;
                 goto _print_folat;
             case 'G':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'g':
                 flags |= FORMAT_FLOAT_G;
                 goto _print_folat;
             case 'F':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'f':
                 flags |= FORMAT_FLOAT_F;
                 goto _print_folat;
             case 'Q':
                 flags |= FORMAT_LARGE;
-                /*FALLTHROUGH*/
+                _fallthrough;
             case 'q':
                 n += vprintf_array(stream, va_arg(args, void *), field_width, precision, flags, qualifier);
                 break;

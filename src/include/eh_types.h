@@ -86,6 +86,12 @@
 #define eh_clz(x)                               __builtin_clz(x)
 
 
+#if defined(__GNUC__) && __GNUC__ >= 7
+#define _fallthrough __attribute__((fallthrough))
+#else
+#define _fallthrough do {} while (0) /* fallthrough */
+#endif
+
 #define __weak                                  __attribute__((weak))
 #define __safety                                /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                              __attribute__((noreturn))
