@@ -8,89 +8,147 @@
  * 
  */
 
-
+#include <eh_co.h>
 #include "eh_config.h"
-#include "eh_co.h"
 
+struct stack_init_context{
+    unsigned long   d8;
+    unsigned long   d9;
+    unsigned long   d10;
+    unsigned long   d11;
+    unsigned long   d12;
+    unsigned long   d13;
+    unsigned long   d14;
+    unsigned long   d15;
+    unsigned long   x19;
+    unsigned long   x20;
+    unsigned long   x21;
+    unsigned long   x22;
+    unsigned long   x23;
+    unsigned long   x24;
+    unsigned long   x25;
+    unsigned long   x26;
+    unsigned long   x27;
+    unsigned long   x28;
+    unsigned long   fp;
+    unsigned long   lr;
+};
+
+/*******************************************************
+ *                                                     *
+ *  -------------------------------------------------  *
+ *  |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  *
+ *  -------------------------------------------------  *
+ *  | 0x0 | 0x4 | 0x8 | 0xc | 0x10| 0x14| 0x18| 0x1c|  *
+ *  -------------------------------------------------  *
+ *  |    d8     |    d9     |    d10    |    d11    |  *
+ *  -------------------------------------------------  *
+ *  -------------------------------------------------  *
+ *  |  8  |  9  |  10 |  11 |  12 |  13 |  14 |  15 |  *
+ *  -------------------------------------------------  *
+ *  | 0x20| 0x24| 0x28| 0x2c| 0x30| 0x34| 0x38| 0x3c|  *
+ *  -------------------------------------------------  *
+ *  |    d12    |    d13    |    d14    |    d15    |  *
+ *  -------------------------------------------------  *
+ *  -------------------------------------------------  *
+ *  |  16 |  17 |  18 |  19 |  20 |  21 |  22 |  23 |  *
+ *  -------------------------------------------------  *
+ *  | 0x40| 0x44| 0x48| 0x4c| 0x50| 0x54| 0x58| 0x5c|  *
+ *  -------------------------------------------------  *
+ *  |    x19    |    x20    |    x21    |    x22    |  *
+ *  -------------------------------------------------  *
+ *  -------------------------------------------------  *
+ *  |  24 |  25 |  26 |  27 |  28 |  29 |  30 |  31 |  *
+ *  -------------------------------------------------  *
+ *  | 0x60| 0x64| 0x68| 0x6c| 0x70| 0x74| 0x78| 0x7c|  *
+ *  -------------------------------------------------  *
+ *  |    x23    |    x24    |    x25    |    x26    |  *
+ *  -------------------------------------------------  *
+ *  -------------------------------------------------  *
+ *  |  32 |  33 |  34 |  35 |  36 |  37 |  38 |  39 |  *
+ *  -------------------------------------------------  *
+ *  | 0x80| 0x84| 0x88| 0x8c| 0x90| 0x94| 0x98| 0x9c|  *
+ *  -------------------------------------------------  *
+ *  |    x27    |    x28    |    FP     |     LR    |  *
+ *  -------------------------------------------------  *
+ *                                                     *
+ *******************************************************/
 
 __attribute__((naked))  void * co_context_swap(
     __attribute__((unused)) void *arg, 
     __attribute__((unused)) context_t *from, 
     __attribute__((unused)) const context_t * const to){
     /*
-     * rdi: arg
-     * rsi: from
-     * rdx: to
+     * x0: arg
+     * x1: from
+     * x2: to
      */
-//     __asm__ volatile(
-//         "leaq  -0x38(%rsp), %rsp \n"                    /* 分配0x38字节存储上下文状态，不分配0x40是因为call指令已经自动存储了返回地址 */
-// #if !defined(X86_X64_USE_TSX)
-//         "stmxcsr  (%rsp) \n"                            /* save MMX control- and status-word */
-//         "fnstcw   0x4(%rsp) \n"                         /* save x87 control-word */
-// #endif
-//         "movq  %r12, 0x8(%rsp)  \n"                     /* save R12 */
-//         "movq  %r13, 0x10(%rsp) \n"                     /* save R13 */
-//         "movq  %r14, 0x18(%rsp) \n"                     /* save R14 */
-//         "movq  %r15, 0x20(%rsp) \n"                     /* save R15 */
-//         "movq  %rbx, 0x28(%rsp) \n"                     /* save rbx */
-//         "movq  %rbp, 0x30(%rsp) \n"                     /* save rbp */
-        
-//         "movq  %rsp, (%rsi) \n"                         /* 存储RSP -> *from */
-        
-//         "movq  (%rdx), %rsp \n"                         /* 加载*to -> RAX */
-//         //"movq  %rax, %rsp \n"                         /* 加载RAX -> RSP */
 
-//         "movq 0x38(%rsp), %r8 \n"                       /* 获取返回地址 */
+    __asm__ volatile(
+        // 栈上分配空间保存现场
+        "sub  sp, sp, #0xa0 \n"
 
-// #if !defined(X86_X64_USE_TSX)
-//         "ldmxcsr  (%rsp) \n"                            /* restore MMX control- and status-word */
-//         "fldcw   0x4(%rsp) \n"                          /* restore x87 control-word */
-// #endif
-//         "movq  0x8(%rsp),  %r12 \n"                     /* restore R12 */
-//         "movq  0x10(%rsp), %r13 \n"                     /* restore R13 */
-//         "movq  0x18(%rsp), %r14 \n"                     /* restore R14 */
-//         "movq  0x20(%rsp), %r15 \n"                     /* restore R15 */
-//         "movq  0x28(%rsp), %rbx \n"                     /* restore RBX */
-//         "movq  0x30(%rsp), %rbp \n"                     /* restore RBP */
+        // 保存 d8 - d15
+        "stp  d8,  d9,  [sp, #0x00] \n"
+        "stp  d10, d11, [sp, #0x10] \n"
+        "stp  d12, d13, [sp, #0x20] \n"
+        "stp  d14, d15, [sp, #0x30] \n"
 
-//         "leaq  0x40(%rsp), %rsp \n"                     /* 恢复栈指针 */
+        // 保存 x19 - x30
+        "stp  x19, x20, [sp, #0x40] \n"
+        "stp  x21, x22, [sp, #0x50] \n"
+        "stp  x23, x24, [sp, #0x60] \n"
+        "stp  x25, x26, [sp, #0x70] \n"
+        "stp  x27, x28, [sp, #0x80] \n"
+        "stp  fp,  lr,  [sp, #0x90] \n"
 
-//         "movq  %rdi, %rax \n"                           /* 将设置的arg进行return */
+        // 存储sp -> *x1
+        "mov  x3, sp                \n"
+        "str  x3, [x1, #0x00]       \n"
+/* ---------------------------------------- restore context ---------------------------------------- */
+        // 加载 *x2 -> sp
+        "ldr  x3, [x2, #0x00]       \n"
+        "mov  sp, x3                \n"
 
-//         "jmp *%r8 \n"                                   /* 恢复到原现场 */
-//     );
+        // 恢复 d8 - d15
+        "ldp  d8,  d9,  [sp, #0x00] \n"
+        "ldp  d10, d11, [sp, #0x10] \n"
+        "ldp  d12, d13, [sp, #0x20] \n"
+        "ldp  d14, d15, [sp, #0x30] \n"
+
+        // 恢复 x19 - x30
+        "ldp  x19, x20, [sp, #0x40] \n"
+        "ldp  x21, x22, [sp, #0x50] \n"
+        "ldp  x23, x24, [sp, #0x60] \n"
+        "ldp  x25, x26, [sp, #0x70] \n"
+        "ldp  x27, x28, [sp, #0x80] \n"
+        "ldp  fp,  lr,  [sp, #0x90] \n"
+
+        // 恢复sp 
+        "add  sp, sp, #0xa0         \n"
+
+        // 跳转回PC
+        "ret   lr \n"
+    );
 }
 
+static __attribute__((naked)) void __start_task(void){
+    __asm__ volatile(
+        "   blr         x19                                 \n" /* x19存放着协程的入口函数 */
+        "1: b           1b                                  \n"
+        :::
+    );
+}
 
-
-__attribute__((naked))  context_t co_context_make( 
+context_t co_context_make( 
     __attribute__((unused)) void *stack_lim,
     __attribute__((unused)) void *stack_top, 
     __attribute__((unused)) int (*func)(void *arg)){
-    /*
-     * rdi: stack_lim
-     * rsi: stack_top
-     * rdx: func
-     */
-    // __asm__ volatile(
-    //     "movq  %rsi, %rax \n"                           /*  获得栈顶指针 */
-    //     "andq  $-16, %rax \n"                           /*  设置为16字节对齐 */
-    //     "leaq  -0x40(%rax), %rax \n"                    /*  制作context的空间 0x40个字节*/
-    //     "stmxcsr  (%rax) \n"                            /* fc_mxcsr:  save MMX control- and status-word */
-    //     "fnstcw   0x4(%rax) \n"                         /* fc_x87_cw: save x87 control-word */
-    //     "leaq  trampoline(%rip), %rcx \n"               /*  获得trampoline的绝对地址 */
-    //     "movq  %rcx, 0x38(%rax) \n"                     /* RIP:       将trampoline的地址放到RIP上 */
-    //     "leaq  finish(%rip), %rcx \n"                   /*  获得finish的绝对地址 */
-    //     "movq  %rcx, 0x30(%rax) \n"                     /* RBP:       将finish的地址放到RBP的位置 */
-    //     "movq  %rdx, 0x28(%rax) \n"                     /* RBX:       将func地址放到RBX上 */
-    //     "ret \n"
-    // "trampoline: \n"
-    //     "push %rbp \n"                                  /* 将RBP中存储的是finish的地址 */
-    //     "jmp *%rbx \n"                                  /* 跳转到func */
-    // "finish: \n"
-    //     "movq  %rax, %rdi \n"                           /*  设置exit参数 */
-    //     "call  _exit@PLT \n"                            /*  exit(0) */
-    //     "hlt \n"
-        
-    // );
+    unsigned long ul_stack_top = (unsigned long)stack_top;
+    struct stack_init_context  *context;
+    ul_stack_top = ul_stack_top & (~0x0fUL);    /* 栈顶地址对齐到16字节 */
+    context = (struct stack_init_context *)(ul_stack_top - sizeof(struct stack_init_context));
+    context->x19 = (unsigned long)func;
+    context->lr =  (unsigned long)__start_task;
+    return (context_t)context;
 }
