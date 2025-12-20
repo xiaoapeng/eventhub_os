@@ -79,7 +79,6 @@ int  eh_module_section_init(void){
     s_eh_module_section_len = 0;
     for(uint32_t i = 0; i < eh_ifa_seg->nsects; i++){
         const void* sect_addr = (const void*)((uint64_t)slide + eh_ifa_sec_array_sort[i]->addr);
-        eh_debugfl("name %s, addr %p, size %ld", eh_ifa_sec_array_sort[i]->sectname, sect_addr, eh_ifa_sec_array_sort[i]->size);
         memcpy(s_eh_module_section + s_eh_module_section_len, sect_addr, eh_ifa_sec_array_sort[i]->size);
         s_eh_module_section_len += eh_ifa_sec_array_sort[i]->size;
     }
