@@ -97,7 +97,7 @@ __attribute__((naked)) void HardFault_Handler(void){
 }
 
 
-EH_USED void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long control ){
+__used void hardfault_handler_c(unsigned long sp, unsigned long lr , unsigned long control ){
     eh_task_sta_t                         sta;
     struct stack_state_context*           stack_state = (struct stack_state_context*)sp;
     //struct StackStateFloatContext*      fpu_stack_state = (struct StackStateFloatContext*)(stack_state+1);

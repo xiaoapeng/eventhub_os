@@ -27,9 +27,9 @@ extern unsigned long platform_get_clock_freq(void);
 #define EH_CONFIG_CLOCKS_PER_SEC                                CONFIG_EH_CONFIG_CLOCKS_PER_SEC
 #endif
 
-#if defined(EH_SYSTEM_IS_LINUX)
+#if defined(EH_SYSTEM_IS_POPULAR)
 #undef EH_CONFIG_CLOCKS_PER_SEC
-#define EH_CONFIG_CLOCKS_PER_SEC                                (1000000U)
+#define EH_CONFIG_CLOCKS_PER_SEC                                ({1000000U;})
 #endif
 
 
@@ -42,7 +42,7 @@ extern unsigned long platform_get_clock_freq(void);
  *  EH_CONFIG_MEM_HEAP_SIZE为堆内存大小，默认为20K
  */
 #ifndef EH_CONFIG_USE_LIBC_MEM_MANAGE
-#if defined(EH_SYSTEM_IS_LINUX)
+#if defined(EH_SYSTEM_IS_POPULAR)
 #define EH_CONFIG_USE_LIBC_MEM_MANAGE                            1
 #else
 #define EH_CONFIG_USE_LIBC_MEM_MANAGE                            0
@@ -79,7 +79,7 @@ extern unsigned long platform_get_clock_freq(void);
  *  配置标准输出缓存大小,该缓冲为单次输出的最大字节数，并不限制eh_printf的输出字节数
  */
 #ifndef EH_CONFIG_STDOUT_MEM_CACHE_SIZE
-#if defined(EH_SYSTEM_IS_LINUX)
+#if defined(EH_SYSTEM_IS_POPULAR)
 #define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                           (4096)
 #else
 #define EH_CONFIG_STDOUT_MEM_CACHE_SIZE                           (32)
@@ -107,7 +107,7 @@ extern unsigned long platform_get_clock_freq(void);
  *  DEBUG时的回车符号，当未定义时会根据系统类型自动判断
  */
 #ifndef EH_CONFIG_DEBUG_ENTER_SIGN
-#if defined(EH_SYSTEM_IS_LINUX)
+#if defined(EH_SYSTEM_IS_POPULAR)
 #define EH_CONFIG_DEBUG_ENTER_SIGN                               "\n"
 #else
 #define EH_CONFIG_DEBUG_ENTER_SIGN                               "\r\n"

@@ -352,19 +352,29 @@ void eh_loop_poll_task_add(eh_loop_poll_task_t *poll_task){
 
 static int interior_init(void){
     eh_t *eh = eh_get_global_handle();
+    int ret;
+
     bzero(eh, sizeof(eh_t));
     bzero(&s_main_task,  sizeof(struct  eh_task));
-    
+
     eh_list_head_init(&eh->task_wait_list_head);
     eh_list_head_init(&eh->task_finish_list_head);
     eh_list_head_init(&eh->loop_poll_task_head);
     eh_list_head_init(&eh->task_finish_auto_destruct_list_head);
+
+    ret = eh_module_section_init();
+    if(ret < 0)
+        return ret;
 
     eh->dispatch_cnt = 0;
     eh->idle_time = 0;
     eh->eh_init_fini_array = (struct eh_module*)eh_module_section_begin();
     eh->eh_init_fini_array_len = ((struct eh_module*)eh_module_section_end() - (struct eh_module*)eh_module_section_begin());
     return 0;
+}
+
+static inline void interior_exit(void){
+    eh_module_section_exit();
 }
 
 static int  module_group_init(void){
@@ -415,6 +425,7 @@ int eh_global_init( void ){
 void eh_global_exit(void){
     _clear();
     module_group_exit();
+    interior_exit();
 }
 
 static __init int main_task_init(void){

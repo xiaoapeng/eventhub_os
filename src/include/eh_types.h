@@ -25,17 +25,6 @@
     #endif
 #endif
 
-#ifndef EH_USED
-    #if defined(__CC_ARM) || defined(__CLANG_ARM)
-        #define EH_USED                                 __attribute__((used))
-    #elif defined (__IAR_SYSTEMS_ICC__)
-        #define EH_USED                                 __root
-    #elif defined(__GNUC__)
-        #define EH_USED                                 __attribute__((used))
-    #else
-        #define EH_USED
-    #endif
-#endif
 
 
 #define EH_STRINGIFY(x) #x
@@ -92,7 +81,10 @@
 #define _fallthrough do {} while (0) /* fallthrough */
 #endif
 
-#define __weak                                  __attribute__((weak))
+#ifndef __function_weak
+#define __function_weak                         __attribute__((weak))
+#endif
+
 #define __safety                                /* 被此宏标记的函数，可在中断和其他线程中进行调用 */
 #define __noreturn                              __attribute__((noreturn))
 
@@ -101,5 +93,11 @@
 #endif
 
 #define __function_const                        __attribute__((__const__))
+
+#ifndef __used
+#define __used                                  __attribute__((used))   
+#endif
+
+#define __no_sanitize_address                   __attribute__((no_sanitize_address))
 
 #endif // _EH_TYPES_H_

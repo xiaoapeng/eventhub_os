@@ -25,6 +25,30 @@ struct module_group{
 };
 
 
+
+
+#define EH_MODULE_VARIABLE_LINE_HELPER(x, y) x##y
+#define EH_MODULE_VARIABLE_LINE_NAME(x, y) EH_MODULE_VARIABLE_LINE_HELPER(x, y)
+
+#define __eh_define_module_export(_init__func_, _exit__func_,  _section)                                     \
+    static __used __no_sanitize_address const  struct eh_module  EH_SECTION( _section )                                           \
+        EH_MODULE_VARIABLE_LINE_NAME(_eh_module_, __LINE__) =                                                \
+    {                                                                                                        \
+        .init = _init__func_,                                                                                \
+        .exit = _exit__func_,                                                                                \
+    }
+
+#if defined(__APPLE__) && defined(__MACH__)
+#define _EH_SECTION_BASE_NAME "__EH_IFA_DATA"
+#define _eh_define_module_export(_init__func_, _exit__func_, _section_id) \
+    __eh_define_module_export(_init__func_, _exit__func_, _EH_SECTION_BASE_NAME "," _section_id )
+extern void *eh_module_section_begin(void);
+extern void *eh_module_section_end(void);
+extern int  eh_module_section_init(void);
+extern void eh_module_section_exit(void);
+#else
+#define _eh_define_module_export(_init__func_, _exit__func_, _section_id) \
+    __eh_define_module_export(_init__func_, _exit__func_, ".eh_init_fini_array." _section_id )
 #define eh_module_section_begin()  ({   \
             extern char __start_eh_init_fini_array[];               \
             (void *)__start_eh_init_fini_array;                     \
@@ -33,21 +57,9 @@ struct module_group{
             extern char __end_eh_init_fini_array[];                 \
             (void *)__end_eh_init_fini_array;                       \
         })
-
-#define EH_MODULE_VARIABLE_LINE_HELPER(x, y) x##y
-#define EH_MODULE_VARIABLE_LINE_NAME(x, y) EH_MODULE_VARIABLE_LINE_HELPER(x, y)
-
-#define __eh_define_module_export(_init__func_, _exit__func_,  _section)                                    \
-    static EH_USED const  struct eh_module  EH_SECTION( _section )                                           \
-        EH_MODULE_VARIABLE_LINE_NAME(_eh_module_, __LINE__) =                                               \
-    {                                                                                                        \
-        .init = _init__func_,                                                                                \
-        .exit = _exit__func_,                                                                                \
-    }
-
-#define _eh_define_module_export(_init__func_, _exit__func_, _section_id) \
-    __eh_define_module_export(_init__func_, _exit__func_, ".eh_init_fini_array." _section_id )
-
+#define eh_module_section_init() 0
+#define eh_module_section_exit()
+#endif
 
 #define eh_memory_module_export(_init__func_, _exit__func_)     _eh_define_module_export(_init__func_, _exit__func_, "1.0.0")
 #define eh_main_task_module_export(_init__func_, _exit__func_)  _eh_define_module_export(_init__func_, _exit__func_, "1.0.1")
@@ -70,8 +82,12 @@ struct module_group{
 
 #define EH_MODULE_GROUP_MAX_CNT    8
 
+#if defined(__APPLE__) && defined(__MACH__)
+#define __init
+#define __exit
+#else
 #define __init EH_SECTION(".eh_init")
 #define __exit EH_SECTION(".eh_exit")
-
+#endif
 
 #endif // _EH_MODULE_H_

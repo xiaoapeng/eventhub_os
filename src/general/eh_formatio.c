@@ -71,7 +71,7 @@ static const double powers_of_10[FORMAT_FLOAT_POWERS_TAB_SIZE] = {
 };
 static uint8_t _stdout_cache[EH_CONFIG_STDOUT_MEM_CACHE_SIZE];
 
-__weak void stdout_write(void *stream, const uint8_t *buf, size_t size){
+__function_weak void stdout_write(void *stream, const uint8_t *buf, size_t size){
     (void)stream;
     (void)buf;
     (void)size;

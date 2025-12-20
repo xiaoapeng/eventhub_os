@@ -53,14 +53,14 @@ __attribute__((naked))   void context_convert_to_msp(void){
     );
 }
 
-EH_USED void svc_handler_c(unsigned long *sp, uint8_t svc_number){
+__used void svc_handler_c(unsigned long *sp, uint8_t svc_number){
     struct stack_auto_push_context *context = (struct stack_auto_push_context *)sp;
     /* 目前无任何实现 */
     (void) context;
     (void) svc_number;
 }
 
-EH_USED void context_convert(unsigned long *sp, uint8_t svc_number){
+__used void context_convert(unsigned long *sp, uint8_t svc_number){
     /* sp-> svc_num psp msp lr */
     struct fsp{
         unsigned long svc_num;
