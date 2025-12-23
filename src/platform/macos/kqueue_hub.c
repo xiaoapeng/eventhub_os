@@ -54,9 +54,9 @@ void kqueue_hub_set_wait_break_event(void) {
     write(kqueue_hub.wait_break_fd, &buffer, sizeof(buffer));
 }
 
-int kqueue_hub_add_fd(int fd, int16_t filter, uint16_t flags, struct kqueue_event_action *action) {
+int kqueue_hub_add_fd(int fd, int16_t filter, uint16_t flags, const struct kqueue_event_action *action) {
     struct kevent event;
-    EV_SET(&event, fd, filter, EV_ADD | EV_ENABLE | flags, 0, 0, action);
+    EV_SET(&event, fd, filter, EV_ADD | EV_ENABLE | flags, 0, 0, (void*)action);
     return kevent(kqueue_hub.kqueue_fd, &event, 1, NULL, 0, NULL);
 }
 

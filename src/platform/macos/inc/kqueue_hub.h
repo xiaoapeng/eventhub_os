@@ -35,7 +35,7 @@ extern void kqueue_hub_clean_wait_break_event(void);
  * @param  action           事件回调
  * @return int              0 成功 -1 失败
  */
-extern int  kqueue_hub_add_fd(int fd, int16_t filter, uint16_t flags, struct kqueue_event_action *action);
+extern int  kqueue_hub_add_fd(int fd, int16_t filter, uint16_t flags, const struct kqueue_event_action *action);
 
 /**
  * @brief 删除一个文件描述符从kqueue事件中心
