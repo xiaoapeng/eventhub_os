@@ -20,7 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 struct kqueue_event_action{
-    void (*callback)(struct kevent *event, void *arg);
+    void (*callback)(int fd, int16_t filter, void *arg);
     void *arg;
 };
 

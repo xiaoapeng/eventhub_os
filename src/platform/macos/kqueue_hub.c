@@ -24,8 +24,9 @@ struct kqueue_hub {
     struct kevent               wait_events[KEVENT_WAIT_MAX_EVENTS];
 } kqueue_hub;
 
-static void kqueue_event_wait_break_callback(struct kevent *event, void *arg) {
-    (void) event;
+static void kqueue_event_wait_break_callback(int fd, int16_t filter, void *arg) {
+    (void) fd;
+    (void) filter;
     (void) arg;
     kqueue_hub_clean_wait_break_event();
 }
@@ -41,8 +42,10 @@ static int kqueue_event_set_nonblocking(int fd) {
 
 void kqueue_hub_clean_wait_break_event(void) {
     // Read from the pipe to clear the interrupt event
-    char buffer;
-    read(kqueue_hub.wait_break_fd, &buffer, sizeof(buffer));
+    static char buffer[1024];
+    while(read(kqueue_hub.wait_break_fd, &buffer, sizeof(buffer)) == sizeof(buffer)){
+        /* ignore */
+    }
 }
 
 void kqueue_hub_set_wait_break_event(void) {
@@ -82,7 +85,7 @@ int kqueue_hub_poll(eh_usec_t timeout) {
         struct kevent *event = &kqueue_hub.wait_events[i];
         struct kqueue_event_action *action = (struct kqueue_event_action *)event->udata;
         if (action && action->callback) {
-            action->callback(event, action->arg);
+            action->callback((int)event->ident, event->filter, action->arg);
         }
     }
 
