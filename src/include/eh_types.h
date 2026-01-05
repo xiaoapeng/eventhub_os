@@ -98,6 +98,10 @@
 #define __used                                  __attribute__((used))   
 #endif
 
+#ifdef __clang__
 #define __no_sanitize_address                   __attribute__((no_sanitize_address))
+#else
+#define __no_sanitize_address
+#endif
 
 #endif // _EH_TYPES_H_
