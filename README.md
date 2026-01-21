@@ -36,105 +36,20 @@
 
 ### 1. 代码集成
 
-* *CMAKE 方式集成*
 
-#### 将eventhub_os添加到你的项目中后，在CMakeLists.txt中合适的位置添加
 
-```c
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/eventhub_os/")
-```
-
-#### 复制eventhub_os/test/inc/eh_user_config.h 到你的项目include（假设是./include）中,然后在添加cmake中添加
+#### 使用[fly](https://github.com/xiaoapeng/fly)的eventhub_os包，将自动拉取代码进行集成
 
 ```c
-target_include_directories( eventhub PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-```
+# windows 
+./build.bat menuconfig
 
-#### 最后给你的目标引用eventhub
+# linux or macos
+./build.sh menuconfig
 
-```c
-add_executable(you_target)
-    target_link_libraries(you_target xxxxx eventhub )
-```
-
-#### 定义一些cmake变量，使eventhub自动选择架构和平台
-
-定义CMAKE变量`CMAKE_SYSTEM_NAME`和 `CMAKE_SYSTEM_PROCESSOR`
-
-| 平台 | 定义方式 | 备注 |
-| --- | --- | --- |
-| linux x86_64 | `CMAKE_SYSTEM_NAME`=Linux<br>`CMAKE_SYSTEM_PROCESSOR`=x86_64  | 一般选择系统都会自动指定好 |
-| Cortex-M0 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m0  | 一般要手动指定 |
-| Cortex-M3 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m3  | 一般要手动指定 |
-| Cortex-M4 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m4  | 一般要手动指定 |
-| Cortex-M7 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m7  | 一般要手动指定 |
-| Cortex-M33 | `CMAKE_SYSTEM_NAME`=Generic<br>`CMAKE_SYSTEM_PROCESSOR`=cortex-m33  | 一般要手动指定 |
-
-* *其他方式集成*
-
-添加以下文件在你的项目中
-
-```c
-├── eh_core.c
-├── eh_event.c
-├── eh_event_cb.c
-├── eh_mem.c
-├── eh_mutex.c
-├── eh_sem.c
-├── eh_sleep.c
-├── eh_timer.c
-├── general
-│   ├── eh_debug.c
-│   ├── eh_formatio.c
-|   ├── eh_rbtree.c
-│   └── include
-│       ├── eh_debug.h
-|       ├── eh_list.h
-|       ├── eh_rbtree.h
-│       └── eh_formatio.h
-└── include
-    ├── eh_co.h
-    ├── eh_config.h
-    ├── eh_error.h
-    ├── eh_event_cb.h
-    ├── eh_event.h
-    ├── eh.h
-    ├── eh_internal.h
-    ├── eh_mem.h
-    ├── eh_module.h
-    ├── eh_mutex.h
-    ├── eh_platform.h
-    ├── eh_sem.h
-    ├── eh_sleep.h
-    ├── eh_timer.h
-    └── eh_types.h
-```
-
-#### 根据你选择的平台添加 src/<span style="color: red;">coroutine</span>/<XX平台>/ 的代码到你的项目中
-
-假如选择m33平台，那么添加src/coroutine/cortex-m33/的代码到你的项目中，如果该目录下有多个文件，一般代表有多种任务切换实现,选择其中一种即可，若选择多种，会产生重定义,一般选择CMakeLists.txt文件中使用的默认实现即可
-
-```txt
-# 以cm33实现为例，CMakeLists.txt中 默认使用 coroutine_pendsv.c
-.
-├── CMakeLists.txt
-├── coroutine_msp.c
-└── coroutine_pendsv.c (default)
-
-```
-
-#### 根据你选择的平台添加src/<span style="color: red;">platform</span>/<XX平台>/ 的代码到你的项目中
-
-假如选择m33平台，那么添加src/platform/cortex-m33/的代码到你的项目中
-
-```txt
-.
-├── CMSIS
-│   ├── include
-│   │   └── core_cm33.h
-├── inc
-│   └── platform_port.h
-└── platform.c
+# menuconfig 
+    Target Packages  --->
+        [*]evnethub os kernel support  --->
 ```
 
 ### 2. 实现platform_get_clock_monotonic_time函数(linux平台忽略)

@@ -40,6 +40,7 @@ message(STATUS "CMAKE_SYSTEM_PROCESSOR:${CMAKE_SYSTEM_PROCESSOR}")
 
 # compile libeventhub
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/components/")
 
 if(NOT IS_SUB_PROJECT)
     # compile libgeneral_test 
