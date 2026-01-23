@@ -138,36 +138,36 @@ extern int eh_dbg_hex(enum eh_dbg_level level, enum eh_dbg_flags flags, size_t l
  *   }
  * 只有输出语句的打印等级同时满足全局打印等级和模块打印等级才会输出
  * 全局打印等级可以通过eh_dbg_set_level函数设置
- * 而模块打印等级则只能在编译器设置,设置宏为EH_DBG_MODEULE_LEVEL_<module_name>来设置
+ * 而模块打印等级则只能在编译器设置,设置宏为EH_DBG_MODULE_LEVEL_<module_name>来设置
  * 例如：
- *   #define EH_DBG_MODEULE_LEVEL_FUNC_A  EH_DBG_DEBUG
- *   或者由编译脚本来控制 -DEH_DBG_MODEULE_LEVEL_FUNC_A=EH_DBG_DEBUG
+ *   #define EH_DBG_MODULE_LEVEL_FUNC_A  EH_DBG_DEBUG
+ *   或者由编译脚本来控制 -DEH_DBG_MODULE_LEVEL_FUNC_A=EH_DBG_DEBUG
  *
  */
 /* 模块可进行宏控制打印是否输出*/
-#define eh_mdebugln(name, fmt, ...)  eh_mprintln(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
-#define eh_minfoln(name, fmt, ...)   eh_mprintln(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
-#define eh_msysln(name, fmt, ...)    eh_mprintln(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
-#define eh_mwarnln(name, fmt, ...)   eh_mprintln(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
-#define eh_merrln(name, fmt, ...)    eh_mprintln(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+#define eh_mdebugln(name, fmt, ...)  eh_mprintln(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_minfoln(name, fmt, ...)   eh_mprintln(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_msysln(name, fmt, ...)    eh_mprintln(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_mwarnln(name, fmt, ...)   eh_mprintln(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_merrln(name, fmt, ...)    eh_mprintln(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
 /* 模块可进行宏控制打印是否输出(带行号和函数名称) */
-#define eh_mdebugfl(name, fmt, ...)  eh_mprintfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
-#define eh_minfofl(name, fmt, ...)   eh_mprintfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
-#define eh_msysfl(name, fmt, ...)    eh_mprintfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
-#define eh_mwarnfl(name, fmt, ...)   eh_mprintfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
-#define eh_merrfl(name, fmt, ...)    eh_mprintfl(EH_DBG_MODEULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+#define eh_mdebugfl(name, fmt, ...)  eh_mprintfl(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_minfofl(name, fmt, ...)   eh_mprintfl(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_msysfl(name, fmt, ...)    eh_mprintfl(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_mwarnfl(name, fmt, ...)   eh_mprintfl(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_merrfl(name, fmt, ...)    eh_mprintfl(EH_DBG_MODULE_LEVEL_##name, name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
 /* 模块可进行宏控制打印是否输出(原始数据) */
-#define eh_mdebugraw(name, fmt, ...)  eh_mprintraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
-#define eh_minforaw(name, fmt, ...)   eh_mprintraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
-#define eh_msysraw(name, fmt, ...)    eh_mprintraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
-#define eh_mwarnraw(name, fmt, ...)   eh_mprintraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
-#define eh_merrraw(name, fmt, ...)    eh_mprintraw(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
+#define eh_mdebugraw(name, fmt, ...)  eh_mprintraw(EH_DBG_MODULE_LEVEL_##name, EH_DBG_DEBUG, fmt, ##__VA_ARGS__)
+#define eh_minforaw(name, fmt, ...)   eh_mprintraw(EH_DBG_MODULE_LEVEL_##name, EH_DBG_INFO, fmt, ##__VA_ARGS__)
+#define eh_msysraw(name, fmt, ...)    eh_mprintraw(EH_DBG_MODULE_LEVEL_##name, EH_DBG_SYS, fmt, ##__VA_ARGS__)
+#define eh_mwarnraw(name, fmt, ...)   eh_mprintraw(EH_DBG_MODULE_LEVEL_##name, EH_DBG_WARNING, fmt, ##__VA_ARGS__)
+#define eh_merrraw(name, fmt, ...)    eh_mprintraw(EH_DBG_MODULE_LEVEL_##name, EH_DBG_ERR, fmt, ##__VA_ARGS__)
 /* 模块可进行宏控制打印是否输出(16进制) */
-#define eh_mdebughex(name, buf, len)  eh_mhex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_DEBUG, buf, len)
-#define eh_minfohex(name, buf, len)   eh_mhex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_INFO, buf, len)
-#define eh_msyshex(name, buf, len)    eh_mhex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_SYS, buf, len)
-#define eh_mwarnhex(name, buf, len)   eh_mhex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_WARNING, buf, len)
-#define eh_merrhex(name, buf, len)    eh_mhex(EH_DBG_MODEULE_LEVEL_##name, EH_DBG_ERR, buf, len)
+#define eh_mdebughex(name, buf, len)  eh_mhex(EH_DBG_MODULE_LEVEL_##name, EH_DBG_DEBUG, buf, len)
+#define eh_minfohex(name, buf, len)   eh_mhex(EH_DBG_MODULE_LEVEL_##name, EH_DBG_INFO, buf, len)
+#define eh_msyshex(name, buf, len)    eh_mhex(EH_DBG_MODULE_LEVEL_##name, EH_DBG_SYS, buf, len)
+#define eh_mwarnhex(name, buf, len)   eh_mhex(EH_DBG_MODULE_LEVEL_##name, EH_DBG_WARNING, buf, len)
+#define eh_merrhex(name, buf, len)    eh_mhex(EH_DBG_MODULE_LEVEL_##name, EH_DBG_ERR, buf, len)
 
 /**
  * @brief 打印错误原因，且执行 action 语句
