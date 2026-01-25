@@ -138,6 +138,12 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
     eh_event_cb_slot_init(slot, slot_function, slot_param)
 
 /**
+ * @brief 检查槽是否已连接到信号
+ */
+#define eh_signal_slot_is_connected(slot)                                               \
+    (!eh_list_empty(&(slot)->cb_node))
+
+/**
  * @brief 连接信号和槽
  */
 #define eh_signal_slot_connect(signal, slot)                                            \
