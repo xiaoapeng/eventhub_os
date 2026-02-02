@@ -86,8 +86,8 @@ static inline bool eh_llist_on_list(const struct eh_llist_node *node)
 #define eh_llist_for_each(pos, head_or_prev)        \
 	for ((pos) = ({                                                                                   \
                       eh_static_assert(                                                               \
-                          eh_same_type( typeof(*(head_or_prev)), struct eh_llist_head ) ||            \
-                          eh_same_type( typeof(*(head_or_prev)), struct eh_llist_node ),              \
+                          eh_same_type( head_or_prev, struct eh_llist_head* )           ||            \
+                          eh_same_type( head_or_prev, struct eh_llist_node* ),                        \
                           "pointer type mismatch in eh_llist_for_each_safe"                           \
                       );                                                                              \
                       head_or_prev ? ((struct eh_llist_node *)head_or_prev)->next : NULL;             \
@@ -101,12 +101,13 @@ static inline bool eh_llist_on_list(const struct eh_llist_node *node)
 #define eh_llist_for_each_entry(pos, head_or_prev, member)				                                \
 	for ((pos) = ({                                                                                     \
                       eh_static_assert(                                                                 \
-                          eh_same_type( typeof(*(head_or_prev)), struct eh_llist_head ) ||              \
-                          eh_same_type( typeof(*(head_or_prev)), struct eh_llist_node ),                \
+                          eh_same_type( head_or_prev, struct eh_llist_head* )||                         \
+                          eh_same_type( head_or_prev, struct eh_llist_node* ),                          \
                           "pointer type mismatch in eh_llist_for_each_safe"                             \
                       );                                                                                \
+                      void *__tmp_ptr = (void *)(head_or_prev);                                         \
                       eh_llist_entry(                                                                   \
-                            head_or_prev ? ((struct eh_llist_node *)head_or_prev)->next : NULL,         \
+                            head_or_prev ? ((struct eh_llist_node *)__tmp_ptr)->next : NULL,            \
                             typeof(*(pos)), member);                                                    \
                   });                                                                                   \
 	     eh_member_address_is_nonnull(pos, member);			                                            \
@@ -117,19 +118,30 @@ static inline bool eh_llist_on_list(const struct eh_llist_node *node)
 /**
  * @brief                   遍历链表指针节点(安全)
  */ 
- #define eh_llist_for_each_safe(prev, pos, _next, head_or_prev)		                                    \
- for ( (prev) = ({                                                                                   \
-                     eh_static_assert(                                                               \
-                         eh_same_type( typeof(*(head_or_prev)), struct eh_llist_head ) ||            \
-                         eh_same_type( typeof(*(head_or_prev)), struct eh_llist_node ),              \
-                         "pointer type mismatch in eh_llist_for_each_safe"                           \
-                     );                                                                              \
-                     ((struct eh_llist_node *)head_or_prev);                                         \
-                 }),                                                                                 \
-       (pos) = (prev) ? (prev)->next : NULL;                                                         \
-       (pos) && ((_next) = (pos)->next, true);                                                        \
-       (prev) = ((prev)->next == (_next) ? (prev) : (pos)),                                           \
-       (pos) = (_next))
+#define eh_llist_for_each_safe(prev, pos, _next, head_or_prev)		                                    \
+for ( (prev) = ({                                                                                       \
+                    eh_static_assert(                                                                   \
+                        eh_same_type( head_or_prev, struct eh_llist_head* )||                           \
+                        eh_same_type( head_or_prev, struct eh_llist_node* ),                            \
+                        "pointer type mismatch in eh_llist_for_each_safe"                               \
+                    );                                                                                  \
+                    ((struct eh_llist_node *)head_or_prev);                                             \
+                }),                                                                                     \
+      (pos) = (prev) ? (prev)->next : NULL;                                                             \
+      (pos) && ((_next) = (pos)->next, true);                                                           \
+      (prev) = ((prev)->next == (_next) ? (prev) : (pos)),                                              \
+      (pos) = (_next))
+
+
+/**
+ * @brief                   遍历链表指针节点(安全)
+ */ 
+#define eh_llist_for_each_safe_continue(prev, pos, _next, head_or_prev)		                            \
+for ( (pos) = (prev) ? (prev)->next : NULL;                                                             \
+      (pos) && ((_next) = (pos)->next, true);                                                           \
+      (prev) = ((prev)->next == (_next) ? (prev) : (pos)),                                              \
+      (pos) = (_next))
+
 
 /**
  * @brief                   用于在遍历链表时安全地删除节点
@@ -182,6 +194,21 @@ extern bool eh_llist_add_batch(struct eh_llist_node *new_first, struct eh_llist_
  * @return                  如果在添加此条目之前列表为空，则返回true
  */
 extern bool eh_llist_add_batch_tail(struct eh_llist_node *new_first, struct eh_llist_node *new_last, struct eh_llist_head *head);
+
+
+/**
+ * @brief                   从任意位置插入一个链表节点
+ * @param  prev             要插入节点的前一个节点
+ * @param  new              要插入的节点
+ * @param  head             链表头
+ * @return                  如果在添加此条目之前列表为空，则返回true
+ */
+static inline void eh_llist_insert(struct eh_llist_node *prev, struct eh_llist_node *new, struct eh_llist_head *head){
+    new->next = prev->next;
+    prev->next = new;
+    if(new->next == NULL)
+        head->last = new;
+}
 
 /**
  * @brief                   头插法，插入一个链表到链表头
@@ -274,14 +301,25 @@ static inline void eh_llist_enqueue(struct eh_llist_node *new, struct eh_llist_h
 #define eh_llist_dequeue(head) eh_llist_pop(head)
 
 /**
+ * @brief                   返回首个节点
+ * @param  head             链表头
+ * @return struct eh_llist_node*   返回头节点，队列为空时返回NULL
+ */
+#define eh_llist_first(head) ((head)->first)
+
+/**
+ * @brief                   返回最后一个节点
+ * @param  head             链表头
+ * @return struct eh_llist_node*   返回尾节点，队列为空时返回NULL
+ */
+#define eh_llist_last(head)  ((head)->last)
+
+/**
  * @brief                   队列/栈：查看偷看数据
  * @param  head             链表头
  * @return struct eh_llist_node*   返回队列头节点，队列为空时返回NULL
  */
-static inline struct eh_llist_node *eh_llist_peek(struct eh_llist_head *head){
-    return head->first;
-}
-
+#define eh_llist_peek(head) eh_llist_first(head)
 
 #ifdef __cplusplus
 #if __cplusplus
