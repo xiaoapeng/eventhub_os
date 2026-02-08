@@ -12,6 +12,8 @@
 #include <eh_event.h>
 #include <eh_event_flags.h>
 #include <eh_platform.h>
+#include <eh_types.h>
+#include <eh_atomic.h>
 
 enum event_flags_condition_type{
     EVENT_FLAGS_WAIT_CLEAN,
@@ -92,95 +94,56 @@ extern __async int eh_event_flags_wait_bits_clean(eh_event_flags_t *ef, eh_flags
     return ret;
 }
 
-__safety int eh_event_flags_set_bits(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags |= flags;
-    eh_exit_critical(state);
-    return ret;
-}
-
-__safety int eh_event_flags_clear_bits(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags &= ~flags;
-    eh_exit_critical(state);
-    return ret;
-}
-
-__safety int eh_event_flags_update(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags = flags;
-    eh_exit_critical(state);
-    return ret;
-}
-
-
 __safety int eh_event_flags_set_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    if(ef->flags & flags){
-        ret = 0;
-        goto out;
-    }
+    int ret = 0;
+    eh_flags_t old_flags, new_flags;
+    old_flags = eh_atomic_load_explicit(&ef->flags, eh_memory_order_acquire);
+    do {
+        new_flags = old_flags | flags;
+        
+        if (new_flags == old_flags)
+            return EH_RET_EXISTS;
+        
+    } while(!eh_atomic_compare_exchange_weak_explicit(&ef->flags, 
+        &old_flags,
+        new_flags,
+        eh_memory_order_acq_rel, 
+        eh_memory_order_acquire));
     ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags |= flags;
-out:
-    eh_exit_critical(state);
     return ret;
 }
 
 __safety int eh_event_flags_clear_bits_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    if((ef->flags & flags) == 0){
-        ret = 0;
-        goto out;
-    }
+    int ret = 0;
+    eh_flags_t old_flags, new_flags;
+    old_flags = eh_atomic_load_explicit(&ef->flags, eh_memory_order_acquire);
+    do {
+        new_flags = old_flags & ~flags;
+        
+        if (new_flags == old_flags)
+            return EH_RET_EXISTS;
+        
+    } while(!eh_atomic_compare_exchange_weak_explicit(&ef->flags, 
+        &old_flags,
+        new_flags,
+        eh_memory_order_acq_rel, 
+        eh_memory_order_acquire));
     ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags &= ~flags;
-out:
-    eh_exit_critical(state);
     return ret;
 }
 
 
-__safety int eh_event_flags_update_change_notify(eh_event_flags_t *ef, eh_flags_t flags){
-    eh_save_state_t state;
-    int ret;
-    state = eh_enter_critical();
-    if(ef->flags == flags){
-        ret = 0;
-        goto out;
+__safety int eh_event_flags_update_change_notify(eh_event_flags_t *ef, eh_flags_t flags) {
+    eh_flags_t old_flags = eh_atomic_exchange_explicit(&ef->flags, flags, eh_memory_order_acq_rel);
+    
+    if (old_flags != flags) {
+        return eh_event_notify(&ef->event);
     }
-    ret = eh_event_notify(&ef->event);
-    if(ret == 0)
-        ef->flags = flags;
-out:
-    eh_exit_critical(state);
-    return ret;
+    
+    return 0;
 }
 
 
 __safety eh_flags_t eh_event_flags_get(eh_event_flags_t *ef){
-    eh_flags_t flags;
-    eh_save_state_t state;
-    state = eh_enter_critical();
-    flags = ef->flags;
-    eh_exit_critical(state);
-    return flags;
+    return eh_atomic_load_explicit(&ef->flags, eh_memory_order_acquire);
 }

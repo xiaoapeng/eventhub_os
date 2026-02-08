@@ -31,14 +31,6 @@
 
 #define EH_ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-/* 内存屏障 */
-#define eh_compiler_barrier()                   __asm__ volatile("" : : : "memory")             /* 防止 编译器重新排 */
-#define eh_memory_order_consume_barrier()       atomic_thread_fence(memory_order_consume)       /* 防止 loadstore重排和loadstore重排 */
-#define eh_memory_order_acquire_barrier()       atomic_thread_fence(memory_order_acquire)       /* 防止 loadstore重排和loadstore重排和 与相关load操作相关计算的重排 */
-#define eh_memory_order_release_barrier()       atomic_thread_fence(memory_order_release)       /* 防止 loadstore重排和storestore重排 */
-#define eh_memory_order_acq_rel_barrier()       atomic_thread_fence(memory_order_acq_rel)       /* 防止 loadload、loadstore、storestore重排 */
-#define eh_memory_order_seq_cst_barrier()       atomic_thread_fence(memory_order_seq_cst)       /* 防止 loadload、loadstore、storestore重排 与相关load、store操作相关计算的重排 和缓存同步 */
-
 
 #define eh_offsetof(TYPE, MEMBER)               __builtin_offsetof(TYPE, MEMBER)
 #define eh_same_type(a, b)                      __builtin_types_compatible_p(typeof(a), typeof(b))
