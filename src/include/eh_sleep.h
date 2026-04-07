@@ -18,7 +18,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 /**
- * @brief                   定时器事件的封装，在在指定协程上睡眠 usec 微秒
+ * @brief                   定时器事件的封装，让当前协程睡眠 usec 微秒
  * @param  usec             微秒
  */
 extern void __async eh_usleep(eh_usec_t usec);

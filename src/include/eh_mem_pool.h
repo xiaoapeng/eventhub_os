@@ -43,7 +43,7 @@ struct eh_mem_pool{
  * @param  align            内存对齐字节数
  * @param  size             每一项内存块的大小
  * @param  num              内存块数量
- * @return eh_mem_pool_t    应该使用eh_ptr_to_error来判断错误码，若成功应该为0，失败为负数
+ * @return eh_mem_pool_t    成功返回内存池句柄，失败返回可由 eh_ptr_to_error 判断的错误指针
  */
 extern  eh_mem_pool_t eh_mem_pool_create(size_t align, size_t size, size_t num);
 

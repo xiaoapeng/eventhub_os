@@ -67,7 +67,7 @@ struct eh_task_sta{
 
 
 /**
- * @brief   微秒转换为时钟数
+ * @brief   毫秒转换为时钟数
  * @param   _msec   毫秒数
  * return   eh_clock_t
  */
@@ -96,7 +96,6 @@ extern eh_usec_t eh_clock_to_usec(eh_clock_t clock);
 
 /**
  * @brief 让出当前CPU
- * @return int 返回0
  */
 extern void __async eh_task_yield(void);
 
@@ -151,16 +150,16 @@ extern const char* eh_task_name(const eh_task_t *task);
 /**
  * @brief                   获取任务状态
  * @param  task             任务句柄
- * @param  sta              任务状态
- * @return int 
+ * @param  sta              输出任务状态
  */
 extern void eh_task_sta(const eh_task_t *task, eh_task_sta_t *sta);
 
 /**
  * @brief                   阻塞等待任务结束
- * @param  task             被等待的任务句柄,
- * @param  ret              成功返回0，成功时任务将会被 eh_task_destroy 释放掉
- * @return int 
+ * @param  task             被等待的任务句柄
+ * @param  ret              输出任务退出返回值，可为NULL；成功时任务会被内部释放
+ * @param  timeout          超时时间，EH_TIME_FOREVER 为永不超时
+ * @return int              成功返回0，失败返回负数错误码
  */
 extern int __async eh_task_join(eh_task_t *task, int *ret, eh_sclock_t timeout);
 

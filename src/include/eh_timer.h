@@ -86,7 +86,7 @@ extern __safety int eh_timer_restart(eh_event_timer_t *timer);
  * @param  timer            定时器实例指针
  * @param  clock_interval   定时器间隔
  * @param  attr             定时器属性
- * @return __safety 
+ * @return int              见eh_error.h
  */
 extern __safety int eh_timer_advanced_init(eh_event_timer_t *timer, eh_sclock_t clock_interval, uint32_t attr);
 
@@ -117,7 +117,6 @@ extern __safety void eh_timer_clean(eh_event_timer_t *timer);
  * @brief                           配置定时器的超时时间,若定时器在运行中，则下次重新运行时使用此值
  * @param  timer                    实例指针
  * @param  clock_interval           超时时间
- * @return int 
  */
 #define  eh_timer_config_interval(timer, clock_interval)     \
     do{                                                     \
@@ -149,5 +148,4 @@ extern __safety void eh_timer_clean(eh_event_timer_t *timer);
 
 
 #endif // _EH_TIMER_H_
-
 

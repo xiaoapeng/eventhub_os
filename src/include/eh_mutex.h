@@ -35,7 +35,7 @@ enum eh_mutex_type {
 /**
  * @brief                   创建一个互斥锁
  * @param  type             锁的类型
- * @return eh_mutex_t       应该使用eh_ptr_to_error来判断错误码，若成功应该为0，失败为负数
+ * @return eh_mutex_t       成功返回互斥锁句柄，失败返回可由 eh_ptr_to_error 判断的错误指针
  */
 extern eh_mutex_t eh_mutex_create(enum eh_mutex_type type);
 

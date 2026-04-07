@@ -20,7 +20,7 @@ extern "C"{
 enum EH_SCHEDULER_STATE{
     EH_SCHEDULER_STATE_ON_INIT,                     /* 未初始化状态 */
     EH_SCHEDULER_STATE_INIT,
-    EH_SCHEDULER_STATE_RUN,                         /* 初始化状态 */
+    EH_SCHEDULER_STATE_RUN,                         /* 运行状态 */
     EH_SCHEDULER_STATE_IDLE_OR_EVENT_HANDLER,       /* 等待状态 */
     EH_SCHEDULER_STATE_ERROR,                       /* 错误状态 */
     EH_SCHEDULER_STATE_EXIT,                        /* 退出状态 */
@@ -114,7 +114,7 @@ extern eh_t _global_eh;
 extern void eh_timer_check(void);
 
 /**
- * @brief  获取第一个定时器剩余时间
+ * @brief  获取最近一个定时器的剩余时间；当没有定时器时返回内部空闲上限值
  * @return eh_sclock_t 
  */
 extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
@@ -191,12 +191,12 @@ extern eh_sclock_t eh_timer_get_first_remaining_time_on_lock(void);
 #define eh_task_set_current_state(_state)     do{eh_get_global_handle()->current_task->state = (_state);}while(0)
 
 /**
- * @brief               进行下一个任务的调度，调度成功返回0，调度失败返回-1
+ * @brief               进行下一个任务的调度
  */
 extern void __async eh_task_next(void);
 
 /**
- * @brief                进行任务唤醒，配置目标任务为唤醒状态，后续将加入调度环
+ * @brief                唤醒等待态任务，配置目标任务为就绪状态并重新加入调度环
  * @param  wakeup_task   被唤醒的任务
  */
 extern void eh_task_wake_up(eh_task_t *wakeup_task);

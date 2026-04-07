@@ -123,7 +123,7 @@ extern const uint8_t* eh_ringbuf_peek(eh_ringbuf_t *ringbuf, int32_t offset, uin
 
 /**
  * @brief                           偷看环形缓冲区,并将数据拷贝到buf中
- *                                  当缓冲区的数量小于要偷看的数量会直接返回NULL,这样设计是为了在高性能场景下防止无意义的拷贝
+ *                                  当缓冲区的数量小于要偷看的数量时返回0,这样设计是为了在高性能场景下防止无意义的拷贝
  * @param  ringbuf                  环形缓冲区指针
  * @param  offset                   从哪开始偷看
  * @param  buf                      要读到的缓冲区指针

@@ -52,7 +52,6 @@ struct eh_epoll_slot{
 /**
  * @brief                           定义并初始化一个事件（.c中使用）
  * @param  event_name               事件名称
- * @param  type_ptr                 事件类型
  */
 #define EH_DEFINE_EVENT(event_name) eh_event_t event_name =                         \
     EH_EVENT_INIT(event_name)
@@ -66,7 +65,6 @@ struct eh_epoll_slot{
 /**
  * @brief                           事件初始化
  * @param  e                        事件实例指针
- * @param  static_const_name        事件名称，可为NULL
  * @return int                      见eh_error.h
  */
 extern __safety int eh_event_init(eh_event_t *e);
@@ -132,10 +130,9 @@ extern __safety eh_epoll_t eh_epoll_new(void);
 extern __safety void eh_epoll_del(eh_epoll_t epoll);
 
 /**
- * @brief                   获取epoll句柄的描述符
+ * @brief                   删除一个epoll句柄，并可为各节点提供额外释放回调
  * @param  epoll            epoll句柄
  * @param  free_func        释放节点句柄的函数（可以在其中释放节点用户数据），若为NULL，不进行任何操作
- * @return int 
  */
 void __safety eh_epoll_del_advanced(eh_epoll_t _epoll, void (*free_func)(void *node_handle));
 
@@ -185,7 +182,6 @@ extern void* eh_epoll_get_handle_userdata_no_lock(void* node_handle);
  * @brief                   删除epoll中指定节点句柄 （用户请勿使用）
  * @param  epoll            epoll句柄
  * @param  node_handle      epoll中指定事件节点的句柄
- * @return void*            返回epoll中指定事件用户数据，返回值使用 eh_ptr_to_error来判断
  */
 extern void eh_epoll_del_event_from_handle_no_lock(eh_epoll_t epoll, void* node_handle);
 

@@ -1,6 +1,6 @@
 /**
- * @file epoll_hub.h
- * @brief linux epoll处理中心
+ * @file kqueue_hub.h
+ * @brief macOS kqueue 处理中心
  * @author simon.xiaoapeng (simon.xiaoapeng@gmail.com)
  * @date 2024-06-13
  * 
@@ -56,4 +56,3 @@ extern void kqueue_hub_exit(void);
 
 
 #endif // _EPOLL_HUB_H_
-
