@@ -53,11 +53,11 @@ extern int eh_event_cb_connect(eh_event_t *e, eh_event_cb_slot_t *slot, eh_task_
 extern void eh_event_cb_disconnect(eh_event_t *e, eh_event_cb_slot_t *slot);
 
 /**
- * @brief                   清理一个任务下的所有触发器与槽函数的连接
+ * @brief                   清理指定任务在某个事件上的全部槽函数连接
  * @param  e                事件
  * @param  task             执行触发回调的主体任务
  */
-extern void eh_event_cb_clean(eh_event_t *e, eh_task_t *task);
+extern void eh_event_cb_clean_from_task(eh_event_t *e, eh_task_t *task);
 
 /**
  * @brief                   执行事件处理

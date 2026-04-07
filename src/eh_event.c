@@ -201,15 +201,19 @@ int eh_event_notify(eh_event_t *e){
 int eh_event_notify_and_reorder(eh_event_t *e, int num){
     eh_save_state_t state;
     struct eh_event_receptor *pos;
+    struct eh_list_head *last_receptor_node = NULL;
     int i = 0;
     eh_param_assert(e);
+    if(num <= 0)
+        return EH_RET_OK;
     state = eh_enter_critical();
     eh_list_for_each_entry(pos, &e->receptor_list_head, list_node){
         pos->trigger = 1;
         _eh_event_trigger_receptor_no_lock(pos);
+        last_receptor_node = &pos->list_node;
         if(++i >= num) break;
     }
-    if(&pos->list_node != &e->receptor_list_head){
+    if(last_receptor_node){
         /*  
          *  head -> node0 -> nodex ->  pos  -> nodeA
          *   ^                                   v
@@ -224,7 +228,7 @@ int eh_event_notify_and_reorder(eh_event_t *e, int num){
          *  将pos作为临时的头，把head作为节点移动到pos后面
          */
 
-         eh_list_move(&e->receptor_list_head, &pos->list_node);
+         eh_list_move(&e->receptor_list_head, last_receptor_node);
     }
     eh_exit_critical(state);
     return EH_RET_OK;

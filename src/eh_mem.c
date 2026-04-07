@@ -209,10 +209,14 @@ void  eh_free(void* ptr){
 
 int eh_mem_heap_register(const struct eh_mem_heap *heap){
     eh_param_assert(heap);
+    eh_param_assert(heap->heap_start);
+    eh_param_assert(heap->heap_size > EH_MEM_BLOCK_HEAD_SIZE);
+    if(mem_heap_array_cnt >= EH_MEM_HEAP_ARRAY_NUM)
+        return EH_RET_BUSY;
     mem_heap_array[mem_heap_array_cnt].heap_start = heap->heap_start;
     mem_heap_array[mem_heap_array_cnt].heap_size = heap->heap_size;
     mem_heap_array_cnt++;
-    return EH_RET_INVALID_STATE;
+    return EH_RET_OK;
 }
 
 

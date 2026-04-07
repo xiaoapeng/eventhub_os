@@ -51,7 +51,7 @@ void kqueue_hub_clean_wait_break_event(void) {
 void kqueue_hub_set_wait_break_event(void) {
     // Write to the pipe to simulate the interrupt (waking up the waiting thread)
     char buffer = '1';
-    write(kqueue_hub.wait_break_fd, &buffer, sizeof(buffer));
+    write(kqueue_hub.wake_up_fd, &buffer, sizeof(buffer));
 }
 
 int kqueue_hub_add_fd(int fd, int16_t filter, uint16_t flags, const struct kqueue_event_action *action) {

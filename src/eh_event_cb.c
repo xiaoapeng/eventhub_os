@@ -74,10 +74,14 @@ static inline void trigger_forced_release_ref(struct eh_event_cb_trigger *trigge
 
 static void trigger_clean(struct eh_event_cb_trigger *trigger){
     eh_event_cb_slot_t *slot,*n;
-    if(trigger) return ;
-    eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node)
+    if(trigger == NULL)
+        return;
+    eh_list_for_each_entry_safe(slot, n, &trigger->cb_head, cb_node){
         eh_list_del_init(&slot->cb_node);
-    eh_free(trigger);
+    }
+    trigger->connect_cnt = 0;
+    if(trigger->forced_ref == 0)
+        eh_free(trigger);
 }
 
 static void epoll_userdata_free(void *node_handle){
@@ -282,7 +286,7 @@ out:
 }
 
 
-void eh_event_cb_clean(eh_event_t *e, eh_task_t *task){
+void eh_event_cb_clean_from_task(eh_event_t *e, eh_task_t *task){
     eh_save_state_t state;
     eh_epoll_t epoll = task_get_epoll(task);
     void *node_handle;

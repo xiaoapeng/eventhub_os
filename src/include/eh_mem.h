@@ -36,7 +36,7 @@ extern __safety void  eh_free(void* ptr);
 /**
  * @brief 
  * @param  heap            注册堆空间用于内存分配
- * @return int             0: 成功, -1: 失败
+ * @return int             成功返回0，失败返回负数错误码
  */
 extern int eh_mem_heap_register(const struct eh_mem_heap *heap);
 

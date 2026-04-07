@@ -171,13 +171,13 @@ typedef  EH_STRUCT_CUSTOM_SIGNAL(eh_event_t) eh_signal_base_t;
  * @brief 清除信号和槽函数在当前任务上的全部连接
  */
 #define eh_signal_slot_clean(signal)                                                    \
-    eh_event_cb_clean((&(signal)->event), eh_task_self())
+    eh_event_cb_clean_from_task((&(signal)->event), eh_task_self())
 
 /**
  * @brief 清除信号和槽函数在指定任务上的全部连接
  */
 #define eh_signal_slot_clean_from_task(signal, task)                                    \
-    eh_event_cb_clean((&(signal)->event), task)
+    eh_event_cb_clean_from_task((&(signal)->event), task)
 
 
 /**
