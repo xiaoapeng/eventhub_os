@@ -66,6 +66,15 @@
 #define eh_ctz(x)                               __builtin_ctz(x)
 #define eh_clz(x)                               __builtin_clz(x)
 
+#ifdef __GNUC__
+#define eh_isinf(x)                             __builtin_isinf(x)
+#define eh_isnan(x)                             __builtin_isnan(x)
+#else
+#include <math.h>
+#define eh_isinf(x)                             isinf(x)
+#define eh_isnan(x)                             isnan(x)
+#endif
+
 
 #if defined(__GNUC__) && __GNUC__ >= 7
 #define _fallthrough __attribute__((fallthrough))

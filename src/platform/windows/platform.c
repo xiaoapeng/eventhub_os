@@ -26,7 +26,7 @@ static LARGE_INTEGER win_perf_freq;
 eh_clock_t platform_get_clock_monotonic_time(void){
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
-    return (eh_clock_t)((counter.QuadPart * 1000000ULL) / win_perf_freq.QuadPart);
+    return (eh_clock_t)((uint64_t)counter.QuadPart * 1000000ULL / (uint64_t)win_perf_freq.QuadPart);
 }
 
 eh_save_state_t platform_enter_critical(void){

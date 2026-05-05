@@ -16,7 +16,6 @@
 #include <float.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <eh_mem.h>
 #include <eh_types.h>
 #include <eh_formatio.h>
@@ -633,9 +632,9 @@ static inline int vprintf_float_f_or_g(struct stream_base *stream, double num, i
 
 static int vprintf_float(struct stream_base *stream, double num, int field_width, int precision, int flags){
     int n=0;
-    if(isinf(num) || isnan(num)){
+    if(eh_isinf(num) || eh_isnan(num)){
         char *out_str = NULL;
-        if(isinf(num)){
+        if(eh_isinf(num)){
             if(num < 0){
                 out_str = flags & FORMAT_LARGE ? "-INF":"-inf";
             }else{
@@ -647,7 +646,7 @@ static int vprintf_float(struct stream_base *stream, double num, int field_width
                     out_str = flags & FORMAT_LARGE ? "INF":"inf";
                 }
             }
-        }else if(isnan(num)){
+        }else if(eh_isnan(num)){
             out_str = flags & FORMAT_LARGE ? "NAN":"nan";
         }
         n += vprintf_string(stream, out_str, field_width, -1, flags);
@@ -994,7 +993,7 @@ static int streamout_vprintf(struct stream_base *stream, const char *fmt, va_lis
                     field_width = (sizeof(void *) << 1) + 2;
                     flags |= FORMAT_ZEROPAD | FORMAT_SPECIAL;
                 }
-                n += vprintf_number(stream, (unsigned long)va_arg(args, void *), field_width, precision, flags, BASE_TYPE_HEX);
+                n += vprintf_number(stream, (uintptr_t)va_arg(args, void *), field_width, precision, flags, BASE_TYPE_HEX);
                 continue;
             }
             case 'E':

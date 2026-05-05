@@ -57,7 +57,7 @@ static void load_coff_string_table(void){
     fread(&num_symbols, 4, 1, f);
     if(sym_table_ptr > 0 && num_symbols > 0){
         /* 字符串表在 symbol table 之后: sym_table_ptr + num_symbols * 18 */
-        long str_tab_offset = sym_table_ptr + num_symbols * 18;
+        long str_tab_offset = (long)(sym_table_ptr + num_symbols * 18);
         fseek(f, str_tab_offset, SEEK_SET);
         DWORD str_tab_size = 0;
         fread(&str_tab_size, 4, 1, f);

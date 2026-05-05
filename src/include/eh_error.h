@@ -11,6 +11,7 @@
 #ifndef _EH_ERROR_H_
 #define _EH_ERROR_H_
 
+#include <stdint.h>
 #include <eh_types.h>
 
 #ifdef __cplusplus
@@ -46,14 +47,14 @@ extern "C"{
     }while(0)
 
 static inline __function_const int eh_ptr_to_error(void *ptr){
-    if( eh_likely(((long)(ptr)) > 0) || eh_likely((long)(ptr) <= EH_RET_MIN_ERROR_NUM) )
+    if( eh_likely(((intptr_t)(ptr)) > 0) || eh_likely((intptr_t)(ptr) <= EH_RET_MIN_ERROR_NUM) )
         return EH_RET_OK;
     if(!ptr)
         return EH_RET_PTR_NULL;
-    return (int)(long)(ptr);
+    return (int)(intptr_t)(ptr);
 }
 
-#define eh_error_to_ptr(err_on)             ((void*)(long)(err_on))
+#define eh_error_to_ptr(err_on)             ((void*)(intptr_t)(err_on))
 
 #ifdef __cplusplus
 #if __cplusplus

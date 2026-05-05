@@ -9,6 +9,7 @@
  */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <eh.h>
 #include <eh_types.h>
 #include <eh_platform.h>
@@ -27,7 +28,7 @@ eh_mem_pool_t eh_mem_pool_create(size_t align, size_t size, size_t num){
     if( pool == NULL )
         return eh_error_to_ptr(EH_RET_MALLOC_ERROR);
     
-    pool->base = (void*)eh_align_up((unsigned long)(pool->free_list + num), align);
+    pool->base = (void*)eh_align_up((uintptr_t)(pool->free_list + num), align);
     pool->align_size = eh_align_up(size, align);
     pool->num = num;
     pool->free_list_head.next = pool->free_list;

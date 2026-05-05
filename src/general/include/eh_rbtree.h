@@ -4,10 +4,11 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <eh_types.h>
 
 
-typedef unsigned long parent_node_t;
+typedef uintptr_t parent_node_t;
 struct eh_rbtree_node {
     parent_node_t  parent_and_color;
     struct eh_rbtree_node *rb_right;

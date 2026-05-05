@@ -223,7 +223,7 @@ struct eh_list_head *head)
  *        Member name of list_head in the container
  */
 #define eh_list_entry(ptr, type, member) \
-    ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+    ((type *)((char *)(ptr)-eh_offsetof(type, member)))
 
 /**
  * @brief 遍历双向链表

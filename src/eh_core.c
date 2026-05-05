@@ -368,7 +368,7 @@ static int interior_init(void){
     eh->dispatch_cnt = 0;
     eh->idle_time = 0;
     eh->eh_init_fini_array = (struct eh_module*)eh_module_section_begin();
-    eh->eh_init_fini_array_len = ((struct eh_module*)eh_module_section_end() - (struct eh_module*)eh_module_section_begin());
+    eh->eh_init_fini_array_len = (uintptr_t)((struct eh_module*)eh_module_section_end() - (struct eh_module*)eh_module_section_begin());
     return 0;
 }
 
@@ -381,7 +381,7 @@ static int  module_group_init(void){
     struct eh_module  *eh_init_fini_array;
     long i,len;
     int ret = 0;
-    len = eh->eh_init_fini_array_len;
+    len = (long)eh->eh_init_fini_array_len;
     eh_init_fini_array = eh->eh_init_fini_array;
     for(i=0;i<len;i++){
         if(eh_init_fini_array[i].init){
@@ -406,7 +406,7 @@ static void module_group_exit(void){
     eh_t *eh = eh_get_global_handle();
     struct eh_module  *eh_init_fini_array;
     long i;
-    i = eh->eh_init_fini_array_len;
+    i = (long)eh->eh_init_fini_array_len;
     eh_init_fini_array = eh->eh_init_fini_array;
 
     for(i=i-1;i>=0;i--){
