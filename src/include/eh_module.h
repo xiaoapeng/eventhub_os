@@ -46,6 +46,14 @@ extern void *eh_module_section_begin(void);
 extern void *eh_module_section_end(void);
 extern int  eh_module_section_init(void);
 extern void eh_module_section_exit(void);
+#elif defined(_WIN32)
+#define _EH_SECTION_BASE_NAME ".ehm"
+#define _eh_define_module_export(_init__func_, _exit__func_, _section_id) \
+    __eh_define_module_export(_init__func_, _exit__func_, _EH_SECTION_BASE_NAME _section_id)
+extern void *eh_module_section_begin(void);
+extern void *eh_module_section_end(void);
+extern int  eh_module_section_init(void);
+extern void eh_module_section_exit(void);
 #else
 #define _eh_define_module_export(_init__func_, _exit__func_, _section_id) \
     __eh_define_module_export(_init__func_, _exit__func_, ".eh_init_fini_array." _section_id )
@@ -84,6 +92,9 @@ extern void eh_module_section_exit(void);
 #define EH_MODULE_GROUP_MAX_CNT    8
 
 #if defined(__APPLE__) && defined(__MACH__)
+#define __init
+#define __exit
+#elif defined(_WIN32)
 #define __init
 #define __exit
 #else

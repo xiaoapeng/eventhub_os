@@ -29,3 +29,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_compile_definitions( eventhub PUBLIC "-DEH_SYSTEM_IS_POPULAR" )
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_compile_definitions( eventhub PUBLIC "-DEH_SYSTEM_IS_POPULAR" )
+endif()
+

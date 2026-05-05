@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <eh.h>
 #include <eh_debug.h>
 #include <eh_mem.h>
@@ -354,8 +353,8 @@ static int interior_init(void){
     eh_t *eh = eh_get_global_handle();
     int ret;
 
-    bzero(eh, sizeof(eh_t));
-    bzero(&s_main_task,  sizeof(struct  eh_task));
+    memset(eh, 0, sizeof(eh_t));
+    memset(&s_main_task, 0, sizeof(struct  eh_task));
 
     eh_list_head_init(&eh->task_wait_list_head);
     eh_list_head_init(&eh->task_finish_list_head);
@@ -432,7 +431,7 @@ static __init int main_task_init(void){
     eh_t *eh = eh_get_global_handle();
     eh->main_task = &s_main_task;
     eh->current_task = &s_main_task;
-    
+
     s_main_task.name = "main_task";
     _eh_task_struct_init(&s_main_task, 1, 0, NULL, 0, NULL, NULL);
     s_main_task.state = EH_TASK_STATE_RUNING;

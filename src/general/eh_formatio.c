@@ -77,11 +77,26 @@ __function_weak void stdout_write(void *stream, const uint8_t *buf, size_t size)
     (void)size;
 }
 
+#ifdef __MINGW64__
+/*
+ * MinGW 链接器 bug: weak 函数指针直接用于静态初始化器时,
+ * 会被错误解析到一个无关地址 (如 main+0x28)。
+ * 通过同文件内的非 weak wrapper 间接引用可绕过此问题。
+ */
+static void _stdout_write_wrapper(void *stream, const uint8_t *buf, size_t size){
+    stdout_write(stream, buf, size);
+}
+#endif
+
 struct stream_function _eh_stdout = {
     .base = {
         .type = STREAM_TYPE_FUNCTION,
     },
+#ifdef __MINGW64__
+    .write = _stdout_write_wrapper,
+#else
     .write = stdout_write,
+#endif
     .cache = _stdout_cache,
     .pos = _stdout_cache,
     .end = _stdout_cache + EH_CONFIG_STDOUT_MEM_CACHE_SIZE,
